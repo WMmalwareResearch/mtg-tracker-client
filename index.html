@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTG Manager (Hybrid)</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --primary: #6200ea; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #10b981; --red: #ef4444; --border: #e2e8f0; }
@@ -103,6 +104,8 @@
       padding-top: 10px;
       border-top: 1px solid #e2e8f0;
   }
+  
+  #importStatus { font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 10px; display: none; }
 
 </style>
 </head>
@@ -176,12 +179,13 @@
 
   <div id="view-collection" class="view">
     <div class="card-box" style="background:#f8fafc; border:1px dashed #cbd5e1;">
-        <h3 style="font-size:16px;">📥 Bulk Import (Disabled)</h3>
-        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Bulk Import functionality requires the PapaParse library, which is not supported by the simplified Apps Script API.</p>
-        <form id="importForm" onsubmit="alert('Bulk Import is disabled in Hybrid Mode.'); return false;"><div style="display:flex; gap:10px;">
-            <input type="file" name="csvFile" id="csvFile" accept=".csv" style="flex:1; font-size:12px;" disabled>
-            <button type="submit" id="importButton" class="action-btn" style="flex:0 0 auto;" disabled>Import CSV</button>
-        </div></form>
+        <h3 style="font-size:16px;">📥 Bulk Import (Active)</h3>
+        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Select a CSV with columns: <b>Name, Set, Code, Qty, Foil (true/false)</b>.</p>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <input type="file" id="csvInput" accept=".csv" style="font-size:12px;">
+            <button onclick="handleImport()" class="action-btn">Start Import</button>
+        </div>
+        <div id="importStatus"></div>
     </div>
     <div class="card-box">
       <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -242,8 +246,8 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.7 (CSV Export Enabled)";
-const APP_VERSION_GS = "V36.0 (Robust API)";
+const APP_VERSION_HTML = "V1.8 (Bulk Import)";
+const APP_VERSION_GS = "V37.0 (Batch Mode)";
 // --- END VERSION INFO ---
 
 // --- CRITICAL: YOUR API ENDPOINT ---
@@ -281,7 +285,6 @@ async function callAPI(action, data = {}) {
         const apiResponse = JSON.parse(text);
 
         if (apiResponse.success === false) {
-            alert(`Server Error in ${action}: ${apiResponse.error}`);
             console.error(`Server Error in ${action}:`, apiResponse.error);
         }
         return apiResponse;
@@ -344,6 +347,75 @@ function loadLastLocation() {
         document.getElementById('locationInput').value = lastLoc;
     }
 }
+
+// --- NEW: BULK IMPORT LOGIC ---
+function handleImport() {
+    const fileInput = document.getElementById('csvInput');
+    const statusDiv = document.getElementById('importStatus');
+    
+    if (!fileInput.files.length) {
+        alert("Please select a file first.");
+        return;
+    }
+
+    statusDiv.style.display = 'block';
+    statusDiv.innerText = "Parsing CSV...";
+
+    Papa.parse(fileInput.files[0], {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function(results) {
+            const rawData = results.data;
+            if (rawData.length === 0) {
+                statusDiv.innerText = "Error: CSV is empty.";
+                return;
+            }
+
+            statusDiv.innerText = `Found ${rawData.length} rows. Starting upload...`;
+            
+            // Map CSV columns to our internal format
+            // Expected headers roughly: Name, Set, Code, Qty, Foil
+            const cards = rawData.map(r => ({
+                name: r.Name || r.name || "Unknown",
+                set: r.Set || r.set || "",
+                code: r.Code || r.code || "",
+                qty: parseInt(r.Qty || r.quantity || r.Quantity || 1),
+                foil: (r.Foil || r.foil || "false")
+            })).filter(c => c.name !== "Unknown"); // simple validation
+
+            // Process in Chunks of 10 to be safe
+            const CHUNK_SIZE = 10;
+            const chunks = [];
+            for (let i = 0; i < cards.length; i += CHUNK_SIZE) {
+                chunks.push(cards.slice(i, i + CHUNK_SIZE));
+            }
+
+            let processedCount = 0;
+            const total = cards.length;
+
+            for (let i = 0; i < chunks.length; i++) {
+                statusDiv.innerText = `Uploading batch ${i + 1}/${chunks.length} (${processedCount}/${total} cards)...`;
+                
+                const response = await callAPI('processBatch', { 
+                    cards: chunks[i],
+                    location: document.getElementById('locationInput').value || "Bulk Import" 
+                });
+
+                if (response.success) {
+                    processedCount += chunks[i].length;
+                } else {
+                    statusDiv.innerText = `Error in batch ${i+1}: ${response.error}`;
+                    // Optional: Continue or Stop? We'll continue for now.
+                }
+            }
+
+            statusDiv.innerText = `Done! Imported ${processedCount} cards. Refreshing list...`;
+            loadCollection();
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
+        }
+    });
+}
+
 
 // --- API Rewrites ---
 
@@ -639,7 +711,7 @@ async function submitForm(f) {
   }
 }
 
-// --- NEW: EXPORT CSV FUNCTIONALITY ---
+// --- EXPORT CSV FUNCTIONALITY ---
 function exportCSV(btn) {
     if (!rawCollectionData || rawCollectionData.length === 0) {
         alert("No collection data loaded. Please view your collection first.");
