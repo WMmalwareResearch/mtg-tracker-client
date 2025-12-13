@@ -4,6 +4,7 @@
 <base target="_top">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTG Manager (Hybrid)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root { --primary: #6200ea; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #10b981; --red: #ef4444; --border: #e2e8f0; }
@@ -89,6 +90,9 @@
   .stat-num { font-size: 20px; font-weight: 800; color: var(--primary); }
   .stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; }
   .top-card-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+
+  /* CHARTS */
+  .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 30px; }
 
   /* FOOTER STYLES */
   #version-footer { 
@@ -216,9 +220,17 @@
         <div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Cards</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-value">$0.00</div><div class="stat-label">Total Value</div></div>
       </div>
-      <div style="text-align:center; padding:15px; color:#475569;">
-          Charts disabled for stability. Numerical data is below.
+      
+      <h3 style="margin-top:20px;">Color Distribution</h3>
+      <div class="chart-container">
+          <canvas id="colorChart"></canvas>
       </div>
+      
+      <h3 style="margin-top:20px;">Rarity Breakdown</h3>
+      <div class="chart-container">
+          <canvas id="rarityChart"></canvas>
+      </div>
+
     </div>
     <div class="card-box"><h3>Daily Movers</h3><div id="moversList"></div></div>
     <div class="card-box"><h3>Top Cards</h3><div id="topCardsList"></div></div>
@@ -230,41 +242,39 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.2 (Hybrid Client)";
-const APP_VERSION_GS = "V35.0 (API)";
+const APP_VERSION_HTML = "V1.4 (Charts Enabled)";
+const APP_VERSION_GS = "V36.0 (Robust API)";
 // --- END VERSION INFO ---
 
 // --- CRITICAL: YOUR API ENDPOINT ---
-// You MUST replace this with the most current, clean Web App URL (the one ending in /exec)
-// Get it from: Apps Script -> Deploy -> Manage Deployments -> Copy Web App URL
+// Pre-filled with your working URL
 const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwd77Efgh_YW6NAsK54LI9CmQLdzBzV2FlylHBTgRKApElhCuT0GKJpUZIASNewmCNrSw/exec';
 // --- END CRITICAL SETUP ---
 
 let rawCollectionData = [], currentCardData = null, debounceTimer;
 let viewMode = 'list';
-
-// Check if the API Endpoint has been updated by the user
-if (API_ENDPOINT.includes('PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE')) {
-    alert("CRITICAL ERROR: Please edit the index.html file on GitHub and replace 'PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE' with your actual Apps Script Web App URL.");
-}
+let charts = { color: null, rarity: null }; // Store chart instances
 
 /**
  * Universal API Caller Function (using modern fetch)
  */
 async function callAPI(action, data = {}) {
-    if (API_ENDPOINT.includes('PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE')) return { success: false, error: "API Endpoint not configured." };
+    if (!API_ENDPOINT.includes('script.google.com')) {
+        alert("CRITICAL ERROR: API Endpoint is invalid.");
+        return { success: false, error: "API Endpoint not configured." };
+    }
     
-    // We send data via POST body, and the action via the query parameter
-    const url = `${API_ENDPOINT}?action=${action}`;
+    // V36.0 Update: Send action in the BODY to prevent URL param issues
+    const payload = { ...data, action: action };
     
     try {
-        const response = await fetch(url, {
+        const response = await fetch(API_ENDPOINT, {
             method: 'POST',
             mode: 'cors',
             headers: {
-                'Content-Type': 'text/plain', // Required for Apps Script POST requests
+                'Content-Type': 'text/plain',
             },
-            body: JSON.stringify(data)
+            body: JSON.stringify(payload)
         });
 
         if (!response.ok) {
@@ -282,7 +292,6 @@ async function callAPI(action, data = {}) {
         return apiResponse;
 
     } catch (error) {
-        alert(`Network/Fetch Error in ${action}: ${error.message}`);
         console.error(`Fetch error for ${action}:`, error);
         return { success: false, error: error.message };
     }
@@ -735,8 +744,12 @@ async function loadAnalytics() {
 
 function renderAnalytics(data) {
    if(!data) return;
+   
+   // 1. STATS
    document.getElementById('stat-count').innerText = data.totalCards;
    document.getElementById('stat-value').innerText = "$" + data.totalValue;
+   
+   // 2. MOVERS LIST
    const mov = document.getElementById('moversList');
    mov.innerHTML = '';
    if(data.biggestMovers.length===0) mov.innerHTML="<div style='text-align:center;color:#888'>No Movers</div>";
@@ -745,10 +758,56 @@ function renderAnalytics(data) {
       const s = c.change>=0?'+':'';
       mov.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:${col}">${s}$${c.change.toFixed(2)}</div></div>`;
    });
+   
+   // 3. TOP CARDS LIST
    const topCardsList = document.getElementById('topCardsList');
    topCardsList.innerHTML = '';
    data.topCards.forEach(c => {
       topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`;
+   });
+
+   // 4. CHARTS
+   // A. Color Distribution
+   const ctxColor = document.getElementById('colorChart').getContext('2d');
+   if (charts.color) charts.color.destroy();
+   charts.color = new Chart(ctxColor, {
+       type: 'doughnut',
+       data: {
+           labels: ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi', 'Colorless'],
+           datasets: [{
+               data: [
+                   data.colors.W, data.colors.U, data.colors.B, data.colors.R, 
+                   data.colors.G, data.colors.Multi, data.colors.Colorless
+               ],
+               backgroundColor: [
+                   '#f0f2c9', '#b3ceea', '#aeb2b7', '#eaa6a5', '#b6d7a8', '#dcc689', '#d7d7d7'
+               ]
+           }]
+       },
+       options: { responsive: true, maintainAspectRatio: false }
+   });
+
+   // B. Rarity Breakdown
+   const ctxRarity = document.getElementById('rarityChart').getContext('2d');
+   if (charts.rarity) charts.rarity.destroy();
+   charts.rarity = new Chart(ctxRarity, {
+       type: 'bar',
+       data: {
+           labels: ['Common', 'Uncommon', 'Rare', 'Mythic'],
+           datasets: [{
+               label: 'Count',
+               data: [
+                   data.rarity.common, data.rarity.uncommon, 
+                   data.rarity.rare, data.rarity.mythic
+               ],
+               backgroundColor: ['#0f172a', '#94a3b8', '#d4af37', '#ef4444']
+           }]
+       },
+       options: { 
+           responsive: true, 
+           maintainAspectRatio: false,
+           scales: { y: { beginAtZero: true } }
+       }
    });
 }
 
@@ -758,4 +817,3 @@ window.onload = function() {
 </script>
 </body>
 </html>
-
