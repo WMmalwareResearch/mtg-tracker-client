@@ -191,7 +191,7 @@
             </select>
         <button id="viewToggle" class="view-toggle-btn" onclick="toggleViewMode()">Show Grid ▦</button>
       </div>
-      <div class="action-row"><button class="action-btn" onclick="updatePrices(this)">🔄 Update Prices</button><button class="action-btn" onclick="exportCSV(this)" disabled>⬇️ Export CSV</button></div>
+      <div class="action-row"><button class="action-btn" onclick="updatePrices(this)">🔄 Update Prices</button><button class="action-btn" onclick="exportCSV(this)">⬇️ Export CSV</button></div>
       <div id="collectionList">Loading...</div>
     </div>
   </div>
@@ -242,7 +242,7 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.6 (Sticky Location)";
+const APP_VERSION_HTML = "V1.7 (CSV Export Enabled)";
 const APP_VERSION_GS = "V36.0 (Robust API)";
 // --- END VERSION INFO ---
 
@@ -257,7 +257,6 @@ let charts = { color: null, rarity: null }; // Store chart instances
 
 /**
  * Universal API Caller Function (using modern fetch)
- * Fixed for Connection V36
  */
 async function callAPI(action, data = {}) {
     if (!API_ENDPOINT.includes('script.google.com')) {
@@ -265,7 +264,6 @@ async function callAPI(action, data = {}) {
         return { success: false, error: "API Endpoint not configured." };
     }
     
-    // BELT AND SUSPENDERS: Send action in BOTH spots
     const separator = API_ENDPOINT.includes('?') ? '&' : '?';
     const url = `${API_ENDPOINT}${separator}action=${action}`;
     const payload = { ...data, action: action };
@@ -296,7 +294,7 @@ async function callAPI(action, data = {}) {
 
 function init() {
     loadFinishSetting();
-    loadLastLocation(); // NEW: Load sticky location
+    loadLastLocation(); 
     loadLocations(); 
     calculateTotalValue();
     document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`;
@@ -340,7 +338,6 @@ function loadFinishSetting() {
     }
 }
 
-// --- NEW: Sticky Location Logic ---
 function loadLastLocation() {
     const lastLoc = localStorage.getItem('mtgManager_LastLocation');
     if (lastLoc) {
@@ -606,7 +603,6 @@ function calculateTotalValue() {
 async function submitForm(f) {
   document.getElementById('subBtn').disabled=true;
   
-  // 1. CAPTURE LOCATION BEFORE SENDING
   const locInput = document.getElementById('locationInput');
   const currentLoc = locInput.value;
   localStorage.setItem('mtgManager_LastLocation', currentLoc);
@@ -629,10 +625,8 @@ async function submitForm(f) {
       alert("Added!");
       f.reset();
       
-      // 2. RESTORE LOCATION
       locInput.value = currentLoc;
       
-      // Cleanup
       document.getElementById('search').value='';
       document.getElementById('bigPrice').innerText='--';
       document.getElementById('totalValue').innerText='$0.00';
@@ -645,8 +639,36 @@ async function submitForm(f) {
   }
 }
 
+// --- NEW: EXPORT CSV FUNCTIONALITY ---
 function exportCSV(btn) {
-    alert("CSV export is not yet implemented in the Hybrid Client API.");
+    if (!rawCollectionData || rawCollectionData.length === 0) {
+        alert("No collection data loaded. Please view your collection first.");
+        return;
+    }
+
+    const headers = ["Set", "Code", "Name", "Finish", "Quantity", "Price", "Location"];
+    const rows = rawCollectionData.map(c => [
+        c.SetCode,
+        c.Code,
+        `"${c.Name.replace(/"/g, '""')}"`, // Handle quotes and commas in names
+        c.Finish,
+        c.Quantity,
+        c.TotalValue,
+        `"${c.Location.replace(/"/g, '""')}"`
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+        + headers.join(",") + "\n" 
+        + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "mtg_collection_export.csv");
+    document.body.appendChild(link);
+    
+    link.click();
+    document.body.removeChild(link);
 }
 
 async function loadCollection() {
