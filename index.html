@@ -102,7 +102,7 @@
 
 </style>
 </head>
-<body onload="init()">
+<body>
 
 <div class="container">
   <div class="tabs">
@@ -173,8 +173,8 @@
   <div id="view-collection" class="view">
     <div class="card-box" style="background:#f8fafc; border:1px dashed #cbd5e1;">
         <h3 style="font-size:16px;">📥 Bulk Import (Disabled)</h3>
-        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Bulk Import requires a dedicated PapaParse library not compatible with this API structure.</p>
-        <form id="importForm" onsubmit="alert('Bulk Import is temporarily disabled in Hybrid Mode.'); return false;"><div style="display:flex; gap:10px;">
+        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Bulk Import functionality requires the PapaParse library, which is not supported by the simplified Apps Script API.</p>
+        <form id="importForm" onsubmit="alert('Bulk Import is disabled in Hybrid Mode.'); return false;"><div style="display:flex; gap:10px;">
             <input type="file" name="csvFile" id="csvFile" accept=".csv" style="flex:1; font-size:12px;" disabled>
             <button type="submit" id="importButton" class="action-btn" style="flex:0 0 auto;" disabled>Import CSV</button>
         </div></form>
@@ -230,36 +230,31 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.0 (Hybrid Client)";
-const APP_VERSION_GS = "V34.0 (API)";
+const APP_VERSION_HTML = "V1.2 (Hybrid Client)";
+const APP_VERSION_GS = "V35.0 (API)";
 // --- END VERSION INFO ---
 
-// --- CRITICAL: YOUR API ENDPOINT (WITH CORS PROXY FIX) ---
-// We use the "All Origins" proxy to bypass the browser's CORS restriction
-// that blocks local HTML files from accessing remote Google Apps Script endpoints.
-const API_URL_RAW = 'https://script.google.com/macros/s/AKfycbxvUF6j4jeuGizIhALalcA2gB6OfXvSo0oyuKV4litB4Bdci4OchREVVJ-ycUhkQ7rjLQ/exec';
-
-// --- CRITICAL: YOUR API ENDPOINT (CLEAN) ---
-// Use your original Web App URL here. The App Script server is now expected to send JSON.
-const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyNyvd11jcASTq8oZfbxW4Z-LfFMjY3WGzi1x24DE66WNiNLLMPt_0nZ2bszMI519pl4g/exec';
+// --- CRITICAL: YOUR API ENDPOINT ---
+// You MUST replace this with the most current, clean Web App URL (the one ending in /exec)
+// Get it from: Apps Script -> Deploy -> Manage Deployments -> Copy Web App URL
+const API_ENDPOINT = 'PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE';
 // --- END CRITICAL SETUP ---
 
 let rawCollectionData = [], currentCardData = null, debounceTimer;
 let viewMode = 'list';
 
+// Check if the API Endpoint has been updated by the user
+if (API_ENDPOINT.includes('PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE')) {
+    alert("CRITICAL ERROR: Please edit the index.html file on GitHub and replace 'PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE' with your actual Apps Script Web App URL.");
+}
+
 /**
  * Universal API Caller Function (using modern fetch)
- * @param {string} action - The name of the Code.gs function to call.
- * @param {object} [data={}] - The payload (parameters) to send to the server.
  */
 async function callAPI(action, data = {}) {
-    // SIMPLE CHECK: Ensure the endpoint is defined before proceeding.
-    if (!API_ENDPOINT || API_ENDPOINT === '') {
-        console.error("API_ENDPOINT is not configured.");
-        alert("API Endpoint is not configured. Please update API_ENDPOINT in the script.");
-        return { success: false };
-    }
+    if (API_ENDPOINT.includes('PASTE_YOUR_NEW_APPS_SCRIPT_WEB_APP_URL_HERE')) return { success: false, error: "API Endpoint not configured." };
     
+    // We send data via POST body, and the action via the query parameter
     const url = `${API_ENDPOINT}?action=${action}`;
     
     try {
@@ -598,7 +593,6 @@ function calculateTotalValue() {
 async function submitForm(f) {
   document.getElementById('subBtn').disabled=true;
   
-  // 1. Gather all form data
   const formData = {
       setCode: document.getElementById('setCode').value,
       colNum: document.getElementById('colNum').value,
@@ -609,10 +603,8 @@ async function submitForm(f) {
       cardPrice: document.getElementById('cardPriceInput').value
   };
 
-  // 2. Make the API call
   const response = await callAPI('processForm', formData);
 
-  // 3. Handle response and reset UI
   document.getElementById('subBtn').disabled=false;
 
   if (response.success) {
@@ -628,6 +620,10 @@ async function submitForm(f) {
 
       loadLocations();
   }
+}
+
+function exportCSV(btn) {
+    alert("CSV export is not yet implemented in the Hybrid Client API.");
 }
 
 async function loadCollection() {
@@ -724,17 +720,12 @@ async function updatePrices(btn) {
     }
 }
 
-function exportCSV(btn) {
-    alert("CSV export is not yet implemented in the Hybrid Client API.");
-}
-
 async function loadAnalytics() { 
     const response = await callAPI('getAnalyticsData');
 
     if (response.success) {
         renderAnalytics(response.data);
     } else {
-        // Fallback for visual feedback
         document.getElementById('stat-count').innerText = '--';
         document.getElementById('stat-value').innerText = '--';
         document.getElementById('moversList').innerHTML = 'Error loading data.';
@@ -759,7 +750,6 @@ function renderAnalytics(data) {
    data.topCards.forEach(c => {
       topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`;
    });
-   // Charts are intentionally omitted for stability
 }
 
 window.onload = function() {
