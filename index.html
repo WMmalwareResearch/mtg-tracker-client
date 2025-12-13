@@ -242,7 +242,7 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.4 (Charts Enabled)";
+const APP_VERSION_HTML = "V1.5 (Connection Fix)";
 const APP_VERSION_GS = "V36.0 (Robust API)";
 // --- END VERSION INFO ---
 
@@ -257,6 +257,7 @@ let charts = { color: null, rarity: null }; // Store chart instances
 
 /**
  * Universal API Caller Function (using modern fetch)
+ * FIXED: Sends Action in BOTH URL and BODY to ensure connection.
  */
 async function callAPI(action, data = {}) {
     if (!API_ENDPOINT.includes('script.google.com')) {
@@ -264,11 +265,16 @@ async function callAPI(action, data = {}) {
         return { success: false, error: "API Endpoint not configured." };
     }
     
-    // V36.0 Update: Send action in the BODY to prevent URL param issues
+    // BELT AND SUSPENDERS: Send action in BOTH spots
+    // 1. In the URL (The Belt)
+    const separator = API_ENDPOINT.includes('?') ? '&' : '?';
+    const url = `${API_ENDPOINT}${separator}action=${action}`;
+    
+    // 2. In the Body (The Suspenders)
     const payload = { ...data, action: action };
     
     try {
-        const response = await fetch(API_ENDPOINT, {
+        const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
             headers: {
