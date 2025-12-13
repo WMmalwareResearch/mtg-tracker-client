@@ -242,7 +242,7 @@
 
 <script>
 // --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.5 (Connection Fix)";
+const APP_VERSION_HTML = "V1.6 (Sticky Location)";
 const APP_VERSION_GS = "V36.0 (Robust API)";
 // --- END VERSION INFO ---
 
@@ -257,7 +257,7 @@ let charts = { color: null, rarity: null }; // Store chart instances
 
 /**
  * Universal API Caller Function (using modern fetch)
- * FIXED: Sends Action in BOTH URL and BODY to ensure connection.
+ * Fixed for Connection V36
  */
 async function callAPI(action, data = {}) {
     if (!API_ENDPOINT.includes('script.google.com')) {
@@ -266,27 +266,19 @@ async function callAPI(action, data = {}) {
     }
     
     // BELT AND SUSPENDERS: Send action in BOTH spots
-    // 1. In the URL (The Belt)
     const separator = API_ENDPOINT.includes('?') ? '&' : '?';
     const url = `${API_ENDPOINT}${separator}action=${action}`;
-    
-    // 2. In the Body (The Suspenders)
     const payload = { ...data, action: action };
     
     try {
         const response = await fetch(url, {
             method: 'POST',
             mode: 'cors',
-            headers: {
-                'Content-Type': 'text/plain',
-            },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const text = await response.text();
         const apiResponse = JSON.parse(text);
 
@@ -294,9 +286,7 @@ async function callAPI(action, data = {}) {
             alert(`Server Error in ${action}: ${apiResponse.error}`);
             console.error(`Server Error in ${action}:`, apiResponse.error);
         }
-        
         return apiResponse;
-
     } catch (error) {
         console.error(`Fetch error for ${action}:`, error);
         return { success: false, error: error.message };
@@ -306,6 +296,7 @@ async function callAPI(action, data = {}) {
 
 function init() {
     loadFinishSetting();
+    loadLastLocation(); // NEW: Load sticky location
     loadLocations(); 
     calculateTotalValue();
     document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`;
@@ -349,6 +340,13 @@ function loadFinishSetting() {
     }
 }
 
+// --- NEW: Sticky Location Logic ---
+function loadLastLocation() {
+    const lastLoc = localStorage.getItem('mtgManager_LastLocation');
+    if (lastLoc) {
+        document.getElementById('locationInput').value = lastLoc;
+    }
+}
 
 // --- API Rewrites ---
 
@@ -608,12 +606,17 @@ function calculateTotalValue() {
 async function submitForm(f) {
   document.getElementById('subBtn').disabled=true;
   
+  // 1. CAPTURE LOCATION BEFORE SENDING
+  const locInput = document.getElementById('locationInput');
+  const currentLoc = locInput.value;
+  localStorage.setItem('mtgManager_LastLocation', currentLoc);
+  
   const formData = {
       setCode: document.getElementById('setCode').value,
       colNum: document.getElementById('colNum').value,
       quantity: document.getElementById('quantityInput').value,
       isFoil: document.getElementById('foil-on').checked,
-      cardLocation: document.getElementById('locationInput').value,
+      cardLocation: currentLoc,
       cardName: document.getElementById('search').value,
       cardPrice: document.getElementById('cardPriceInput').value
   };
@@ -625,6 +628,11 @@ async function submitForm(f) {
   if (response.success) {
       alert("Added!");
       f.reset();
+      
+      // 2. RESTORE LOCATION
+      locInput.value = currentLoc;
+      
+      // Cleanup
       document.getElementById('search').value='';
       document.getElementById('bigPrice').innerText='--';
       document.getElementById('totalValue').innerText='$0.00';
