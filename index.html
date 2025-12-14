@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.0.0</title>
+    <title>The Grimoire | v1.1.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,16 +14,16 @@
     <style>
         /* --- THEME & VARS (DARK GRIMOIRE) --- */
         :root { 
-            --primary: #a78bfa; /* Deep Violet */
-            --bg-dark: #0f0a1c; /* Deep Black */
-            --card-bg: rgba(45, 21, 60, 0.8); /* Dark Purple Glass */
+            --primary: #a78bfa; 
+            --bg-dark: #0f0a1c; 
+            --card-bg: rgba(45, 21, 60, 0.8); 
             --text: #f8fafc; 
-            --subtext: #a1a1aa; /* Light Gray */
-            --border: rgba(167, 139, 250, 0.2); /* Primary Border Glow */
-            --green: #d946ef; /* Success/Profit (Fuchsia Glow) */
-            --red: #dc2626; /* Error/Delete (Crimson Red) */
-            --yellow: #facc15; /* Warning/Partial */
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
+            --subtext: #a1a1aa; 
+            --border: rgba(167, 139, 250, 0.2); 
+            --green: #d946ef; 
+            --red: #dc2626; 
+            --yellow: #facc15;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
             /* Chart Colors */
             --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
@@ -45,7 +45,6 @@
         * { box-sizing: border-box; }
         .hidden { display: none !important; }
         
-        /* Scrollbar polish */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } 
@@ -195,7 +194,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.0.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.1.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -249,11 +248,26 @@
             </div>
             
             <div id="view-collection" class="hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <h2>Relic Vault</h2>
                     <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadCollection()">Refresh</button>
                 </div>
-                <div class="collection-grid" id="collection-grid" style="margin-top:20px;">Loading...</div>
+                
+                <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
+                    <div class="input-group" style="flex:1; margin-bottom:0;">
+                        <span class="input-icon">🔍</span>
+                        <input id="vaultSearch" placeholder="Search Vault..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;">
+                    </div>
+                    <select id="vaultSort" onchange="filterVault()" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;">
+                        <option value="date-new">Date (Newest)</option>
+                        <option value="date-old">Date (Oldest)</option>
+                        <option value="price-high">Value (High $)</option>
+                        <option value="price-low">Value (Low $)</option>
+                        <option value="name">Name (A-Z)</option>
+                    </select>
+                </div>
+
+                <div class="collection-grid" id="collection-grid">Loading...</div>
             </div>
 
             <div id="view-decks" class="hidden">
@@ -570,14 +584,45 @@
             } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
         }
 
+        // --- NEW: THE LENS (FILTER & SORT) ---
         async function loadCollection() {
+            // Re-fetch data if needed, or just use cache
+            if(cardsCache.length === 0) {
+                const { data: cards } = await sb.from('cards').select('*').order('created_at', { ascending: false });
+                cardsCache = cards || [];
+            }
+            filterVault(); // Use filterVault to render
+        }
+
+        function filterVault() {
+            const term = document.getElementById('vaultSearch').value.toLowerCase();
+            const sort = document.getElementById('vaultSort').value;
+            
+            // 1. Filter
+            let filtered = cardsCache.filter(c => c.name.toLowerCase().includes(term));
+
+            // 2. Sort
+            if (sort === 'price-high') filtered.sort((a,b) => (b.market_price_usd||0) - (a.market_price_usd||0));
+            else if (sort === 'price-low') filtered.sort((a,b) => (a.market_price_usd||0) - (b.market_price_usd||0));
+            else if (sort === 'date-old') filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
+            else filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)); // Default Date New
+
+            renderVaultGrid(filtered);
+        }
+
+        function renderVaultGrid(cards) {
             const grid = document.getElementById('collection-grid');
-            grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
-            const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
-            if(cards.length === 0) { grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">No cards found.</div>'; return; }
-            cardsCache = cards; 
+            if(cards.length === 0) { grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">No matching relics found.</div>'; return; }
+            
             grid.innerHTML = cards.map(c => `
-                <div class="grid-card" id="card-${c.id}"><div class="overlay" style="top:5px; height:auto; background:none; align-items:flex-start;"><button style="background:var(--red); padding:4px 8px; border-radius:4px; font-size:10px; width:auto; transform:none;" onclick="deleteCard('${c.id}', event)">🗑️ Sacrifice</button></div><img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div>
+                <div class="grid-card" id="card-${c.id}">
+                    <div class="overlay" style="top:5px; height:auto; background:none; align-items:flex-start;">
+                        <button style="background:var(--red); padding:4px 8px; border-radius:4px; font-size:10px; width:auto; transform:none;" onclick="deleteCard('${c.id}', event)">🗑️</button>
+                    </div>
+                    <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
+                    <div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div>
+                </div>
             `).join('');
         }
 
@@ -588,7 +633,8 @@
             const { error } = await sb.from('cards').delete().eq('id', id);
             if(error) { showToast(`Error: ${error.message}`, "error"); if(cardEl) cardEl.style.display = 'block'; } 
             else { showToast("Relic sacrificed.", "success"); }
-            loadData(); 
+            loadData(); // Updates dashboard stats
+            filterVault(); // Re-renders grid
         }
 
         // --- 5. DECK LOGIC (LOCAL ANALYTICS & THE LINK) ---
