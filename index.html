@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.7.0</title>
+    <title>The Grimoire | v1.6.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,8 +26,8 @@
             --blue: #3b82f6; 
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
-            /* Chart Colors */
-            --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
+            /* Magic Colors */
+            --mana-w: #f0f2c0; --mana-u: #b3ceea; --mana-b: #a69f9d; --mana-r: #ea9f82; --mana-g: #c4d3ca; --mana-c: #d8d8d8;
         }
 
         body { 
@@ -225,7 +225,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.7.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.6.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -316,11 +316,7 @@
                 <div id="deck-workspace">
                     <div id="editor-mode" class="deck-area-edit">
                         <div class="card-box">
-                            <div style="display:flex; align-items:center; margin-bottom:10px;">
-                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin-bottom: 0; flex-grow: 1; padding-left:14px;">
-                                <button class="secondary" style="width:auto; padding:8px 12px; margin-left:10px; font-size:12px;" onclick="calculateLands()">🏛️ Calculate Mana</button>
-                                <button class="secondary clear-btn" onclick="clearDeckEditor()" style="margin-left:10px;">🗑️</button>
-                            </div>
+                            <div style="display:flex; align-items:center; margin-bottom:10px;"><input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin-bottom: 0; flex-grow: 1; padding-left:14px;"><button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button></div>
                             <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
                             <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve Ritual</button>
                             <button onclick="saveDeck()" style="margin-top:10px;">💾 Forge Ritual</button>
@@ -331,7 +327,13 @@
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                 <div style="flex-grow:1;"><h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3><div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div></div>
-                                <div style="display:flex; gap:10px;"><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button><button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button></div>
+                                <div style="display:flex; gap:10px;">
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
+                                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button>
+                                </div>
                             </div>
                             <div class="deck-list-viewer" id="detail-decklist-viewer">Card list will appear here...</div>
                         </div>
@@ -581,42 +583,6 @@
             const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||');
             const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`;
             window.open(url, '_blank');
-        }
-
-        // NEW: THE ARCHITECT (LAND CALCULATOR)
-        function calculateLands() {
-            const listText = document.getElementById('deckList').value;
-            const { totalCount } = parseDeckList(listText);
-            
-            // Assume 60 card deck standard, or 100 if >60
-            const targetSize = totalCount > 60 ? 100 : 60;
-            const landsNeeded = targetSize - totalCount;
-            
-            if (landsNeeded <= 0) return showToast(`Deck is already ${totalCount} cards. No room for auto-lands.`, "error");
-
-            // Use the Chart Data (if available) to determine ratios
-            if (!colorChartInstance || !colorChartInstance.data.datasets[0].data) {
-                return showToast("Please validate deck first to calculate mana.", "error");
-            }
-
-            const pips = colorChartInstance.data.datasets[0].data; // [W, U, B, R, G, C]
-            const totalPips = pips.reduce((a, b) => a + b, 0);
-            
-            if (totalPips === 0) return showToast("No colored spells found to calculate lands.", "error");
-
-            let landBlock = "\n\n// The Architect's Foundation\n";
-            const landNames = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes'];
-            
-            pips.forEach((pipCount, i) => {
-                if (pipCount > 0) {
-                    const landCount = Math.round((pipCount / totalPips) * landsNeeded);
-                    if (landCount > 0) landBlock += `${landCount} ${landNames[i]}\n`;
-                }
-            });
-
-            document.getElementById('deckList').value += landBlock;
-            showToast(`🏛️ The Architect has added ${landsNeeded} lands.`, "success");
-            validateDeck(); // Re-validate to show new ownership
         }
 
         let typeChartInstance = null; let manaCurveInstance = null; let colorChartInstance = null;
