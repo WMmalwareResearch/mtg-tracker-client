@@ -96,7 +96,8 @@
         
         /* FOOTER */
         .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--subtext); font-size: 11px; }
-        .footer-legal a { color: var(--subtext); text-decoration: none; margin: 0 10px; }
+        .footer-legal a { color: var(--subtext); text-decoration: none; margin: 0 10px; cursor: pointer;}
+        .footer-legal a:hover { color: var(--primary); }
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
@@ -164,7 +165,7 @@
             <div class="ad-sidebar">
                 AD SPACE<br>(Skyscraper)
             </div>
-            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.2 SaaS Beta</div>
+            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.3 SaaS Beta</div>
         </div>
     </div>
 
@@ -320,6 +321,10 @@
                     <div class="card-box"><h3>Allocation (Color)</h3><div class="chart-container"><canvas id="colorChart"></canvas></div></div>
                     <div class="card-box"><h3>Top Sets</h3><div class="chart-container"><canvas id="setChart"></canvas></div></div>
                 </div>
+                <div class="card-box" style="margin-top:20px;">
+                    <h3>💎 Top Assets</h3>
+                    <div id="topCardsList"></div>
+                </div>
             </div>
 
             <div id="view-deckcheck" class="view">
@@ -349,10 +354,37 @@
 
         </div> <div class="footer-legal">
             &copy; 2025 Grimoire. All rights reserved.<br>
-            <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a> | <a href="#">Cookie Policy</a>
+            <a href="javascript:void(0)" onclick="document.getElementById('legalModal').classList.remove('hidden')">Privacy Policy</a> | 
+            <a href="javascript:void(0)" onclick="document.getElementById('legalModal').classList.remove('hidden')">Terms of Service</a>
         </div>
 
-    </div> <div id="setupModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;">
+    </div> <div id="legalModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;">
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:600px; max-height:80vh; overflow-y:auto; border: 1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;">Legal & Privacy</h2>
+                <button onclick="document.getElementById('legalModal').classList.add('hidden')" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text);">✖️</button>
+            </div>
+            
+            <div style="font-size:13px; color:var(--text); line-height:1.6;">
+                <h3 style="border-bottom:1px solid var(--border); padding-bottom:5px;">1. Privacy Policy</h3>
+                <p><strong>Data Ownership:</strong> Grimoire operates as a "Bring Your Own Backend" (BYOB) application. All collection data, financial records, and deck lists are stored exclusively in your personal Google Spreadsheet. We do not have access to your data, nor do we store it on external servers.</p>
+                <p><strong>Third-Party Services:</strong> This application interacts with the Scryfall API to retrieve card images and pricing data. No personal information is sent to Scryfall.</p>
+                <p><strong>Cookies:</strong> We use local storage solely to remember your theme preferences (Dark/Light mode) and API connection URL.</p>
+
+                <h3 style="border-bottom:1px solid var(--border); padding-bottom:5px; margin-top:20px;">2. Terms of Service</h3>
+                <p><strong>License:</strong> Grimoire is provided "as is" without warranty of any kind. You are free to use this software for personal management of your Magic: The Gathering collection.</p>
+                <p><strong>Financial Disclaimer:</strong> Data provided by this application (including "Market Value" and "P/L") is for informational purposes only. It is not financial advice. Market prices are based on third-party aggregators and may not reflect real-time liquidation value.</p>
+                
+                <h3 style="border-bottom:1px solid var(--border); padding-bottom:5px; margin-top:20px;">3. Affiliation</h3>
+                <p>Grimoire is unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
+            </div>
+
+            <br>
+            <button class="btn-primary" onclick="document.getElementById('legalModal').classList.add('hidden')">Acknowledge</button>
+        </div>
+    </div>
+
+    <div id="setupModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;">
         <div style="background:var(--card); padding:30px; border-radius:12px; width:400px; border: 1px solid var(--border);">
             <h2>Configuration</h2>
             <label>API Endpoint</label>
@@ -366,7 +398,7 @@
     </div>
 
     <script>
-        const APP_VERSION = "v3.2 SaaS Beta";
+        const APP_VERSION = "v3.3 SaaS Beta";
         let API_ENDPOINT = "", rawCollectionData = [], currentCardData = null, debounceTimer, viewMode = 'list', charts = { color: null, rarity: null, history: null, sets: null };
 
         window.onload = function() { loadTheme(); checkConnection(); };
@@ -375,7 +407,7 @@
             document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
             if(btn) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active'); }
-            if (viewId === 'home') document.querySelector('.nav-item').classList.add('active'); // Helper
+            if (viewId === 'home') document.querySelector('.nav-item').classList.add('active'); 
             
             if (viewId === 'analytics') loadAnalytics();
             if (viewId === 'collection') loadCollection();
