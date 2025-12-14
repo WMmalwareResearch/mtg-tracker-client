@@ -24,7 +24,7 @@
             --red: #dc2626; /* Error/Delete (Crimson Red) */
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
             
-            /* Chart Colors (Matching Grimoire theme) */
+            /* Chart Colors */
             --chart-color-1: #d946ef; /* Fuchsia */
             --chart-color-2: #dc2626; /* Crimson */
             --chart-color-3: #a78bfa; /* Violet */
@@ -112,10 +112,7 @@
             margin: 0 auto;
         }
 
-        /* Rituals View manages its own complex grid */
-        #view-decks {
-            margin: 0 auto;
-        }
+        #view-decks { margin: 0 auto; }
 
         /* --- COMPONENTS --- */
         .card-box { 
@@ -182,111 +179,51 @@
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
 
-        /* Media Query for Stat Grid on Medium Desktops */
         @media (min-width: 901px) and (max-width: 1300px) {
-            .stat-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
-            }
+            .stat-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         }
 
         /* GRIDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         
-        /* DECK WORKSPACE SPECIFIC LAYOUTS */
-        .deck-area-edit {
-            display: grid;
-            grid-template-columns: 1fr 300px; 
-            gap: 20px;
+        /* NEW: Dashboard Specific Grid (Compact) */
+        #recent-grid {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Smaller cards */
+            gap: 12px;
         }
 
-        .deck-area-detail {
-            display: grid;
-            grid-template-columns: 1fr 400px; 
-            gap: 20px;
-        }
-        .deck-list-viewer {
-            height: 70vh; 
-            overflow-y: auto;
-            white-space: pre-wrap; 
-            padding: 15px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text);
-            background: rgba(0,0,0,0.1);
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: rgba(0,0,0,0.3); box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
+        .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         
-        /* Chart Container Styling */
-        #deck-charts {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            padding-top: 20px;
-        }
+        /* DECK WORKSPACE SPECIFIC LAYOUTS */
+        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
         
         /* Saved Rituals List */
-        #saved-decks-list { 
-            max-height: 450px; 
-            overflow-y: auto; 
-            padding-right: 5px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 10px; 
-        }
-        .deck-item-preview {
-            background: rgba(255,255,255,0.05); 
-            padding:15px; 
-            border-radius:8px; 
-            border:1px solid var(--border); 
-            cursor:pointer; 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center;
-            position: relative;
-        }
-        .deck-item-preview:hover {
-            border-color: var(--primary);
-        }
-        .deck-item-info {
-            font-size: 12px;
-            color: var(--subtext);
-            font-weight: 400;
-            margin-top: 5px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+        #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
+        .deck-item-preview { background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; position: relative; }
+        .deck-item-preview:hover { border-color: var(--primary); }
+        .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* LOGIN SCREEN */
-        #auth-screen { 
-            background: radial-gradient(circle at center, #450a0a, #0f0a1c); 
-        }
-        .auth-box { 
-            background: rgba(255,255,255,0.05); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid var(--border); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
-        }
+        #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); }
+        .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
 
         /* MOBILE BOTTOM NAV */
         .bottom-nav { display: none; } 
 
         /* RESPONSIVE */
-        @media (max-width: 900px) {
-            .deck-area-edit, .deck-area-detail {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 900px) { .deck-area-edit, .deck-area-detail { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { 
             .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
             .sidebar { display: none; } 
             .main { padding: 20px; } 
-            .bottom-nav { 
-                background: rgba(15, 10, 28, 0.9); 
-                border-top: 1px solid var(--border); 
-            }
+            .bottom-nav { background: rgba(15, 10, 28, 0.9); border-top: 1px solid var(--border); }
             .b-item.active { color: var(--primary); }
         }
     </style>
@@ -459,7 +396,7 @@
         </div>
     </div>
 
-  <script>
+    <script>
         // --- 1. CONFIGURATION ---
         const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
@@ -506,16 +443,9 @@
             const msg = document.getElementById('auth-msg');
             btn.innerText = "Processing..."; btn.disabled = true;
 
-            // Attempt Sign In
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
-                // If sign in fails, check if we should try sign up
-                if (error.message.includes("Invalid login credentials")) {
-                    showToast("Invalid credentials. If you are new, we will attempt to create an account.", "info");
-                }
-
-                // Attempt Sign Up as fallback
                 const signUp = await sb.auth.signUp({ 
                     email, password,
                     options: { emailRedirectTo: window.location.href }
@@ -526,7 +456,6 @@
                     btn.innerText = "Summon Session"; btn.disabled = false;
                 } else {
                     if(signUp.data.session) {
-                        // Immediate login on signup success
                         finalizeLogin(signUp.data.session);
                     } else {
                         msg.innerText = "✅ Pact Forged! Check your email.";
@@ -536,12 +465,10 @@
                     }
                 }
             } else {
-                // SUCCESSFUL LOGIN
                 finalizeLogin(data.session);
             }
         }
 
-        // Helper to switch UI state immediately upon login
         function finalizeLogin(newSession) {
             session = newSession;
             document.getElementById('auth-screen').classList.add('hidden');
@@ -556,14 +483,13 @@
             window.location.reload(); 
         }
 
-        // Passive Listener (Backup)
         sb.auth.onAuthStateChange((event, _session) => {
             if (event === 'SIGNED_IN' && _session) {
                 session = _session;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('user-email').innerText = session.user.email;
-                if(cardsCache.length === 0) loadData(); // Only load if not already loaded
+                if(cardsCache.length === 0) loadData(); 
             } else if (event === 'SIGNED_OUT') {
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
@@ -911,7 +837,6 @@
             
             if (!listText) return showToast("Ritual list is empty.", "error");
 
-            // Ensure we switch to detail view to see results
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
             document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
@@ -1097,6 +1022,3 @@
             }
         });
     </script>
-</body>
-</html>
-
