@@ -225,6 +225,9 @@
         <div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Cards</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-value">$0.00</div><div class="stat-label">Total Value</div></div>
       </div>
+      <h3 style="margin-top:20px;">Portfolio History</h3>
+      <div class="chart-container"><canvas id="historyChart"></canvas></div>
+      
       <h3 style="margin-top:20px;">Color Distribution</h3><div class="chart-container"><canvas id="colorChart"></canvas></div>
       <h3 style="margin-top:20px;">Rarity Breakdown</h3><div class="chart-container"><canvas id="rarityChart"></canvas></div>
     </div>
@@ -236,13 +239,13 @@
 </div>
 
 <script>
-const APP_VERSION_HTML = "V2.0 (BYOB Edition)";
-const APP_VERSION_GS = "V37.0 (Batch Mode)";
+const APP_VERSION_HTML = "V2.1 (Portfolio History)";
+const APP_VERSION_GS = "V38.0 (History Support)";
 
 let API_ENDPOINT = ""; // Populated from LocalStorage
 let rawCollectionData = [], currentCardData = null, debounceTimer;
 let viewMode = 'list';
-let charts = { color: null, rarity: null };
+let charts = { color: null, rarity: null, history: null };
 
 // --- SETUP & CONNECTION LOGIC ---
 window.onload = function() {
@@ -601,6 +604,37 @@ function renderAnalytics(data) {
    });
    const topCardsList = document.getElementById('topCardsList'); topCardsList.innerHTML = '';
    data.topCards.forEach(c => { topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`; });
+
+   // HISTORY CHART
+   const ctxHistory = document.getElementById('historyChart').getContext('2d');
+   if (charts.history) charts.history.destroy();
+   let historyLabels = [], historyData = [];
+   if (data.history && data.history.length > 0) {
+       historyLabels = data.history.map(h => new Date(h.date).toLocaleDateString());
+       historyData = data.history.map(h => h.value);
+   } else {
+       historyLabels = [new Date().toLocaleDateString()];
+       historyData = [parseFloat(data.totalValue) || 0];
+   }
+   charts.history = new Chart(ctxHistory, {
+       type: 'line',
+       data: {
+           labels: historyLabels,
+           datasets: [{
+               label: 'Portfolio Value',
+               data: historyData,
+               borderColor: '#6200ea',
+               backgroundColor: 'rgba(98, 0, 234, 0.1)',
+               fill: true,
+               tension: 0.3
+           }]
+       },
+       options: { 
+           responsive: true, 
+           maintainAspectRatio: false,
+           scales: { y: { beginAtZero: false, ticks: { callback: function(value) { return '$' + value; } } } } 
+       }
+   });
 
    const ctxColor = document.getElementById('colorChart').getContext('2d');
    if (charts.color) charts.color.destroy();
