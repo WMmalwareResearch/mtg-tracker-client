@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.6.0</title>
+    <title>The Grimoire | v1.7.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,8 +26,8 @@
             --blue: #3b82f6; 
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
-            /* Magic Colors */
-            --mana-w: #f0f2c0; --mana-u: #b3ceea; --mana-b: #a69f9d; --mana-r: #ea9f82; --mana-g: #c4d3ca; --mana-c: #d8d8d8;
+            /* Chart Colors */
+            --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
         }
 
         body { 
@@ -108,16 +108,21 @@
         .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         
+        /* DECK GRID (NEW V1.7.0) */
+        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .deck-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; position: relative; height: 150px; display: flex; flex-direction: column; justify-content: space-between; }
+        .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); background: rgba(255,255,255,0.08); }
+        .deck-card h4 { margin: 0; color: white; font-size: 16px; }
+        .deck-card-meta { color: var(--subtext); font-size: 12px; }
+        .new-deck-card { border: 1px dashed var(--subtext); display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--subtext); }
+        .new-deck-card:hover { border-color: var(--primary); color: var(--primary); }
+
         /* DECK WORKSPACE */
         .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
-        #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
-        .deck-item-preview { background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; position: relative; }
-        .deck-item-preview:hover { border-color: var(--primary); }
-        .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
+        
         /* THE LINK */
         .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
         .is-owned { color: var(--green); border-left: 2px solid var(--green); background: rgba(217, 70, 239, 0.05); }
@@ -225,7 +230,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.6.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.7.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -312,21 +317,37 @@
             </div>
 
             <div id="view-decks" class="hidden">
-                <h2>Ritual Library</h2>
-                <div id="deck-workspace">
-                    <div id="editor-mode" class="deck-area-edit">
+                <div id="deck-library">
+                    <h2 style="margin-bottom:20px;">Ritual Library</h2>
+                    <div id="deck-grid-container" class="deck-grid">
+                        </div>
+                </div>
+
+                <div id="deck-workspace" class="hidden">
+                    <button onclick="closeDeck()" class="secondary" style="width:auto; margin-bottom:15px; padding:8px 15px; font-size:12px;">← Back to Library</button>
+                    
+                    <div id="editor-mode" class="deck-area-edit hidden">
                         <div class="card-box">
-                            <div style="display:flex; align-items:center; margin-bottom:10px;"><input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin-bottom: 0; flex-grow: 1; padding-left:14px;"><button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button></div>
+                            <div style="display:flex; align-items:center; margin-bottom:10px;">
+                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin-bottom: 0; flex-grow: 1; padding-left:14px;">
+                                <button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button>
+                            </div>
                             <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
                             <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve Ritual</button>
                             <button onclick="saveDeck()" style="margin-top:10px;">💾 Forge Ritual</button>
                         </div>
-                        <div class="card-box"><h3 style="margin-top:0;">Saved Rituals</h3><div id="saved-decks-list"></div></div>
                     </div>
+                    
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <div style="flex-grow:1;"><h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3><div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div></div>
+                                <div style="flex-grow:1;">
+                                    <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
+                                    <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">
+                                        OWNERSHIP: <span id="detail-owned-percent">0%</span>
+                                        <div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
+                                    </div>
+                                </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
@@ -339,7 +360,10 @@
                         </div>
                         <div class="card-box">
                             <h3>Ritual Analysis</h3>
-                            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12px; color:var(--subtext); font-weight:600; text-transform:uppercase;">Estimated Value</span><span id="detail-deck-price" style="font-size:18px; font-weight:700; color:var(--green);">$0.00</span></div>
+                            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
+                                <span style="font-size:12px; color:var(--subtext); font-weight:600; text-transform:uppercase;">Estimated Value</span>
+                                <span id="detail-deck-price" style="font-size:18px; font-weight:700; color:var(--green);">$0.00</span>
+                            </div>
                             <div id="detail-analysis-results" style="font-size:13px; color:var(--subtext);">Metrics will appear here.</div>
                             <div id="deck-charts" class="hidden">
                                 <div style="position:relative;"><canvas id="colorChart"></canvas></div>
@@ -410,8 +434,9 @@
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden')); document.getElementById('view-' + view).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(el => { if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active'); });
             document.querySelectorAll('.b-item').forEach(el => el.classList.remove('active')); document.querySelectorAll('.b-item').forEach(el => { if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active'); });
-            if (view !== 'decks') { showRitualEditor(false); clearCharts(); }
-            if(view === 'collection') loadCollection(); if(view === 'oracle') loadOracle(); if(view === 'decks') loadDecks();
+            if (view === 'decks') { loadDecks(); }
+            else { showRitualEditor(false); clearCharts(); document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden'); }
+            if(view === 'collection') loadCollection(); if(view === 'oracle') loadOracle(); 
         }
         function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(fetchCardMeta, 500); }
         async function fetchCardMeta() {
@@ -554,7 +579,49 @@
             if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; } loadData(); filterVault(); loadOracle(); }
         }
 
-        // --- DECK LOGIC ---
+        // --- DECK LOGIC (UPDATED V1.7.0 GRID) ---
+        async function loadDecks() {
+            // Switch to Library View
+            document.getElementById('deck-workspace').classList.add('hidden');
+            document.getElementById('deck-library').classList.remove('hidden');
+            
+            const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
+            const gridEl = document.getElementById('deck-grid-container');
+            window.myDecks = data || [];
+
+            // Add "New Deck" Button Card
+            let html = `
+                <div class="deck-card new-deck-card" onclick="showRitualEditor()">
+                    <span style="font-size:30px; margin-bottom:10px;">➕</span>
+                    <span style="font-weight:600;">Forge New Ritual</span>
+                </div>
+            `;
+
+            if (data && data.length > 0) {
+                html += data.map(d => {
+                    const date = new Date(d.updated_at).toLocaleDateString();
+                    return `
+                    <div class="deck-card" onclick="viewRitualDetails('${d.id}')">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <h4>${d.name}</h4>
+                                <span style="color:var(--red); font-size:16px; padding:5px; margin:-5px -5px 0 0;" onclick="deleteDeck('${d.id}', event)">✕</span>
+                            </div>
+                            <div class="deck-card-meta" style="margin-top:5px;">${d.card_count || 0} Relics</div>
+                        </div>
+                        <div class="deck-card-meta">Updated: ${date}</div>
+                    </div>
+                    `;
+                }).join('');
+            }
+            gridEl.innerHTML = html;
+        }
+
+        function closeDeck() {
+            // Return to Library
+            loadDecks();
+        }
+
         function analyzeOwnership(deckListText) {
             const vaultMap = {}; cardsCache.forEach(c => { const key = c.name.toLowerCase().trim(); vaultMap[key] = (vaultMap[key] || 0) + c.quantity; });
             const basics = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes', 'snow-covered plains', 'snow-covered island', 'snow-covered swamp', 'snow-covered mountain', 'snow-covered forest'];
@@ -609,6 +676,11 @@
         async function validateDeck() {
             const listText = document.getElementById('deckList').value; const resultsEl = document.getElementById('detail-analysis-results'); const btn = document.getElementById('validateDeckBtn');
             if (!listText) return showToast("Ritual list is empty.", "error");
+            
+            // Switch from Library to Workspace
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            
             document.getElementById('editor-mode').classList.add('hidden'); document.getElementById('detail-mode').classList.remove('hidden'); document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
             analyzeOwnership(listText);
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
@@ -652,12 +724,66 @@
                 });
             } catch(e) { container.innerHTML = '<p style="color:var(--red);">The vision is clouded (API Error).</p>'; }
         }
-        function viewRitualDetails(id) { currentViewedDeckId = id; const d = window.myDecks.find(x => x.id == id); if (!d) return showToast("Ritual not found in local cache.", "error"); document.getElementById('deckName').value = d.name; document.getElementById('deckList').value = d.card_list; validateDeck(); }
-        function showRitualEditor(keepData = false) { document.getElementById('detail-mode').classList.add('hidden'); document.getElementById('editor-mode').classList.remove('hidden'); clearCharts(); currentViewedDeckId = null; if (!keepData) { document.getElementById('deckName').value = ''; document.getElementById('deckList').value = ''; const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); if(resultsEl) resultsEl.innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>'; } }
+        function viewRitualDetails(id) { 
+            // Switch View
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            
+            currentViewedDeckId = id; const d = window.myDecks.find(x => x.id == id); if (!d) return showToast("Ritual not found in local cache.", "error"); document.getElementById('deckName').value = d.name; document.getElementById('deckList').value = d.card_list; validateDeck(); 
+        }
+        
+        function showRitualEditor(keepData = false) { 
+            // Switch View
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            
+            document.getElementById('detail-mode').classList.add('hidden'); document.getElementById('editor-mode').classList.remove('hidden'); clearCharts(); currentViewedDeckId = null; 
+            if (!keepData) { document.getElementById('deckName').value = ''; document.getElementById('deckList').value = ''; const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); if(resultsEl) resultsEl.innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>'; } 
+        }
+        
         function clearDeckEditor() { showRitualEditor(false); showToast("Ritual editor cleared.", "info"); }
         async function saveDeck() { const name = document.getElementById('deckName').value; const list = document.getElementById('deckList').value; if(!name) return showToast("Name required", "error"); const { totalCount } = parseDeckList(list); let error; if (currentViewedDeckId) { const res = await sb.from('decks').update({ name: name, card_list: list, card_count: totalCount }).eq('id', currentViewedDeckId); error = res.error; } else { const res = await sb.from('decks').insert({ user_id: session.user.id, name: name, card_list: list, card_count: totalCount }); error = res.error; } if(!error) { showToast(`💾 Ritual '${name}' saved!`, "success"); loadDecks(); } else { showToast(error.message, "error"); } }
-        async function loadDecks() { showRitualEditor(); const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false }); const listEl = document.getElementById('saved-decks-list'); if (!data || data.length === 0) { listEl.innerHTML = '<div style="color:var(--subtext); padding:10px;">No saved rituals.</div>'; return; } listEl.innerHTML = data.map(d => { const countText = d.card_count ? `(${d.card_count} relics)` : '(count unknown)'; return ` <div class="deck-item-preview" onclick="viewRitualDetails('${d.id}')"> <div> <div style="font-weight:600; color:white;">${d.name}</div> <div class="deck-item-info">${countText}</div> </div> <span style="font-size:12px; color:var(--red); padding:5px;" onclick="deleteDeck('${d.id}', event)">✕</span> </div> `; }).join(''); window.myDecks = data; }
+        
+        async function loadDecks() { 
+            // V1.7.0 UPDATED LOAD DECKS (GRID)
+            document.getElementById('deck-workspace').classList.add('hidden');
+            document.getElementById('deck-library').classList.remove('hidden');
+            
+            const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false }); 
+            const gridEl = document.getElementById('deck-grid-container');
+            window.myDecks = data || [];
+            
+            let html = `
+                <div class="deck-card new-deck-card" onclick="showRitualEditor()">
+                    <span style="font-size:30px; margin-bottom:10px;">➕</span>
+                    <span style="font-weight:600;">Forge New Ritual</span>
+                </div>
+            `;
+            
+            if (data && data.length > 0) {
+                html += data.map(d => {
+                    const date = new Date(d.updated_at).toLocaleDateString();
+                    return `
+                    <div class="deck-card" onclick="viewRitualDetails('${d.id}')">
+                        <div>
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <h4>${d.name}</h4>
+                                <span style="color:var(--red); font-size:16px; padding:5px; margin:-5px -5px 0 0;" onclick="deleteDeck('${d.id}', event)">✕</span>
+                            </div>
+                            <div class="deck-item-info" style="margin-top:5px;">${d.card_count || 0} Relics</div>
+                        </div>
+                        <div class="deck-item-info">Updated: ${date}</div>
+                    </div>
+                    `;
+                }).join('');
+            }
+            gridEl.innerHTML = html;
+        }
+        
+        function closeDeck() { loadDecks(); } // Go back to grid
+        
         async function deleteDeck(id, e) { e.stopPropagation(); if(!confirm("Delete ritual?")) return; if (currentViewedDeckId == id) { showRitualEditor(false); } await sb.from('decks').delete().eq('id', id); showToast("Ritual removed.", "success"); loadDecks(); }
+        
         sb.auth.getSession().then(({ data: { session: existingSession } }) => { if (existingSession) { session = existingSession; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText = session.user.email; loadData(); } });
     </script>
 </body>
