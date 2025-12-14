@@ -166,7 +166,7 @@
             <div class="ad-sidebar">
                 AD SPACE<br>(Skyscraper)
             </div>
-            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.4 Archmage</div>
+            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.4.1 Stable</div>
         </div>
     </div>
 
@@ -399,7 +399,7 @@
     </div>
 
     <script>
-        const APP_VERSION = "v3.4 Archmage";
+        const APP_VERSION = "v3.4.1 Stable";
         let API_ENDPOINT = "", rawCollectionData = [], currentCardData = null, debounceTimer, viewMode = 'list', charts = { color: null, rarity: null, history: null, sets: null };
 
         window.onload = function() { loadTheme(); checkConnection(); };
@@ -421,6 +421,12 @@
 
         // API
         function checkConnection() { const storedUrl = localStorage.getItem('mtg_api_url'); if (!storedUrl) document.getElementById('setupModal').classList.remove('hidden'); else { API_ENDPOINT = storedUrl; init(); } }
+        
+        function showSetup() { 
+            document.getElementById('setupModal').classList.remove('hidden'); 
+            document.getElementById('apiUrlInput').value = localStorage.getItem('mtg_api_url') || ""; 
+        }
+
         function saveApiUrl() { const input = document.getElementById('apiUrlInput').value.trim(); if (!input.includes('script.google.com')) { alert("Invalid URL."); return; } localStorage.setItem('mtg_api_url', input); API_ENDPOINT = input; document.getElementById('setupModal').classList.add('hidden'); init(); }
         async function callAPI(action, data = {}) { if (!API_ENDPOINT) return { success: false }; try { const response = await fetch(`${API_ENDPOINT}?action=${action}`, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ ...data, action: action }) }); if (!response.ok) throw new Error(response.status); return await response.json(); } catch (error) { console.error(error); return { success: false, error: error.message }; } }
         function init() { loadLocations(); calculateTotalValue(); loadAnalytics(); } 
