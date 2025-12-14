@@ -99,18 +99,22 @@
             padding-left: 12px;
         }
 
-        /* MAIN CONTENT */
+        /* MAIN CONTENT - Applies base padding */
         .main { 
-            /* REMOVED: max-width: 1400px; - Allows Dashboard/Vault to fill screen */
             padding: 40px clamp(1rem, 2vw + 1rem, 5rem); 
-            margin: 0 auto;
             overflow-y: auto; 
             flex: 1; 
         }
         
-        /* Apply Max-Width specifically to the Rituals View */
+        /* NEW: Wrapper for views needing max-width/centering (Dashboard, Vault, Add) */
+        #view-dashboard, #view-add, #view-collection {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Rituals View needs full width but its internal content has its own complex grid */
         #view-decks {
-            max-width: 1400px; 
+            /* No max-width here, let the main container handle max-width */
             margin: 0 auto;
         }
 
@@ -1066,6 +1070,8 @@
             clearCharts();
             document.getElementById('deckName').value = '';
             document.getElementById('deckList').value = '';
+            // Reset detail analysis panel when leaving details view
+            document.getElementById('detail-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>';
         }
 
         // --- RITUAL SAVE/LOAD FUNCTIONS ---
