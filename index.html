@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | Dark Edition</title>
+    <title>The Grimoire | v1.0.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,16 +14,16 @@
     <style>
         /* --- THEME & VARS (DARK GRIMOIRE) --- */
         :root { 
-            --primary: #a78bfa; 
-            --bg-dark: #0f0a1c; 
-            --card-bg: rgba(45, 21, 60, 0.8); 
+            --primary: #a78bfa; /* Deep Violet */
+            --bg-dark: #0f0a1c; /* Deep Black */
+            --card-bg: rgba(45, 21, 60, 0.8); /* Dark Purple Glass */
             --text: #f8fafc; 
-            --subtext: #a1a1aa; 
-            --border: rgba(167, 139, 250, 0.2); 
-            --green: #d946ef; 
-            --red: #dc2626; 
-            --yellow: #facc15;
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            --subtext: #a1a1aa; /* Light Gray */
+            --border: rgba(167, 139, 250, 0.2); /* Primary Border Glow */
+            --green: #d946ef; /* Success/Profit (Fuchsia Glow) */
+            --red: #dc2626; /* Error/Delete (Crimson Red) */
+            --yellow: #facc15; /* Warning/Partial */
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
             
             /* Chart Colors */
             --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
@@ -45,6 +45,7 @@
         * { box-sizing: border-box; }
         .hidden { display: none !important; }
         
+        /* Scrollbar polish */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } 
@@ -194,6 +195,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.0.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
