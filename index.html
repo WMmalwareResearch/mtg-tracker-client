@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.5.2</title>
+    <title>The Grimoire | v1.6.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,8 +26,8 @@
             --blue: #3b82f6; 
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
-            /* Chart Colors */
-            --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
+            /* Magic Colors */
+            --mana-w: #f0f2c0; --mana-u: #b3ceea; --mana-b: #a69f9d; --mana-r: #ea9f82; --mana-g: #c4d3ca; --mana-c: #d8d8d8;
         }
 
         body { 
@@ -85,13 +85,8 @@
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
         #validateDeckBtn { background: var(--green); margin-bottom: 10px; }
 
-        /* DASHBOARD STATS (V1.5.2 FIX: AUTO-FIT) */
-        .stat-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 20px; 
-            margin-bottom: 30px; 
-        }
+        /* DASHBOARD STATS */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
@@ -230,7 +225,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.5.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.6.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -332,7 +327,13 @@
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                 <div style="flex-grow:1;"><h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3><div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div></div>
-                                <div style="display:flex; gap:10px;"><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button><button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button><button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button></div>
+                                <div style="display:flex; gap:10px;">
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
+                                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button>
+                                </div>
                             </div>
                             <div class="deck-list-viewer" id="detail-decklist-viewer">Card list will appear here...</div>
                         </div>
@@ -340,7 +341,11 @@
                             <h3>Ritual Analysis</h3>
                             <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;"><span style="font-size:12px; color:var(--subtext); font-weight:600; text-transform:uppercase;">Estimated Value</span><span id="detail-deck-price" style="font-size:18px; font-weight:700; color:var(--green);">$0.00</span></div>
                             <div id="detail-analysis-results" style="font-size:13px; color:var(--subtext);">Metrics will appear here.</div>
-                            <div id="deck-charts" class="hidden"><div style="position:relative;"><canvas id="typeChart"></canvas></div><div style="position:relative;"><canvas id="manaCurve"></canvas></div></div>
+                            <div id="deck-charts" class="hidden">
+                                <div style="position:relative;"><canvas id="colorChart"></canvas></div>
+                                <div style="position:relative;"><canvas id="typeChart"></canvas></div>
+                                <div style="position:relative;"><canvas id="manaCurve"></canvas></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -572,15 +577,73 @@
             const missingLines = []; document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => { const needed = parseInt(el.getAttribute('data-qty-needed')); const owned = parseInt(el.getAttribute('data-qty-owned')); const name = el.getAttribute('data-name'); const toBuy = needed - owned; if(toBuy > 0) missingLines.push(`${toBuy} ${name}`); });
             if(missingLines.length === 0) return showToast("You own all these relics!", "success"); navigator.clipboard.writeText(missingLines.join('\n')).then(() => { showToast("📋 Missing relics copied to clipboard!", "success"); }).catch(() => showToast("Failed to copy.", "error"));
         }
-        let typeChartInstance = null; let manaCurveInstance = null;
-        function clearCharts() { if (typeChartInstance) { typeChartInstance.destroy(); typeChartInstance = null; } if (manaCurveInstance) { manaCurveInstance.destroy(); manaCurveInstance = null; } document.getElementById('deck-charts').classList.add('hidden'); }
+        // NEW: Buy Deck (The Merchant)
+        function buyDeck() {
+            const buyLines = [];
+            document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => {
+                const needed = parseInt(el.getAttribute('data-qty-needed'));
+                const owned = parseInt(el.getAttribute('data-qty-owned'));
+                const name = el.getAttribute('data-name');
+                const toBuy = needed - owned;
+                if(toBuy > 0) buyLines.push(`${toBuy} ${name}`);
+            });
+            
+            if(buyLines.length === 0) return showToast("You own all these relics! Nothing to buy.", "success");
+            
+            // Format for TCGPlayer Mass Entry
+            // URL Format: https://www.tcgplayer.com/massentry?c=1 Sol Ring||2 Forest
+            const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||');
+            const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`;
+            window.open(url, '_blank');
+        }
+
+        let typeChartInstance = null; let manaCurveInstance = null; let colorChartInstance = null;
+        function clearCharts() { 
+            if (typeChartInstance) { typeChartInstance.destroy(); typeChartInstance = null; } 
+            if (manaCurveInstance) { manaCurveInstance.destroy(); manaCurveInstance = null; } 
+            if (colorChartInstance) { colorChartInstance.destroy(); colorChartInstance = null; } 
+            document.getElementById('deck-charts').classList.add('hidden'); 
+        }
         function renderTypeChart(typeData) { if (typeChartInstance) typeChartInstance.destroy(); const ctx = document.getElementById('typeChart').getContext('2d'); typeChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(typeData), datasets: [{ data: Object.values(typeData), backgroundColor: CHART_COLORS, borderColor: 'rgba(0, 0, 0, 0.4)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, title: { display: true, text: 'Card Type Breakdown', color: 'white' } } } }); }
         function renderManaCurve(cmcData) { if (manaCurveInstance) manaCurveInstance.destroy(); const ctx = document.getElementById('manaCurve').getContext('2d'); const maxCmc = Math.max(...Object.keys(cmcData).map(Number)); const labels = []; const data = []; for (let i = 0; i <= Math.min(maxCmc, 6); i++) { labels.push(i.toString()); data.push(cmcData[i] || 0); } let cmcSevenPlus = 0; for (let i = 7; i <= maxCmc; i++) { cmcSevenPlus += (cmcData[i] || 0); } if (maxCmc >= 7 || maxCmc === 0) { labels.push('7+'); data.push(cmcSevenPlus); } manaCurveInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Card Count', data: data, backgroundColor: '#a78bfa', borderColor: 'rgba(167, 139, 250, 0.2)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, title: { display: true, text: 'Mana Value (CMC) Curve', color: 'white' } }, scales: { x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#a1a1aa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } } } } }); }
+        
+        // NEW: Render Color Chart (The Prism)
+        function renderColorChart(colors) {
+            if (colorChartInstance) colorChartInstance.destroy();
+            const ctx = document.getElementById('colorChart').getContext('2d');
+            const colorLabels = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
+            const colorData = [colors['W']||0, colors['U']||0, colors['B']||0, colors['R']||0, colors['G']||0, colors['C']||0];
+            // Colors matching MTG standard
+            const bgColors = ['#f0f2c0', '#b3ceea', '#a69f9d', '#ea9f82', '#c4d3ca', '#d8d8d8'];
+            
+            colorChartInstance = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: colorLabels,
+                    datasets: [{
+                        data: colorData,
+                        backgroundColor: bgColors,
+                        borderColor: 'rgba(0,0,0,0.5)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#a1a1aa' } },
+                        title: { display: true, text: 'Mana Symbol Breakdown', color: 'white' }
+                    },
+                    scales: { r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } } }
+                }
+            });
+        }
+
         function parseDeckList(deckListText) {
             const lines = deckListText.split('\n'); let total = 0; const uniqueCardNames = new Map(); const regex = /^(\d+)\s+(.+)/; 
             lines.forEach(line => { const match = line.trim().match(regex); if (match) { const quantity = parseInt(match[1]); const name = match[2].trim(); if (!isNaN(quantity) && name.length > 0) { total += quantity; const key = name.toLowerCase().replace(/[^a-z0-9]/g, ''); const existing = uniqueCardNames.get(key); if (existing) { existing.qty += quantity; } else { uniqueCardNames.set(key, { qty: quantity, name: name }); } } } });
             return { totalCount: total, cards: Array.from(uniqueCardNames.values()) };
         }
+        
         async function validateDeck() {
             const listText = document.getElementById('deckList').value; const resultsEl = document.getElementById('detail-analysis-results'); const btn = document.getElementById('validateDeckBtn');
             if (!listText) return showToast("Ritual list is empty.", "error");
@@ -593,18 +656,29 @@
             const identifiers = parsedCards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let allMatchedCards = []; let allUnmatched = [];
             try {
                 for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); if (data.object === 'error') throw new Error(data.details); allMatchedCards = allMatchedCards.concat(data.data); if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found); }
-                const typeAgg = {}; const cmcAgg = {}; let totalDeckPrice = 0;
+                const typeAgg = {}; const cmcAgg = {}; let totalDeckPrice = 0; const colorAgg = { W:0, U:0, B:0, R:0, G:0, C:0 };
                 allMatchedCards.forEach(cardData => { 
                     const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; 
                     const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; 
                     if (!cardData.type_line.toLowerCase().includes('land')) { const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; }
                     const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0); totalDeckPrice += (price * quantity);
+                    
+                    // MANA PIP PARSING
+                    if (cardData.mana_cost) {
+                        const cost = cardData.mana_cost;
+                        colorAgg['W'] += (cost.match(/{W}/g) || []).length * quantity;
+                        colorAgg['U'] += (cost.match(/{U}/g) || []).length * quantity;
+                        colorAgg['B'] += (cost.match(/{B}/g) || []).length * quantity;
+                        colorAgg['R'] += (cost.match(/{R}/g) || []).length * quantity;
+                        colorAgg['G'] += (cost.match(/{G}/g) || []).length * quantity;
+                        colorAgg['C'] += (cost.match(/{C}/g) || []).length * quantity;
+                    }
                 });
                 document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
                 let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`; output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`;
                 if (allUnmatched.length > 0) { output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`; allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`); output += `</ul><p>Please fix these names in the editor.</p>`; showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error"); } else { output += `<p style="color:var(--green);">All unique relic names resolved!</p>`; showToast(`Ritual successfully resolved!`, "success"); }
                 resultsEl.innerHTML = output;
-                if (allUnmatched.length === 0) { document.getElementById('deck-charts').classList.remove('hidden'); renderTypeChart(typeAgg); renderManaCurve(cmcAgg); }
+                if (allUnmatched.length === 0) { document.getElementById('deck-charts').classList.remove('hidden'); renderTypeChart(typeAgg); renderManaCurve(cmcAgg); renderColorChart(colorAgg); }
             } catch (error) { resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`; showToast("Validation Error.", "error"); } finally { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } }
         }
         function openProphecy() { document.getElementById('prophecy-modal').classList.remove('hidden'); drawProphecy(); }
