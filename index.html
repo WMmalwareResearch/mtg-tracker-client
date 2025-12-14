@@ -149,7 +149,9 @@
         const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
         
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // FIXED: Renamed client to 'sb' to prevent naming collision with the library
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let session = null;
         let tempCardData = null;
         let searchTimer;
@@ -161,33 +163,40 @@
             if(!email || !password) return alert("Please enter email and password");
             
             const btn = document.querySelector('#auth-screen button');
+            const msg = document.getElementById('auth-msg');
             btn.innerText = "Processing..."; btn.disabled = true;
 
             // 1. Try Sign In
-            let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
+                console.log("Sign in failed ("+error.message+"), trying sign up...");
                 // 2. If Sign In fails, Try Sign Up
-                console.log("Sign in failed, trying sign up...", error.message);
-                const signUp = await supabase.auth.signUp({ email, password });
+                const signUp = await sb.auth.signUp({ email, password });
                 
                 if (signUp.error) {
                     alert("Error: " + signUp.error.message);
                     btn.innerText = "Sign In / Sign Up"; btn.disabled = false;
                 } else {
-                    alert("Account created! Please check your email to confirm registration before logging in.");
-                    btn.innerText = "Sign In / Sign Up"; btn.disabled = false;
+                    if(signUp.data.session) {
+                        window.location.reload();
+                    } else {
+                        msg.innerText = "✅ Account created! Please check your email to confirm.";
+                        msg.style.color = "var(--green)";
+                        btn.innerText = "Check Email";
+                    }
                 }
+            } else {
+                window.location.reload();
             }
         }
 
         async function handleLogout() {
-            await supabase.auth.signOut();
+            await sb.auth.signOut();
             window.location.reload();
         }
 
-        // Listen for Auth Changes
-        supabase.auth.onAuthStateChange((event, _session) => {
+        sb.auth.onAuthStateChange((event, _session) => {
             session = _session;
             if (session) {
                 document.getElementById('auth-screen').classList.add('hidden');
@@ -210,8 +219,6 @@
         }
 
         // --- 4. DATA LOGIC ---
-        
-        // Add Card Helper (Scryfall)
         function debounceSearch() {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(fetchCardMeta, 500);
@@ -221,7 +228,6 @@
             const name = document.getElementById('search').value;
             const status = document.getElementById('search-status');
             if(name.length < 3) { status.innerText = ""; return; }
-            
             status.innerText = "Searching Scryfall...";
             
             try {
@@ -245,7 +251,6 @@
             } catch(e) { status.innerText = "Error fetching data."; }
         }
 
-        // INSERT (Cards)
         async function addCard() {
             if(!tempCardData) return alert("Search for a card first");
             const cost = document.getElementById('cost').value || 0;
@@ -254,7 +259,7 @@
             
             btn.innerText = "Saving..."; btn.disabled = true;
 
-            const { error } = await supabase.from('cards').insert({
+            const { error } = await sb.from('cards').insert({
                 user_id: session.user.id,
                 name: tempCardData.name,
                 set_code: tempCardData.set,
@@ -273,19 +278,16 @@
                 document.getElementById('preview-text').style.display = 'block';
                 document.getElementById('search-status').innerText = "";
                 tempCardData = null;
-                loadData(); // Refresh stats
+                loadData(); 
             } else { alert("Database Error: " + error.message); }
         }
 
-        // READ (Dashboard Stats)
         async function loadData() {
-            const { data: cards, error } = await supabase.from('cards').select('*');
+            const { data: cards, error } = await sb.from('cards').select('*');
             if(error) return console.error(error);
 
             let totalVal = 0, totalCost = 0, count = 0;
             
-            // Note: In MVP, assuming Market Value = Buy Price for demo.
-            // In V5, we would fetch live prices again.
             cards.forEach(c => {
                 count += c.quantity;
                 totalCost += (Number(c.buy_price) * c.quantity);
@@ -296,7 +298,6 @@
             document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2);
             document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
             
-            // Recent Grid
             if(cards.length > 0) {
                 const recent = cards.slice(-5).reverse();
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
@@ -308,10 +309,9 @@
             }
         }
 
-        // READ (Collection List)
         async function loadCollection() {
             document.getElementById('collection-grid').innerHTML = "Loading...";
-            const { data } = await supabase.from('cards').select('*').order('created_at', { ascending: false });
+            const { data } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             
             if(data.length === 0) {
                 document.getElementById('collection-grid').innerHTML = '<div style="color:var(--subtext);">No cards found.</div>';
@@ -320,7 +320,7 @@
 
             document.getElementById('collection-grid').innerHTML = data.map(c => `
                 <div class="grid-card">
-                    <div class="grid-del" style="position:absolute; top:5px; right:5px; background:rgba(220,38,38,0.9); padding:2px 6px; border-radius:4px; font-size:10px; z-index:10;" onclick="deleteCard('${c.id}')">✕</div>
+                    <div class="grid-del" style="position:absolute; top:5px; right:5px; background:rgba(220,38,38,0.9); padding:2px 6px; border-radius:4px; font-size:10px; z-index:10; cursor:pointer;" onclick="deleteCard('${c.id}')">✕</div>
                     <img src="${c.image_url}" loading="lazy">
                     <div class="overlay"><span>${c.quantity}x</span><span>$${c.buy_price}</span></div>
                 </div>
@@ -329,18 +329,17 @@
 
         async function deleteCard(id) {
             if(!confirm("Delete this card?")) return;
-            await supabase.from('cards').delete().eq('id', id);
+            await sb.from('cards').delete().eq('id', id);
             loadCollection();
             loadData();
         }
 
-        // DECK LOGIC
         async function saveDeck() {
             const name = document.getElementById('deckName').value;
             const list = document.getElementById('deckList').value;
             if(!name) return alert("Name required");
             
-            const { error } = await supabase.from('decks').insert({
+            const { error } = await sb.from('decks').insert({
                 user_id: session.user.id,
                 name: name,
                 card_list: list
@@ -351,7 +350,7 @@
         }
 
         async function loadDecks() {
-            const { data } = await supabase.from('decks').select('*').order('updated_at', { ascending: false });
+            const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
             document.getElementById('saved-decks-list').innerHTML = data.map(d => `
                 <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="loadDeckIntoEditor('${d.id}')">
                     <strong>${d.name}</strong>
@@ -370,7 +369,7 @@
         async function deleteDeck(id, e) {
             e.stopPropagation();
             if(!confirm("Delete deck?")) return;
-            await supabase.from('decks').delete().eq('id', id);
+            await sb.from('decks').delete().eq('id', id);
             loadDecks();
         }
     </script>
