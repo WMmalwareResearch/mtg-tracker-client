@@ -171,8 +171,14 @@
             
             if (error) {
                 console.log("Sign in failed ("+error.message+"), trying sign up...");
-                // 2. If Sign In fails, Try Sign Up
-                const signUp = await sb.auth.signUp({ email, password });
+                // 2. If Sign In fails, Try Sign Up with FORCED REDIRECT for GitHub Pages
+                const signUp = await sb.auth.signUp({ 
+                    email, 
+                    password,
+                    options: {
+                        emailRedirectTo: 'https://wmmalwareresearch.github.io/mtg-tracker-client/index.html'
+                    }
+                });
                 
                 if (signUp.error) {
                     alert("Error: " + signUp.error.message);
