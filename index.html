@@ -307,11 +307,17 @@
                         
                         <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
                         
-                        <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate Deck</button>
+                        <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve Deck</button>
                         <button onclick="saveDeck()" style="margin-top:10px;">💾 Save Deck</button>
                     </div>
+                    
                     <div class="card-box">
-                        <h3>Saved Decks</h3>
+                        <h3>Deck Analysis</h3>
+                        <div id="deck-analysis-results" style="font-size:13px; color:var(--subtext);">
+                            Run validation to see card counts and legality issues.
+                        </div>
+                        
+                        <h3 style="margin-top:20px;">Saved Decks</h3>
                         <div id="saved-decks-list" style="display:flex; flex-direction:column; gap:10px;"></div>
                     </div>
                 </div>
@@ -351,8 +357,7 @@
             toast.innerHTML = `<span>${message}</span> <span style="cursor:pointer; opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
             container.appendChild(toast);
             
-            // FIX: Set a double timeout to ensure the element is removed, 
-            // even if the animation fails or the event listener isn't triggered.
+            // FIX: Set a double timeout to ensure the element is removed.
             setTimeout(() => { 
                 toast.classList.add('hiding'); 
                 toast.addEventListener('animationend', () => toast.remove()); 
@@ -548,7 +553,6 @@
 
             btn.innerText = "Saving..."; btn.disabled = true;
 
-            // FIX: Set cost to null if input is blank, or the parsed float otherwise.
             const costToSave = costInput.length > 0 ? parseFloat(costInput) : null;
 
 
@@ -597,7 +601,6 @@
                 
                 count += c.quantity;
                 
-                // FIX: Only include the cost if the buy_price is NOT null and greater than zero.
                 if (c.buy_price !== null && Number(c.buy_price) > 0) {
                     totalCost += Number(c.buy_price) * c.quantity;
                 }
@@ -678,43 +681,103 @@
 
         // --- 5. DECK LOGIC ---
 
-        // Helper function to calculate total cards in a deck list
-        function calculateDeckCount(deckListText) {
+        // Helper function to calculate total cards and parse the list into an array
+        function parseDeckList(deckListText) {
             const lines = deckListText.split('\n');
             let total = 0;
-            const regex = /^(\d+)\s+(.+)/; // Regex to match "QTY CARD NAME"
+            const cardArray = [];
+            const regex = /^(\d+)\s+(.+)/; // Matches "QTY CARD NAME"
 
             lines.forEach(line => {
                 const match = line.trim().match(regex);
                 if (match) {
                     const quantity = parseInt(match[1]);
-                    if (!isNaN(quantity)) {
+                    const name = match[2].trim();
+                    if (!isNaN(quantity) && name.length > 0) {
                         total += quantity;
+                        cardArray.push({ qty: quantity, name: name });
                     }
                 }
             });
-            return total;
+            return { totalCount: total, cards: cardArray };
         }
 
-        // NEW FEATURE: Validates the deck structure (basic)
+        // NEW FEATURE: Validates the deck structure and attempts Scryfall resolution
         async function validateDeck() {
-            const list = document.getElementById('deckList').value;
-            if (!list) return showToast("Deck list is empty.", "error");
-
-            const count = calculateDeckCount(list);
+            const listText = document.getElementById('deckList').value;
+            const resultsEl = document.getElementById('deck-analysis-results');
+            const btn = document.getElementById('validateDeckBtn');
             
-            if (count < 60) {
-                showToast(`Deck size is ${count}. Standard minimum is usually 60 cards.`, "info");
-            } else if (count > 100) {
-                 showToast(`Deck size is ${count}. Exceeds Commander (100) or typical format limits.`, "info");
-            } else {
-                showToast(`Deck size (${count} cards) looks good! Next: check card legality...`, "success");
+            if (!listText) return showToast("Deck list is empty.", "error");
+
+            btn.innerText = "Resolving Cards (0/0)...";
+            btn.disabled = true;
+
+            const { totalCount, cards: parsedCards } = parseDeckList(listText);
+            
+            if (parsedCards.length === 0) {
+                btn.innerText = "✅ Validate & Resolve Deck";
+                btn.disabled = false;
+                return showToast("No valid card lines found in the list.", "error");
+            }
+
+            // 1. Prepare bulk request payload
+            const identifierPayload = {
+                identifiers: parsedCards.map(c => ({ name: c.name }))
+            };
+
+            resultsEl.innerHTML = `<p style="color:var(--subtext);">Attempting to resolve ${parsedCards.length} unique card names...</p>`;
+
+            try {
+                // 2. Send request to Scryfall's identifier endpoint
+                const response = await fetch('https://api.scryfall.com/cards/collection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(identifierPayload)
+                });
+
+                const data = await response.json();
+
+                if (data.object === 'error') {
+                    throw new Error(data.details || 'Scryfall bulk request failed.');
+                }
+                
+                const matchedCards = data.data;
+                const unmatched = data.not_found;
+
+                let output = `<p style="color:var(--green); font-weight: 600;">✅ Deck Resolution Complete! (${totalCount} cards)</p>`;
+                
+                // 3. Process Matched Cards (e.g., Categorization, Count Checks)
+                output += `<p>Found **${matchedCards.length}** unique cards.</p>`;
+                
+                // 4. Process Unmatched Cards (Errors)
+                if (unmatched && unmatched.length > 0) {
+                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${unmatched.length} Card Names Unmatched:</p><ul>`;
+                    unmatched.forEach(u => {
+                        output += `<li style="margin-left: -20px;">* ${u.identifiers.name} (Typo?)</li>`;
+                    });
+                    output += `</ul><p>Please fix these names in the editor above.</p>`;
+                    showToast(`Deck validation failed: ${unmatched.length} card(s) not found.`, "error");
+                } else {
+                    showToast(`Deck successfully resolved! ${totalCount} cards found.`, "success");
+                }
+
+                resultsEl.innerHTML = output;
+
+            } catch (error) {
+                resultsEl.innerHTML = `<p style="color:var(--red);">Error: Could not resolve decklist. ${error.message}</p>`;
+                showToast("Deck resolution failed.", "error");
+            } finally {
+                btn.innerText = "✅ Validate & Resolve Deck";
+                btn.disabled = false;
             }
         }
+
 
         function clearDeckEditor() {
             document.getElementById('deckName').value = '';
             document.getElementById('deckList').value = '';
+            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
             showToast("Deck editor cleared.", "info");
         }
 
@@ -723,16 +786,16 @@
             const list = document.getElementById('deckList').value;
             if(!name) return showToast("Name required", "error");
 
-            const count = calculateDeckCount(list); // Get the card count
+            const { totalCount } = parseDeckList(list); // Get the card count
             
             const { error } = await sb.from('decks').insert({
                 user_id: session.user.id,
                 name: name,
                 card_list: list,
-                card_count: count // Save the new count
+                card_count: totalCount // Save the new count
             });
             
-            if(!error) { showToast(`Deck '${name}' saved (${count} cards).`, "success"); loadDecks(); }
+            if(!error) { showToast(`Deck '${name}' saved (${totalCount} cards).`, "success"); loadDecks(); }
             else { showToast(error.message, "error"); }
         }
 
@@ -761,6 +824,7 @@
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
+            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
             showToast(`Deck '${d.name}' loaded.`, "info");
         }
 
