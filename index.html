@@ -523,7 +523,7 @@
         async function addCard() {
             if(!tempCardData) return showToast("Search and select a card version first", "error");
             
-            const cost = document.getElementById('cost').value || 0;
+            const costInput = document.getElementById('cost').value;
             const qty = document.getElementById('qty').value || 1;
             const btn = document.querySelector('#view-add button');
             
@@ -531,13 +531,18 @@
 
             btn.innerText = "Saving..."; btn.disabled = true;
 
+            // FIX: Set cost to null if input is blank, or the parsed float otherwise.
+            const costToSave = costInput.length > 0 ? parseFloat(costInput) : null;
+
+
             const { error } = await sb.from('cards').insert({
                 user_id: session.user.id,
                 name: tempCardData.name,
                 set_code: tempCardData.set,
                 collector_number: tempCardData.num,
                 image_url: tempCardData.img,
-                buy_price: cost,
+                // FIX: Insert null if input was blank
+                buy_price: costToSave, 
                 quantity: qty,
                 market_price_usd: tempCardData.market_price,
                 last_price_update: new Date().toISOString()
@@ -573,16 +578,15 @@
 
             let totalVal = 0, totalCost = 0, count = 0;
             cards.forEach(c => {
-                const cardCost = Number(c.buy_price) || 0;
                 
                 count += c.quantity;
                 
-                // FIX: Only include the cost if it is a positive number
-                if (cardCost > 0) {
-                    totalCost += cardCost * c.quantity;
+                // FIX: Only include the cost if the buy_price is NOT null and greater than zero.
+                // This prevents "free" cards (null) from calculating a positive P/L.
+                if (c.buy_price !== null && Number(c.buy_price) > 0) {
+                    totalCost += Number(c.buy_price) * c.quantity;
                 }
 
-                // FIX: Use market_price_usd for current total value calculation
                 totalVal += (Number(c.market_price_usd || 0) * c.quantity); 
             });
 
