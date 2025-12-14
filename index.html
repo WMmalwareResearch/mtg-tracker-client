@@ -143,6 +143,8 @@
         button.secondary { background: rgba(255,255,255,0.1); }
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
         .clear-btn:hover { opacity: 1; transform: none; }
+        
+        #validateDeckBtn { background: var(--green); margin-bottom: 10px; }
 
 
         /* DASHBOARD STATS */
@@ -304,7 +306,9 @@
                         </div>
                         
                         <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
-                        <button onclick="saveDeck()" style="margin-top:10px;">Save Deck</button>
+                        
+                        <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate Deck</button>
+                        <button onclick="saveDeck()" style="margin-top:10px;">💾 Save Deck</button>
                     </div>
                     <div class="card-box">
                         <h3>Saved Decks</h3>
@@ -432,7 +436,7 @@
             if(view === 'decks') loadDecks();
         }
 
-        // --- 4. DATA LOGIC ---
+        // --- 4. DATA LOGIC (Cards) ---
         function debounceSearch() {
             clearTimeout(searchTimer);
             searchTimer = setTimeout(fetchCardMeta, 500);
@@ -554,7 +558,6 @@
                 set_code: tempCardData.set,
                 collector_number: tempCardData.num,
                 image_url: tempCardData.img,
-                // FIX: Insert null if input was blank
                 buy_price: costToSave, 
                 quantity: qty,
                 market_price_usd: tempCardData.market_price,
@@ -611,7 +614,6 @@
             gainEl.innerText = `$${gain.toFixed(2)}`;
             gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
 
-            // Recent Acquisitions is limited to the last 5 entries
             if(cards.length > 0) {
                 const recent = cards.slice(0, 5); 
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
@@ -629,7 +631,6 @@
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
             
-            // Use local cache for speed, or fetch if cache is empty
             const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
             
             if(cards.length === 0) {
@@ -675,7 +676,42 @@
             loadData(); 
         }
 
-        // --- DECK LOGIC ---
+        // --- 5. DECK LOGIC ---
+
+        // Helper function to calculate total cards in a deck list
+        function calculateDeckCount(deckListText) {
+            const lines = deckListText.split('\n');
+            let total = 0;
+            const regex = /^(\d+)\s+(.+)/; // Regex to match "QTY CARD NAME"
+
+            lines.forEach(line => {
+                const match = line.trim().match(regex);
+                if (match) {
+                    const quantity = parseInt(match[1]);
+                    if (!isNaN(quantity)) {
+                        total += quantity;
+                    }
+                }
+            });
+            return total;
+        }
+
+        // NEW FEATURE: Validates the deck structure (basic)
+        async function validateDeck() {
+            const list = document.getElementById('deckList').value;
+            if (!list) return showToast("Deck list is empty.", "error");
+
+            const count = calculateDeckCount(list);
+            
+            if (count < 60) {
+                showToast(`Deck size is ${count}. Standard minimum is usually 60 cards.`, "info");
+            } else if (count > 100) {
+                 showToast(`Deck size is ${count}. Exceeds Commander (100) or typical format limits.`, "info");
+            } else {
+                showToast(`Deck size (${count} cards) looks good! Next: check card legality...`, "success");
+            }
+        }
+
         function clearDeckEditor() {
             document.getElementById('deckName').value = '';
             document.getElementById('deckList').value = '';
@@ -686,25 +722,38 @@
             const name = document.getElementById('deckName').value;
             const list = document.getElementById('deckList').value;
             if(!name) return showToast("Name required", "error");
+
+            const count = calculateDeckCount(list); // Get the card count
             
             const { error } = await sb.from('decks').insert({
                 user_id: session.user.id,
                 name: name,
-                card_list: list
+                card_list: list,
+                card_count: count // Save the new count
             });
             
-            if(!error) { showToast("Deck Saved", "success"); loadDecks(); }
+            if(!error) { showToast(`Deck '${name}' saved (${count} cards).`, "success"); loadDecks(); }
             else { showToast(error.message, "error"); }
         }
 
         async function loadDecks() {
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
-            document.getElementById('saved-decks-list').innerHTML = data.map(d => `
+            const listEl = document.getElementById('saved-decks-list');
+            
+            if (!data || data.length === 0) {
+                listEl.innerHTML = '<div style="color:var(--subtext); padding:10px;">No saved decks.</div>';
+                return;
+            }
+
+            listEl.innerHTML = data.map(d => {
+                const countText = d.card_count ? `(${d.card_count} cards)` : '(count unknown)';
+                return `
                 <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="loadDeckIntoEditor('${d.id}')">
-                    <div style="font-weight:600;">${d.name}</div>
+                    <div style="font-weight:600;">${d.name} <span style="font-size:12px; color:var(--subtext); font-weight:400;">${countText}</span></div>
                     <span style="font-size:12px; color:var(--red); padding:5px;" onclick="deleteDeck('${d.id}', event)">✕</span>
                 </div>
-            `).join('');
+                `;
+            }).join('');
             window.myDecks = data;
         }
 
@@ -712,6 +761,7 @@
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
+            showToast(`Deck '${d.name}' loaded.`, "info");
         }
 
         async function deleteDeck(id, e) {
