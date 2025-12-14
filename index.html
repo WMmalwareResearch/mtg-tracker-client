@@ -25,11 +25,11 @@
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
             
             /* Chart Colors (Matching Grimoire theme) */
-            --chart-color-1: #d946ef; /* Fuchsia */
-            --chart-color-2: #dc2626; /* Crimson */
-            --chart-color-3: #a78bfa; /* Violet */
-            --chart-color-4: #4f46e5; /* Indigo */
-            --chart-color-5: #059669; /* Teal */
+            --chart-color-1: #d946ef; 
+            --chart-color-2: #dc2626; 
+            --chart-color-3: #a78bfa; 
+            --chart-color-4: #4f46e5; 
+            --chart-color-5: #059669; 
         }
 
         body { 
@@ -106,15 +106,14 @@
             flex: 1; 
         }
         
-        /* NEW: Wrapper for views needing max-width/centering (Dashboard, Vault, Add) */
+        /* Wrapper for views needing max-width/centering */
         #view-dashboard, #view-add, #view-collection {
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Rituals View needs full width but its internal content has its own complex grid */
+        /* Rituals View manages its own complex grid */
         #view-decks {
-            /* No max-width here, let the main container handle max-width */
             margin: 0 auto;
         }
 
