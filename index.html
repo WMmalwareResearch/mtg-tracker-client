@@ -40,6 +40,8 @@
   /* BUTTONS */
   .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; }
   .btn-primary:active { transform: translateY(1px); }
+  .btn-danger { width: 100%; padding: 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; margin-top: 15px; }
+  .btn-danger:hover { background: #fecaca; }
   .action-row { display: flex; gap: 10px; margin-bottom: 15px; }
   .action-btn { flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: white; font-weight: 600; color: #475569; font-size: 13px; text-align: center; }
   .action-btn:hover { background: #f8fafc; }
@@ -116,6 +118,7 @@
             <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/..." style="font-family:monospace;">
         </div>
         <button class="btn-primary" onclick="saveApiUrl()">Connect</button>
+        <button class="btn-danger" onclick="runMaintenance()">🧹 Clean Up Database</button>
         <p style="font-size:11px; color:#94a3b8; margin-top:15px; text-align:center;">Don't have a URL? <a href="#" onclick="alert('1. Make a Copy of the MTG Tracker Sheet.\n2. Open Extensions > Apps Script.\n3. Click Deploy > New Deployment > Web App > Anyone.\n4. Copy the URL.')">Click here for instructions.</a></p>
     </div>
 </div>
@@ -227,7 +230,6 @@
       </div>
       <h3 style="margin-top:20px;">Portfolio History</h3>
       <div class="chart-container"><canvas id="historyChart"></canvas></div>
-      
       <h3 style="margin-top:20px;">Color Distribution</h3><div class="chart-container"><canvas id="colorChart"></canvas></div>
       <h3 style="margin-top:20px;">Rarity Breakdown</h3><div class="chart-container"><canvas id="rarityChart"></canvas></div>
     </div>
@@ -239,8 +241,8 @@
 </div>
 
 <script>
-const APP_VERSION_HTML = "V2.1 (Portfolio History)";
-const APP_VERSION_GS = "V38.0 (History Support)";
+const APP_VERSION_HTML = "V2.2 (Janitor Button)";
+const APP_VERSION_GS = "V39.0 (Maintenance Mode)";
 
 let API_ENDPOINT = ""; // Populated from LocalStorage
 let rawCollectionData = [], currentCardData = null, debounceTimer;
@@ -278,6 +280,29 @@ function saveApiUrl() {
     API_ENDPOINT = input;
     document.getElementById('setupModal').classList.add('hidden');
     init(); // Start the app
+}
+
+// --- NEW MAINTENANCE FUNCTION ---
+async function runMaintenance() {
+    if(!confirm("Are you sure? This will sort your collection, merge duplicates, and remove empty rows.\n\nThis cannot be undone!")) return;
+    
+    const btn = document.querySelector('.btn-danger');
+    const originalText = btn.innerText;
+    btn.innerText = "Cleaning...";
+    btn.disabled = true;
+
+    const response = await callAPI('performMaintenance');
+    
+    btn.innerText = originalText;
+    btn.disabled = false;
+
+    if (response.success) {
+        alert(`Database Cleaned! Organized ${response.data.count} rows.`);
+        document.getElementById('setupModal').classList.add('hidden');
+        loadCollection(); // Refresh view
+    } else {
+        alert("Maintenance failed: " + (response.error || "Unknown error"));
+    }
 }
 
 // --- CORE APP LOGIC ---
