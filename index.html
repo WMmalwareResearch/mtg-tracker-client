@@ -261,7 +261,7 @@
             white-space: nowrap;
         }
 
-        /* NEW: Chart Container Styling */
+        /* Chart Container Styling */
         #deck-charts {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -296,9 +296,10 @@
     <div id="app" class="app-container hidden">
         <div class="sidebar">
             <div class="logo"><span>🩸</span> The Grimoire</div>
-            <div class="nav-item active" onclick="nav('home', 'home')">🏠 Dashboard</div>
+            <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
+            <div class="nav-item" onclick="nav('analytics', 'analytics')">📈 Analytics</div>
             <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
@@ -308,7 +309,7 @@
         </div>
 
         <div class="main">
-            <div id="view-home">
+            <div id="view-dashboard">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
                     <h2 style="margin:0;">Dashboard</h2>
                 </div>
@@ -362,6 +363,24 @@
                     <button onclick="addCard()">Bind to Vault</button>
                 </div>
             </div>
+            
+            <div id="view-analytics" class="hidden">
+                <div class="card-box">
+                    <h2>Ritual Analysis</h2>
+                    <div id="deck-analysis-results" style="font-size:13px; color:var(--subtext);">
+                        Load a ritual (deck) from the Rituals tab to view its metrics here.
+                    </div>
+                    
+                    <div id="deck-charts" class="hidden">
+                        <div style="position:relative;">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                        <div style="position:relative;">
+                            <canvas id="manaCurve"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div id="view-collection" class="hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -389,21 +408,7 @@
                     </div>
                     
                     <div class="card-box">
-                        <h3>Ritual Analysis</h3>
-                        <div id="deck-analysis-results" style="font-size:13px; color:var(--subtext);">
-                            Run validation to see card counts and legality issues.
-                        </div>
-
-                        <div id="deck-charts" class="hidden">
-                            <div style="position:relative;">
-                                <canvas id="typeChart"></canvas>
-                            </div>
-                            <div style="position:relative;">
-                                <canvas id="manaCurve"></canvas>
-                            </div>
-                        </div>
-                        
-                        <h3 style="margin-top:20px;">Saved Rituals</h3>
+                        <h3 style="margin-top:0;">Saved Rituals</h3>
                         <div id="saved-decks-list"></div>
                     </div>
                 </div>
@@ -411,9 +416,10 @@
         </div>
 
         <div class="bottom-nav">
-            <div class="b-item active" onclick="nav('home', 'home')"><span class="b-icon">🏠</span>Dash</div>
+            <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
             <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
             <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Vault</div>
+            <div class="b-item" onclick="nav('analytics', 'analytics')"><span class="b-icon">📈</span>Stats</div>
             <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Rituals</div>
         </div>
     </div>
@@ -429,7 +435,7 @@
         let allVersions = [];     
         let searchTimer;
         let cardsCache = []; 
-        let activeCharts = []; // Tracks current chart instances
+        let activeCharts = []; 
 
         // --- CHART COLORS (From CSS variables) ---
         const CHART_COLORS = [
@@ -533,8 +539,8 @@
                 if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active');
             });
 
-            // Clear charts when leaving the decks view
-            if (view !== 'decks') {
+            // Clear charts when leaving the analytics view
+            if (view !== 'analytics') {
                 clearCharts();
             }
 
@@ -794,12 +800,14 @@
                 manaCurveInstance.destroy();
                 manaCurveInstance = null;
             }
+            // Clear the chart container and analysis results
             document.getElementById('deck-charts').classList.add('hidden');
+            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Load a ritual (deck) from the Rituals tab to view its metrics here.</p>';
         }
         
         function renderTypeChart(typeData) {
-            clearCharts(); // Destroy existing charts first
-            document.getElementById('deck-charts').classList.remove('hidden');
+            // Destroy only the relevant chart if it exists
+            if (typeChartInstance) typeChartInstance.destroy();
 
             const ctx = document.getElementById('typeChart').getContext('2d');
             const labels = Object.keys(typeData);
@@ -835,23 +843,24 @@
         }
 
         function renderManaCurve(cmcData) {
+            // Destroy only the relevant chart if it exists
+            if (manaCurveInstance) manaCurveInstance.destroy();
+
             const ctx = document.getElementById('manaCurve').getContext('2d');
             const maxCmc = Math.max(...Object.keys(cmcData).map(Number));
             const labels = [];
             const data = [];
 
-            // Fill labels up to the max CMC + '7+' for overflow
             for (let i = 0; i <= Math.min(maxCmc, 6); i++) {
                 labels.push(i.toString());
                 data.push(cmcData[i] || 0);
             }
             
-            // Group 7 and above
             let cmcSevenPlus = 0;
             for (let i = 7; i <= maxCmc; i++) {
                 cmcSevenPlus += (cmcData[i] || 0);
             }
-            if (maxCmc >= 7 || maxCmc === 0) { // Only show 7+ if cards exist in this range or if it's necessary (e.g. 0 CMC decks)
+            if (maxCmc >= 7 || maxCmc === 0) { 
                 labels.push('7+');
                 data.push(cmcSevenPlus);
             }
@@ -928,7 +937,9 @@
             const resultsEl = document.getElementById('deck-analysis-results');
             const btn = document.getElementById('validateDeckBtn');
             
-            clearCharts();
+            // CRITICAL: Ensure the Analysis view is visible to display the results and charts
+            nav('analytics', 'analytics'); 
+            
             if (!listText) return showToast("Ritual list is empty.", "error");
 
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
@@ -1021,6 +1032,7 @@
 
                 // Render Charts if successful and we have data
                 if (allUnmatched.length === 0) {
+                    document.getElementById('deck-charts').classList.remove('hidden');
                     renderTypeChart(typeAgg);
                     renderManaCurve(cmcAgg);
                 }
@@ -1095,8 +1107,14 @@
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
-            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
-            clearCharts();
+            
+            // CRITICAL: Load the saved ritual into the analysis view as a preview (no charts yet)
+            const resultsEl = document.getElementById('deck-analysis-results');
+            resultsEl.innerHTML = `<p style="font-weight:600; color:var(--primary);">Ritual '${d.name}' loaded for editing and analysis.</p>
+                                   <p style="font-size:12px; color:var(--subtext);">Click 'Validate & Resolve Ritual' to generate charts.</p>`;
+            
+            clearCharts(); // Clear any previous charts
+            nav('decks', 'decks'); // Ensure the user is viewing the deck editor
         }
 
         async function deleteDeck(id, e) {
