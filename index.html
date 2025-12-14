@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Grimoire | Cloud Edition</title>
@@ -328,10 +329,10 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let session = null;
-        let tempCardData = null; // Stores the current SELECTED version's details
-        let allVersions = [];     // Stores all versions returned by search
+        let tempCardData = null; 
+        let allVersions = [];     
         let searchTimer;
-        let cardsCache = []; // Cache for instant delete/update
+        let cardsCache = []; 
 
         // --- TOAST HELPER ---
         function showToast(message, type = 'info') {
@@ -444,7 +445,6 @@
             status.innerText = "Searching Scryfall...";
 
             try {
-                // Use the search endpoint and group by name to get all versions
                 const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&unique=prints`);
                 const data = await res.json();
                 
@@ -454,7 +454,6 @@
                     return;
                 }
 
-                // Filter out non-English versions and tokens/art cards for simplicity
                 allVersions = data.data.filter(c => 
                     c.lang === 'en' && 
                     c.collector_number && 
@@ -462,7 +461,6 @@
                     c.layout !== 'art_series'
                 );
                 
-                // Sort by release date descending (most recent first)
                 allVersions.sort((a, b) => new Date(b.released_at) - new Date(a.released_at));
 
 
@@ -501,7 +499,7 @@
             if (!v) return;
 
             const imageUrl = v.image_uris ? v.image_uris.normal : (v.card_faces && v.card_faces[0].image_uris ? v.card_faces[0].image_uris.normal : '');
-            const usdPrice = v.prices.usd || v.prices.usd_foil || 0; // Default to 0 if price not found
+            const usdPrice = v.prices.usd || v.prices.usd_foil || 0;
 
             document.getElementById('set').value = v.set.toUpperCase();
             document.getElementById('num').value = v.collector_number;
@@ -512,13 +510,11 @@
             preview.style.display = 'block';
             document.getElementById('preview-text').style.display = 'none';
 
-            // Store the final metadata for insertion
             tempCardData = {
                 name: v.name,
                 set: v.set.toUpperCase(),
                 num: v.collector_number,
                 img: imageUrl,
-                // CRUCIAL: Storing the market price in USD for Dashboard calculations
                 market_price: parseFloat(usdPrice)
             };
         }
@@ -543,7 +539,6 @@
                 image_url: tempCardData.img,
                 buy_price: cost,
                 quantity: qty,
-                // FIX: Insert the market price and update time
                 market_price_usd: tempCardData.market_price,
                 last_price_update: new Date().toISOString()
             });
@@ -574,12 +569,19 @@
             const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             if(error) return console.error(error);
 
-            cardsCache = cards; // Store the latest data
+            cardsCache = cards; 
 
             let totalVal = 0, totalCost = 0, count = 0;
             cards.forEach(c => {
+                const cardCost = Number(c.buy_price) || 0;
+                
                 count += c.quantity;
-                totalCost += (Number(c.buy_price) * c.quantity);
+                
+                // FIX: Only include the cost if it is a positive number
+                if (cardCost > 0) {
+                    totalCost += cardCost * c.quantity;
+                }
+
                 // FIX: Use market_price_usd for current total value calculation
                 totalVal += (Number(c.market_price_usd || 0) * c.quantity); 
             });
@@ -595,7 +597,7 @@
 
             // Recent Acquisitions is limited to the last 5 entries
             if(cards.length > 0) {
-                const recent = cards.slice(0, 5); // Cards are already ordered descending (most recent first)
+                const recent = cards.slice(0, 5); 
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
                     <div class="grid-card">
                         <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
@@ -611,7 +613,6 @@
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
             
-            // Re-fetch data if cache is empty or stale, otherwise use cache
             const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
             
             if(cards.length === 0) {
