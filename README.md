@@ -1,72 +1,46 @@
-# 🔮 MTG Manager (Hybrid)
+# 🩸 The Grimoire: Dark Edition
 
-A serverless, browser-based Magic: The Gathering collection manager that gives you full control over your data.
+**The Arcane MTG Collection and Ritual (Deck) Tracker**
 
-**Live App:** [Launch MTG Manager](https://wmmalwareresearch.github.io/mtg-tracker-client/)
+The Grimoire provides a dark, cohesive interface for tracking relic acquisitions, calculating portfolio value, and performing deep statistical analysis on your potent Rituals (decks).
 
-![Version](https://img.shields.io/badge/version-2.0-blueviolet) ![Status](https://img.shields.io/badge/status-stable-success)
+This is the public repository showcasing the **client-side HTML, CSS, and JavaScript structure** of the application interface. The live application utilizes a proprietary, protected backend infrastructure based on Supabase and PostgreSQL.
 
-## 🌟 Features
+## 🔗 Access the Live Grimoire
 
-* **☁️ Hybrid Architecture:** Frontend hosted on GitHub, Backend on your own Google Sheet.
-* **💸 Real-Time Pricing:** Fetches live prices via Scryfall API.
-* **📊 Analytics:** Interactive charts for Color Wheel, Rarity, and Financial Value.
-* **📋 Deck Check:** Paste a decklist to see exactly which cards you own and which you need to buy.
-* **📂 Bulk Tools:** Import/Export CSVs compatible with Moxfield/Archidekt.
-* **🔒 Private & Secure:** Your data lives in *your* Google Drive. No external database.
+You can access and use the live application here:
+
+**[GRIMOIRE LIVE APPLICATION URL HERE]** *(Please replace this placeholder with your actual GitHub Pages or custom domain link)*
 
 ---
 
-## 🚀 Quick Start Guide
+## 🌟 Arcane Features
 
-This app uses a **"Bring Your Own Backend"** model. You host the website (or use the link above), but you connect it to your own personal Google Sheet database.
+* **Dark Grimoire Theme:** A custom, immersive UI featuring deep violet, crimson, and black hues.
+* **Relic Vault (Collection Tracking):** Quickly add cards and their acquisition costs using fuzzy search powered by Scryfall.
+* **Portfolio Analysis:** Track the total count, acquisition cost, current market value, and Arcane Gain/Loss (Profit/Loss).
+* **Intelligent Ritual Analysis:** Paste a decklist into the editor to instantly view the full list, generating visualizations for:
+    * **Mana Value (CMC) Curve**
+    * **Card Type Breakdown**
+    * **Card Name Validation** (Identifies typos using Scryfall's bulk API).
+* **Seamless Workspace:** Integrated editing, validation, and analytics all within a single, dynamic Rituals tab.
 
-### Step 1: Get the Database
-1.  **[Click here to make a Copy of the Backend Sheet](LINK_TO_YOUR_BLANK_SHEET)** *(Replace this text with the actual link to your Google Sheet)*
-    * *Note: Ensure the script code in `Extensions > Apps Script` is the V37.0 version.*
+## ⚙️ Technology Stack
 
-### Step 2: Deploy the API
-1.  Inside your new Google Sheet, go to **Extensions** $\rightarrow$ **Apps Script**.
-2.  Click the blue **Deploy** button (top right) $\rightarrow$ **New Deployment**.
-3.  **Select type:** Click the Gear icon ⚙️ $\rightarrow$ **Web App**.
-4.  **Configuration:**
-    * **Description:** `MTG Tracker`
-    * **Execute as:** `Me` (Your email)
-    * **Who has access:** `Anyone` (Crucial for the app to talk to the sheet).
-5.  Click **Deploy**.
-6.  **Copy** the `Web App URL` (It starts with `https://script.google.com/...`).
+* **Front-end:** HTML5, CSS3, Vanilla JavaScript (for speed and portability).
+* **Key Libraries:** Supabase Client Library, Chart.js.
+* **External APIs:** Scryfall API (for card metadata and bulk validation).
+* **Backend (Proprietary):** Supabase (PostgreSQL, Authentication, Realtime).
 
-### Step 3: Connect
-1.  Open the [Live App](https://wmmalwareresearch.github.io/mtg-tracker-client/).
-2.  Paste your **Web App URL** into the setup box.
-3.  Click **Connect**.
+## ⚠️ Note on Source Code
 
-**You're done!** You can now manage your collection. The app will remember your database for next time.
+This repository contains only the front-end code required to display the UI. The proprietary backend configuration, API keys, and server deployment scripts are **not included**.
 
----
+## 🔒 Licensing
 
-## 🛠️ For Developers
+**All Rights Reserved.**
 
-If you want to modify the frontend code or host your own version:
-
-1.  **Fork** this repository.
-2.  Edit `index.html` to change features or styles.
-3.  Enable **GitHub Pages** in your repository settings (`Settings > Pages > Branch: main`).
-
-### Tech Stack
-* **Frontend:** Vanilla HTML5, CSS3, JavaScript.
-* **Libraries:** Chart.js (Analytics), PapaParse (CSV).
-* **Backend:** Google Apps Script (Serverless Node.js-like environment).
-* **API:** Scryfall API (Card Data).
+This software is **Proprietary**. You may not copy, distribute, or modify this code without the express written permission of the author.
 
 ---
-
-## ⚠️ Limitations & Quotas
-Since this runs on free Google infrastructure:
-* **Batch Limit:** Bulk imports are processed in chunks of 10 to prevent timeouts.
-* **Execution Time:** Google Scripts timeout after 6 minutes. Large imports may take time.
-* **Rate Limits:** Please be respectful of Scryfall's API limits when refreshing prices.
-
----
-
-*Built with 🔮 by WM Malware Research*
+*Created by [wmmalwareresearch]*
