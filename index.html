@@ -78,6 +78,7 @@
         h1 { font-size: 24px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
         h2 { font-size: 14px; font-weight: 500; color: var(--subtext); margin: 0 0 20px 0; }
         h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 0; margin-bottom: 15px; }
+        h4 { margin: 5px 0; font-size: 12px; color: var(--subtext); font-weight: 700; text-transform: uppercase; }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
@@ -165,7 +166,7 @@
             <div class="ad-sidebar">
                 AD SPACE<br>(Skyscraper)
             </div>
-            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.3 SaaS Beta</div>
+            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.4 Archmage</div>
         </div>
     </div>
 
@@ -337,7 +338,7 @@
                         </div>
                         <textarea id="deckInput" style="width:100%; height:300px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); padding:10px; font-family:monospace;" placeholder="1 Sol Ring..."></textarea>
                         <br><br>
-                        <button class="btn-primary" onclick="runDeckCheck()">Validate Ownership</button>
+                        <button class="btn-primary" onclick="runDeckCheck(this)">Validate & Analyze</button>
                     </div>
 
                     <div>
@@ -398,7 +399,7 @@
     </div>
 
     <script>
-        const APP_VERSION = "v3.3 SaaS Beta";
+        const APP_VERSION = "v3.4 Archmage";
         let API_ENDPOINT = "", rawCollectionData = [], currentCardData = null, debounceTimer, viewMode = 'list', charts = { color: null, rarity: null, history: null, sets: null };
 
         window.onload = function() { loadTheme(); checkConnection(); };
@@ -514,7 +515,7 @@
             if (charts.sets) charts.sets.destroy(); charts.sets = new Chart(document.getElementById('setChart').getContext('2d'), { type: 'bar', indexAxis: 'y', data: { labels: d.sets.map(s => s.set), datasets: [{ label: 'Unique Cards', data: d.sets.map(s => s.count), backgroundColor: '#6366f1', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
-        // --- DECK LIBRARY ---
+        // --- DECK LIBRARY & ANALYTICS ---
         async function saveDeck() {
             const name = document.getElementById('deckName').value; const list = document.getElementById('deckInput').value; if(!name || !list) { alert("Enter name & decklist."); return; }
             const btn = event.target; btn.innerText = "Saving..."; btn.disabled = true; const res = await callAPI('saveDeck', { name: name, list: list }); btn.innerText = "💾 Save"; btn.disabled = false;
@@ -530,15 +531,25 @@
         }
         function loadDeckIntoEditor(name) { const deck = window.savedDecks.find(d => d.name === name); if(deck) { document.getElementById('deckName').value = deck.name; document.getElementById('deckInput').value = deck.list; } }
         async function deleteDeck(name) { if(!confirm(`Delete "${name}"?`)) return; const res = await callAPI('deleteDeck', { name: name }); if(res.success) loadDeckLibrary(); }
+        
         async function runDeckCheck(btn) {
-            const t = document.getElementById('deckInput').value; if (!t) return; if(btn) btn.disabled = true; const r = await callAPI('checkDeckList', { deckText: t }); if(btn) btn.disabled = false;
+            const t = document.getElementById('deckInput').value; if (!t) return; if(btn) btn.disabled = true; 
+            document.getElementById('deckResults').innerHTML = '<div style="text-align:center; padding:20px;">🔮 Analyzing Mana Curve...</div>';
+            const r = await callAPI('checkDeckList', { deckText: t }); if(btn) btn.disabled = false;
             if (r.success) {
-                const res = r.data, d = document.getElementById('deckResults'); d.innerHTML = '';
-                if (!res.found.length && !res.missing.length) { d.innerText = "No cards found."; return; }
+                const res = r.data; const d = document.getElementById('deckResults');
                 const p = Math.round((res.found.length / (res.found.length + res.missing.length)) * 100);
-                d.innerHTML = `<h3>Deck Status: ${p}%</h3><div class="progress-container"><div class="progress-bar" style="width: ${p}%"></div></div>`;
-                if (res.missing.length) { d.innerHTML += `<h4>Missing</h4><div class="collection-grid">` + res.missing.map(m => `<div class="grid-card" style="filter:grayscale(1); opacity:0.7;"><div style="position:absolute; top:5px; left:5px; background:red; color:white; padding:2px 5px; border-radius:4px; font-size:10px;">Need ${m.req}</div><img src="https://api.scryfall.com/cards/named?exact=${encodeURIComponent(m.name.split('[')[0].trim())}&format=image"></div>`).join('') + `</div>`; }
-                if (res.found.length) { d.innerHTML += `<h4>Owned</h4><div class="collection-grid">` + res.found.map(m => `<div class="grid-card"><div style="position:absolute; top:5px; left:5px; background:green; color:white; padding:2px 5px; border-radius:4px; font-size:10px;">Have ${m.have}</div><img src="${m.image}"></div>`).join('') + `</div>`; }
+                
+                let html = `<div style="margin-bottom:20px;"><h3>Deck Status: ${p}% Owned</h3><div class="progress-container"><div class="progress-bar" style="width: ${p}%"></div></div></div>`;
+                html += `<div class="grid-2" style="margin-bottom:20px;"><div class="card-box" style="padding:10px;"><h4 style="margin:5px 0; font-size:12px; color:var(--subtext);">MANA CURVE</h4><div style="height:150px;"><canvas id="deckManaChart"></canvas></div></div><div class="card-box" style="padding:10px;"><h4 style="margin:5px 0; font-size:12px; color:var(--subtext);">TYPE BREAKDOWN</h4><div style="height:150px;"><canvas id="deckTypeChart"></canvas></div></div></div>`;
+                html += `<div class="grid-2"><div><h4 style="color:var(--red);">Missing (${res.missing.length})</h4><div class="collection-grid">` + res.missing.map(m => `<div class="grid-card" style="filter:grayscale(1); opacity:0.8;" title="${m.name}"><div style="position:absolute; top:5px; left:5px; background:var(--red); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Need ${m.req}</div><img src="${m.image}" loading="lazy"></div>`).join('') + `</div></div>`;
+                html += `<div><h4 style="color:var(--green);">Owned (${res.found.length})</h4><div class="collection-grid">` + res.found.map(m => `<div class="grid-card" title="${m.name}"><div style="position:absolute; top:5px; left:5px; background:var(--green); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Have ${m.have}</div><img src="${m.image}" loading="lazy"></div>`).join('') + `</div></div></div>`;
+                d.innerHTML = html;
+
+                if(res.stats) {
+                    new Chart(document.getElementById('deckManaChart'), { type: 'bar', data: { labels: ['0','1','2','3','4','5','6','7+'], datasets: [{ label: 'Count', data: res.stats.cmc, backgroundColor: '#6366f1', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} } });
+                    new Chart(document.getElementById('deckTypeChart'), { type: 'doughnut', data: { labels: Object.keys(res.stats.types), datasets: [{ data: Object.values(res.stats.types), backgroundColor: ['#f0f2c9','#ef4444','#3b82f6','#f97316','#94a3b8','#a855f7','#eab308'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'right', labels:{boxWidth:10, font:{size:10}}}} } });
+                }
             }
         }
     </script>
