@@ -464,7 +464,7 @@
         let allVersions = [];     
         let searchTimer;
         let cardsCache = []; 
-        let currentViewedDeckId = null; // Track current deck ID for updates
+        let currentViewedDeckId = null;
 
         const CHART_COLORS = [
             '#d946ef', '#dc2626', '#a78bfa', '#4f46e5', '#059669', '#737373', '#facc15'
@@ -503,6 +503,7 @@
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
+                // If sign in fails, try to sign up
                 const signUp = await sb.auth.signUp({ 
                     email, password,
                     options: { emailRedirectTo: window.location.href }
@@ -513,7 +514,8 @@
                     btn.innerText = "Summon Session"; btn.disabled = false;
                 } else {
                     if(signUp.data.session) {
-                        window.location.reload();
+                        // Immediate login on signup
+                        // No reload needed, onAuthStateChange will handle it
                     } else {
                         msg.innerText = "✅ Pact Forged! Check your email.";
                         msg.style.color = "var(--green)";
@@ -521,15 +523,18 @@
                     }
                 }
             } else {
-                window.location.reload();
+                // SUCCESSFUL LOGIN
+                // FIX: Do NOT reload the page. Let onAuthStateChange handle the transition.
+                btn.innerText = "Summoning...";
             }
         }
 
         async function handleLogout() {
             await sb.auth.signOut();
-            window.location.reload();
+            window.location.reload(); // Reload is fine here to reset state
         }
 
+        // Listen for auth changes (Login, Logout, Session Refresh)
         sb.auth.onAuthStateChange((event, _session) => {
             session = _session;
             if (session) {
@@ -537,6 +542,10 @@
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('user-email').innerText = session.user.email;
                 loadData();
+            } else {
+                // If session is lost, show login screen
+                document.getElementById('auth-screen').classList.remove('hidden');
+                document.getElementById('app').classList.add('hidden');
             }
         });
 
@@ -880,7 +889,6 @@
             
             if (!listText) return showToast("Ritual list is empty.", "error");
 
-            // Ensure we switch to detail view to see results
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
             document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
@@ -934,7 +942,6 @@
                 
                 if (allUnmatched.length > 0) {
                     output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`;
-                    // FIXED: Access u.name directly (Scryfall returns the input object for not_found)
                     allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`);
                     output += `</ul><p>Please fix these names in the editor.</p>`;
                     showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error");
@@ -964,13 +971,10 @@
         function viewRitualDetails(id) {
             currentViewedDeckId = id; 
             const d = window.myDecks.find(x => x.id == id);
-            
-            // FIXED: Safety check in case deck not found
             if (!d) return showToast("Ritual not found in local cache.", "error");
 
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
-            
             validateDeck(); 
         }
 
@@ -1021,8 +1025,6 @@
         }
 
         async function loadDecks() {
-            // showRitualEditor(true); 
-            
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
             const listEl = document.getElementById('saved-decks-list');
             
@@ -1058,6 +1060,18 @@
             showToast("Ritual removed.", "success");
             loadDecks();
         }
+
+        // Initialize Session Check
+        sb.auth.getSession().then(({ data: { session: existingSession } }) => {
+            if (existingSession) {
+                session = existingSession;
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                document.getElementById('user-email').innerText = session.user.email;
+                loadData();
+            }
+        });
     </script>
 </body>
 </html>
+
