@@ -227,6 +227,7 @@
             display:flex; 
             justify-content:space-between; 
             align-items:center;
+            position: relative;
         }
         .deck-item-preview:hover {
             border-color: var(--primary);
@@ -1084,8 +1085,8 @@
             document.getElementById('detail-mode').classList.add('hidden');
             document.getElementById('editor-mode').classList.remove('hidden');
             clearCharts();
-            // Clear analysis panel message when returning to edit
-            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
+            document.getElementById('deckName').value = '';
+            document.getElementById('deckList').value = '';
         }
 
         // --- RITUAL SAVE/LOAD FUNCTIONS ---
@@ -1093,6 +1094,7 @@
         function clearDeckEditor() {
             document.getElementById('deckName').value = '';
             document.getElementById('deckList').value = '';
+            // Restore editor context message
             document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
             clearCharts();
             showToast("Ritual editor cleared.", "info");
