@@ -5,57 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTG Manager (Hybrid)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
 <style>
   :root { --primary: #6200ea; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #10b981; --red: #ef4444; --border: #e2e8f0; }
   body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
   .container { max-width: 900px; margin: 0 auto; }
-  
-  /* HEADER & TABS */
   .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
   .tabs { display: flex; background: var(--card); padding: 5px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); flex-grow: 1; margin-right: 10px; }
   .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; transition: 0.2s; }
   .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(98, 0, 234, 0.3); }
   .view { display: none; } .view.active { display: block; }
-  
   .settings-btn { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px 15px; cursor: pointer; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  .settings-btn:hover { background: #f1f5f9; }
-
-  /* CARDS & LAYOUT */
   .card-box { background: var(--card); padding: 24px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   .main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
   @media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
-
-  /* INPUTS */
   .input-group { margin-bottom: 16px; }
   label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: #64748b; letter-spacing: 0.5px; }
   input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; box-sizing: border-box; background: #fff; font-family: 'Inter', sans-serif; }
   input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
   textarea { resize: vertical; min-height: 150px; }
-
-  /* BUTTONS */
   .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; }
-  .btn-primary:active { transform: translateY(1px); }
   .btn-danger { width: 100%; padding: 12px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 15px; margin-top: 15px; }
-  .btn-danger:hover { background: #fecaca; }
   .action-row { display: flex; gap: 10px; margin-bottom: 15px; }
   .action-btn { flex: 1; padding: 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: white; font-weight: 600; color: #475569; font-size: 13px; text-align: center; }
-  .action-btn:hover { background: #f8fafc; }
   .view-toggle-btn { background: #fff; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; margin-left: 10px; }
-
-  /* UI COMPONENTS */
   .finish-toggle { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
   .finish-option { flex: 1; text-align: center; }
   .finish-option input { display: none; }
   .finish-label { display: block; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; transition: all 0.2s; }
-  .finish-option input:checked + .finish-label { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(98, 0, 234, 0.3); }
+  .finish-option input:checked + .finish-label { background: var(--primary); color: white; }
   .finish-option input[value="true"]:checked + .finish-label { color: #9333ea; }
-
-  /* LIST/GRID ITEMS */
   .list-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .list-item img { width: 40px; height: 56px; border-radius: 4px; margin-right: 12px; object-fit: cover; border: 1px solid #eee; }
   .list-details { flex-grow: 1; min-width: 0; }
@@ -63,10 +44,9 @@
   .list-meta { font-size: 11px; color: #64748b; margin-top: 2px; }
   .list-value { font-weight: 700; color: #059669; text-align: right; min-width: 70px; font-size: 14px; }
   .delete-btn { padding: 4px 8px; margin-left: 10px; background: #fee2e2; border-radius: 6px; color: #dc2626; border: none; cursor: pointer; font-size: 12px; }
-
   .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
   .grid-card { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; background: #000; aspect-ratio: 2.5/3.5; }
-  .grid-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
+  .grid-card:hover { transform: translateY(-5px); }
   .grid-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .grid-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0)); padding: 10px; color: white; transform: translateY(100%); transition: transform 0.2s; display: flex; flex-direction: column; }
   .grid-card:hover .grid-overlay { transform: translateY(0); }
@@ -74,8 +54,6 @@
   .grid-meta { font-size: 10px; color: #cbd5e1; display:flex; justify-content:space-between; }
   .grid-del { position: absolute; top: 5px; right: 5px; background: rgba(220, 38, 38, 0.8); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; display: none; font-size: 10px; }
   .grid-card:hover .grid-del { display: block; }
-
-  /* DECK CHECK & ANALYTICS */
   .deck-dashboard { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   .progress-container { background: #f1f5f9; border-radius: 10px; height: 20px; width: 100%; margin: 15px 0; overflow: hidden; }
   .progress-bar { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 1s ease-in-out; }
@@ -85,7 +63,6 @@
   .missing-card { filter: grayscale(100%); opacity: 0.8; }
   .missing-card:hover { filter: grayscale(0%); opacity: 1; }
   .missing-badge-overlay { position: absolute; top: 5px; left: 5px; background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-
   #suggestions { position: absolute; background: white; width: 100%; border: 1px solid #e2e8f0; z-index: 99; max-height: 200px; overflow-y: auto; display: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-top: 4px; }
   .s-item { padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
   .s-item:hover { background: #f8fafc; color: var(--primary); }
@@ -96,33 +73,26 @@
   .stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; }
   .top-card-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
   .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 30px; }
-  
   #version-footer { font-size: 10px; color: #94a3b8; text-align: right; margin-top: 15px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
   #importStatus { font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 10px; display: none; }
-
-  /* SETUP MODAL */
   #setupModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
   .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
   .hidden { display: none !important; }
-
 </style>
 </head>
 <body>
-
 <div id="setupModal" class="hidden">
     <div class="modal-content">
         <h2 style="margin-top:0;">🔮 Connect Your Grimoire</h2>
-        <p style="color:#64748b; font-size:14px;">Enter your <b>Google Apps Script Web App URL</b> to connect this interface to your personal spreadsheet.</p>
+        <p style="color:#64748b; font-size:14px;">Enter your <b>Google Apps Script Web App URL</b>.</p>
         <div class="input-group">
             <label>API URL</label>
             <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/..." style="font-family:monospace;">
         </div>
         <button class="btn-primary" onclick="saveApiUrl()">Connect</button>
         <button class="btn-danger" onclick="runMaintenance()">🧹 Clean Up Database</button>
-        <p style="font-size:11px; color:#94a3b8; margin-top:15px; text-align:center;">Don't have a URL? <a href="#" onclick="alert('1. Make a Copy of the MTG Tracker Sheet.\n2. Open Extensions > Apps Script.\n3. Click Deploy > New Deployment > Web App > Anyone.\n4. Copy the URL.')">Click here for instructions.</a></p>
     </div>
 </div>
-
 <div class="container">
   <div class="header-row">
       <div class="tabs">
@@ -133,541 +103,72 @@
       </div>
       <button class="settings-btn" onclick="showSetup()" title="Settings">⚙️</button>
   </div>
-
   <div id="view-add" class="view active">
     <div class="main-grid">
       <div class="card-box">
         <h3>Add New Card</h3>
-        <div class="input-group">
-          <label>Card Name</label>
-          <div style="display:flex; gap:5px; align-items:center;">
-            <input type="text" id="search" placeholder="Start typing..." autocomplete="off" style="flex-grow:1;">
-            <button type="button" class="action-btn" style="flex:0 0 40px; padding: 12px 0; font-size: 14px;" onclick="copyCardName()" id="copyNameBtn" disabled>📋</button>
-          </div>
-          <div id="suggestions"></div>
-        </div>
-        <div class="input-group" id="verGrp" style="display:none;">
-          <label>Version</label><select id="versionSelect" onchange="updateUI()"></select>
-        </div>
+        <div class="input-group"><label>Card Name</label><div style="display:flex; gap:5px; align-items:center;"><input type="text" id="search" placeholder="Start typing..." autocomplete="off" style="flex-grow:1;"><button type="button" class="action-btn" style="flex:0 0 40px; padding: 12px 0; font-size: 14px;" onclick="copyCardName()" id="copyNameBtn" disabled>📋</button></div><div id="suggestions"></div></div>
+        <div class="input-group" id="verGrp" style="display:none;"><label>Version</label><select id="versionSelect" onchange="updateUI()"></select></div>
         <form id="addForm" onsubmit="event.preventDefault(); submitForm(this)">
-          <div style="display:flex; gap:10px;">
-             <div class="input-group" style="flex:1"><label>Set</label><input name="setCode" id="setCode" readonly style="background:#f1f5f9;color:#64748b;"></div>
-             <div class="input-group" style="flex:1"><label>#</label><input name="colNum" id="colNum" readonly style="background:#f1f5f9;color:#64748b;"></div>
-          </div>
-          <div class="input-group">
-            <label>Finish</label>
-            <div class="finish-toggle">
-              <div class="finish-option"><input type="radio" id="foil-off" name="isFoil" value="false" checked onchange="calculateTotalValue(); saveFinishSetting();"><label for="foil-off" class="finish-label">Normal</label></div>
-              <div class="finish-option"><input type="radio" id="foil-on" name="isFoil" value="true" onchange="calculateTotalValue(); saveFinishSetting();"><label for="foil-on" class="finish-label">Foil ✨</label></div>
-            </div>
-          </div>
+          <div style="display:flex; gap:10px;"><div class="input-group" style="flex:1"><label>Set</label><input name="setCode" id="setCode" readonly style="background:#f1f5f9;color:#64748b;"></div><div class="input-group" style="flex:1"><label>#</label><input name="colNum" id="colNum" readonly style="background:#f1f5f9;color:#64748b;"></div></div>
+          <div class="input-group"><label>Finish</label><div class="finish-toggle"><div class="finish-option"><input type="radio" id="foil-off" name="isFoil" value="false" checked onchange="calculateTotalValue(); saveFinishSetting();"><label for="foil-off" class="finish-label">Normal</label></div><div class="finish-option"><input type="radio" id="foil-on" name="isFoil" value="true" onchange="calculateTotalValue(); saveFinishSetting();"><label for="foil-on" class="finish-label">Foil ✨</label></div></div></div>
           <div class="input-group"><label>Currency</label><select id="currencySelect" onchange="updateUI()"><option value="CAD" selected>🇨🇦 CAD (C$)</option><option value="USD">🇺🇸 USD ($)</option><option value="EUR">🇪🇺 EUR (€)</option></select></div>
-          
-          <div class="input-group">
-            <label for="locationInput">Location</label>
-            <input list="locationOptions" id="locationInput" name="cardLocation" placeholder="Select or type new location">
-            <datalist id="locationOptions"></datalist>
-          </div>
-          <div class="input-group">
-            <label>Quantity</label>
-            <div style="display:flex; gap:5px; align-items:center;">
-              <input type="number" name="quantity" id="quantityInput" value="1" min="1" oninput="calculateTotalValue()" style="flex-grow:1;">
-              <button type="button" class="action-btn" style="flex:0 0 30px; padding: 12px 0;" onclick="setQuantity(1)">C</button>
-              <button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(4)">4x</button>
-              <button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(10)">10x</button>
-            </div>
-          </div>
+          <div class="input-group"><label for="locationInput">Location</label><input list="locationOptions" id="locationInput" name="cardLocation" placeholder="Select or type new location"><datalist id="locationOptions"></datalist></div>
+          <div class="input-group"><label>Quantity</label><div style="display:flex; gap:5px; align-items:center;"><input type="number" name="quantity" id="quantityInput" value="1" min="1" oninput="calculateTotalValue()" style="flex-grow:1;"><button type="button" class="action-btn" style="flex:0 0 30px; padding: 12px 0;" onclick="setQuantity(1)">C</button><button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(4)">4x</button><button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(10)">10x</button></div></div>
           <input type="hidden" name="cardName" id="cardNameInput"><input type="hidden" name="cardPrice" id="cardPriceInput"> 
           <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;"><span style="font-size:12px; font-weight:700; color:#64748b;">TOTAL VALUE</span><span id="totalValue" style="font-size:18px; font-weight:800; color:#0f172a;">$0.00</span></div>
           <button class="btn-primary" id="subBtn">Add to Collection</button>
         </form>
       </div>
-      <div class="card-box" style="text-align:center;">
-           <div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px; text-transform:uppercase;">Market Price</div>
-           <div id="bigPrice" style="font-size:28px; font-weight:800; color:#059669; margin-bottom:15px;">--</div>
-           <img id="cardPreview" src="">
-      </div>
+      <div class="card-box" style="text-align:center;"><div style="font-size:11px; font-weight:bold; color:#64748b; margin-bottom:5px; text-transform:uppercase;">Market Price</div><div id="bigPrice" style="font-size:28px; font-weight:800; color:#059669; margin-bottom:15px;">--</div><img id="cardPreview" src=""></div>
     </div>
   </div>
-
   <div id="view-collection" class="view">
-    <div class="card-box" style="background:#f8fafc; border:1px dashed #cbd5e1;">
-        <h3 style="font-size:16px;">📥 Bulk Import</h3>
-        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Columns: <b>Name, Set, Code, Qty, Foil</b>.</p>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <input type="file" id="csvInput" accept=".csv" style="font-size:12px;">
-            <button onclick="handleImport()" class="action-btn">Start Import</button>
-        </div>
-        <div id="importStatus"></div>
-    </div>
-    <div class="card-box">
-      <div style="display:flex; gap:10px; margin-bottom:15px;">
-        <input type="text" id="collectionSearch" placeholder="Filter..." oninput="filterCollection()" style="flex:1;">
-        <select id="locationFilter" onchange="filterCollection()" style="flex:1;"><option value="">All Locations</option></select>
-        <button id="viewToggle" class="view-toggle-btn" onclick="toggleViewMode()">Show Grid ▦</button>
-      </div>
-      <div class="action-row"><button class="action-btn" onclick="updatePrices(this)">🔄 Update Prices</button><button class="action-btn" onclick="exportCSV(this)">⬇️ Export CSV</button></div>
-      <div id="collectionList">Loading...</div>
-    </div>
+    <div class="card-box" style="background:#f8fafc; border:1px dashed #cbd5e1;"><h3 style="font-size:16px;">📥 Bulk Import</h3><p style="font-size:12px; color:#64748b; margin-bottom:10px;">Columns: <b>Name, Set, Code, Qty, Foil</b>.</p><div style="display:flex; gap:10px; align-items:center;"><input type="file" id="csvInput" accept=".csv" style="font-size:12px;"><button onclick="handleImport()" class="action-btn">Start Import</button></div><div id="importStatus"></div></div>
+    <div class="card-box"><div style="display:flex; gap:10px; margin-bottom:15px;"><input type="text" id="collectionSearch" placeholder="Filter..." oninput="filterCollection()" style="flex:1;"><select id="locationFilter" onchange="filterCollection()" style="flex:1;"><option value="">All Locations</option></select><button id="viewToggle" class="view-toggle-btn" onclick="toggleViewMode()">Show Grid ▦</button></div><div class="action-row"><button class="action-btn" onclick="updatePrices(this)">🔄 Update Prices</button><button class="action-btn" onclick="exportCSV(this)">⬇️ Export CSV</button></div><div id="collectionList">Loading...</div></div>
   </div>
-
-  <div id="view-deckcheck" class="view">
-    <div class="main-grid">
-      <div class="card-box">
-         <h3>📋 Deck Check</h3>
-         <div class="input-group"><textarea id="deckInput" placeholder="1 Sol Ring [C19]..."></textarea></div>
-         <button class="btn-primary" onclick="runDeckCheck(this)">Check Deck</button>
-      </div>
-      <div class="card-box"><div id="deckResults"><div style="text-align:center; color:#94a3b8; padding:20px;">Results will appear here...</div></div></div>
-    </div>
-  </div>
-
-  <div id="view-analytics" class="view">
-    <div class="card-box">
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Cards</div></div>
-        <div class="stat-card"><div class="stat-num" id="stat-value">$0.00</div><div class="stat-label">Total Value</div></div>
-      </div>
-      <h3 style="margin-top:20px;">Portfolio History</h3>
-      <div class="chart-container"><canvas id="historyChart"></canvas></div>
-      <h3 style="margin-top:20px;">Color Distribution</h3><div class="chart-container"><canvas id="colorChart"></canvas></div>
-      <h3 style="margin-top:20px;">Rarity Breakdown</h3><div class="chart-container"><canvas id="rarityChart"></canvas></div>
-    </div>
-    <div class="card-box"><h3>Daily Movers</h3><div id="moversList"></div></div>
-    <div class="card-box"><h3>Top Cards</h3><div id="topCardsList"></div></div>
-  </div>
-
+  <div id="view-deckcheck" class="view"><div class="main-grid"><div class="card-box"><h3>📋 Deck Check</h3><div class="input-group"><textarea id="deckInput" placeholder="1 Sol Ring [C19]..."></textarea></div><button class="btn-primary" onclick="runDeckCheck(this)">Check Deck</button></div><div class="card-box"><div id="deckResults"><div style="text-align:center; color:#94a3b8; padding:20px;">Results will appear here...</div></div></div></div></div>
+  <div id="view-analytics" class="view"><div class="card-box"><div class="stat-grid"><div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Cards</div></div><div class="stat-card"><div class="stat-num" id="stat-value">$0.00</div><div class="stat-label">Total Value</div></div></div><h3 style="margin-top:20px;">Portfolio History</h3><div class="chart-container"><canvas id="historyChart"></canvas></div><h3 style="margin-top:20px;">Color Distribution</h3><div class="chart-container"><canvas id="colorChart"></canvas></div><h3 style="margin-top:20px;">Rarity Breakdown</h3><div class="chart-container"><canvas id="rarityChart"></canvas></div></div><div class="card-box"><h3>Daily Movers</h3><div id="moversList"></div></div><div class="card-box"><h3>Top Cards</h3><div id="topCardsList"></div></div></div>
   <div id="version-footer"></div>
 </div>
-
 <script>
-const APP_VERSION_HTML = "V2.2 (Janitor Button)";
-const APP_VERSION_GS = "V39.0 (Maintenance Mode)";
-
-let API_ENDPOINT = ""; // Populated from LocalStorage
-let rawCollectionData = [], currentCardData = null, debounceTimer;
-let viewMode = 'list';
-let charts = { color: null, rarity: null, history: null };
-
-// --- SETUP & CONNECTION LOGIC ---
-window.onload = function() {
-    document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`;
-    checkConnection();
-};
-
-function checkConnection() {
-    const storedUrl = localStorage.getItem('mtg_api_url');
-    if (!storedUrl) {
-        showSetup();
-    } else {
-        API_ENDPOINT = storedUrl;
-        init();
-    }
-}
-
-function showSetup() {
-    document.getElementById('setupModal').classList.remove('hidden');
-    document.getElementById('apiUrlInput').value = localStorage.getItem('mtg_api_url') || "";
-}
-
-function saveApiUrl() {
-    const input = document.getElementById('apiUrlInput').value.trim();
-    if (!input.includes('script.google.com')) {
-        alert("That doesn't look like a valid Google Apps Script URL.");
-        return;
-    }
-    localStorage.setItem('mtg_api_url', input);
-    API_ENDPOINT = input;
-    document.getElementById('setupModal').classList.add('hidden');
-    init(); // Start the app
-}
-
-// --- NEW MAINTENANCE FUNCTION ---
-async function runMaintenance() {
-    if(!confirm("Are you sure? This will sort your collection, merge duplicates, and remove empty rows.\n\nThis cannot be undone!")) return;
-    
-    const btn = document.querySelector('.btn-danger');
-    const originalText = btn.innerText;
-    btn.innerText = "Cleaning...";
-    btn.disabled = true;
-
-    const response = await callAPI('performMaintenance');
-    
-    btn.innerText = originalText;
-    btn.disabled = false;
-
-    if (response.success) {
-        alert(`Database Cleaned! Organized ${response.data.count} rows.`);
-        document.getElementById('setupModal').classList.add('hidden');
-        loadCollection(); // Refresh view
-    } else {
-        alert("Maintenance failed: " + (response.error || "Unknown error"));
-    }
-}
-
-// --- CORE APP LOGIC ---
-
-async function callAPI(action, data = {}) {
-    if (!API_ENDPOINT) { alert("Not Connected."); showSetup(); return {success:false}; }
-    const separator = API_ENDPOINT.includes('?') ? '&' : '?';
-    const url = `${API_ENDPOINT}${separator}action=${action}`;
-    const payload = { ...data, action: action };
-    
-    try {
-        const response = await fetch(url, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        const text = await response.text();
-        const apiResponse = JSON.parse(text);
-        if (apiResponse.success === false) console.error(`Server Error in ${action}:`, apiResponse.error);
-        return apiResponse;
-    } catch (error) {
-        console.error(`Fetch error for ${action}:`, error);
-        return { success: false, error: error.message };
-    }
-}
-
-function init() {
-    loadFinishSetting();
-    loadLastLocation(); 
-    loadLocations(); 
-    calculateTotalValue();
-}
-
-function nav(t) {
-  document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-  document.querySelector(`.tab[onclick="nav('${t}')"]`).classList.add('active');
-  document.getElementById(`view-${t}`).classList.add('active');
-  if(t==='collection') loadCollection();
-  if(t==='analytics') loadAnalytics();
-}
-
-// ... EXISTING HELPERS (Copy/Paste logic, Settings, etc) ...
-function copyCardName() {
-    const name = document.getElementById('search').value;
-    if (name) navigator.clipboard.writeText(name);
-}
+const APP_VERSION_HTML = "V2.2 (Final Stable)"; const APP_VERSION_GS = "V40.0 (Optimized)";
+let API_ENDPOINT = "", rawCollectionData = [], currentCardData = null, debounceTimer, viewMode = 'list', charts = { color: null, rarity: null, history: null };
+window.onload = function() { document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`; checkConnection(); };
+function checkConnection() { const storedUrl = localStorage.getItem('mtg_api_url'); if (!storedUrl) showSetup(); else { API_ENDPOINT = storedUrl; init(); } }
+function showSetup() { document.getElementById('setupModal').classList.remove('hidden'); document.getElementById('apiUrlInput').value = localStorage.getItem('mtg_api_url') || ""; }
+function saveApiUrl() { const input = document.getElementById('apiUrlInput').value.trim(); if (!input.includes('script.google.com')) { alert("Invalid URL."); return; } localStorage.setItem('mtg_api_url', input); API_ENDPOINT = input; document.getElementById('setupModal').classList.add('hidden'); init(); }
+async function runMaintenance() { if(!confirm("This will sort and merge your database. Irreversible.\n\nContinue?")) return; const btn = document.querySelector('.btn-danger'); const txt = btn.innerText; btn.innerText="Cleaning..."; btn.disabled=true; const res = await callAPI('performMaintenance'); btn.innerText=txt; btn.disabled=false; if(res.success) { alert(`Cleaned ${res.data.count} rows!`); document.getElementById('setupModal').classList.add('hidden'); loadCollection(); } else alert("Failed: "+res.error); }
+async function callAPI(action, data = {}) { if (!API_ENDPOINT) { alert("Not Connected."); showSetup(); return {success:false}; } try { const response = await fetch(`${API_ENDPOINT}?action=${action}`, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ ...data, action: action }) }); if (!response.ok) throw new Error(response.status); return await response.json(); } catch (error) { console.error(error); return { success: false, error: error.message }; } }
+function init() { loadFinishSetting(); loadLastLocation(); loadLocations(); calculateTotalValue(); }
+function nav(t) { document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.querySelectorAll('.view').forEach(e => e.classList.remove('active')); document.querySelector(`.tab[onclick="nav('${t}')"]`).classList.add('active'); document.getElementById(`view-${t}`).classList.add('active'); if(t==='collection') loadCollection(); if(t==='analytics') loadAnalytics(); }
+function copyCardName() { const name = document.getElementById('search').value; if (name) navigator.clipboard.writeText(name); }
 function saveFinishSetting() { localStorage.setItem('mtgManager_LastFinish', document.getElementById('foil-on').checked ? 'Foil' : 'Normal'); }
-function loadFinishSetting() { 
-    if (localStorage.getItem('mtgManager_LastFinish')) document.getElementById('foil-on').checked = true;
-    else document.getElementById('foil-off').checked = true;
-}
-function loadLastLocation() {
-    const lastLoc = localStorage.getItem('mtgManager_LastLocation');
-    if (lastLoc) document.getElementById('locationInput').value = lastLoc;
-}
-
-// --- API ACTIONS ---
-async function loadLocations() {
-    const response = await callAPI('getUniqueLocations');
-    if (response.success) populateLocationDatalist(response.data);
-}
-function populateLocationDatalist(locations) {
-  const datalist = document.getElementById('locationOptions');
-  datalist.innerHTML = ''; 
-  locations.forEach(loc => { const option = document.createElement('option'); option.value = loc; datalist.appendChild(option); });
-}
-function populateCollectionFilter(locations) {
-    const selector = document.getElementById('locationFilter');
-    selector.innerHTML = '<option value="">All Locations</option>';
-    locations.forEach(loc => { if(loc){ const option = document.createElement('option'); option.value = loc; option.text = loc; selector.appendChild(option);} });
-}
-function setQuantity(amount) {
-    document.getElementById('quantityInput').value = amount;
-    calculateTotalValue();
-}
-
-// --- SEARCH & ADD ---
-const search = document.getElementById('search');
-const suggs = document.getElementById('suggestions');
-search.addEventListener('input', function(e) {
-  const q = e.target.value;
-  clearTimeout(debounceTimer);
-  if(q.length < 3) { suggs.style.display='none'; return; }
-  debounceTimer = setTimeout(async function() {
-    fetch('https://api.scryfall.com/cards/autocomplete?q=' + encodeURIComponent(q))
-      .then(r => r.json()).then(json => {
-         if(json.data) {
-            suggs.innerHTML = '';
-            json.data.forEach(n => {
-               const d = document.createElement('div');
-               d.className='s-item'; d.innerText=n;
-               d.onclick = function() { selectCard(n); };
-               suggs.appendChild(d);
-            });
-            suggs.style.display='block';
-         }
-      });
-  }, 300);
-});
-
-async function selectCard(name) {
-  search.value = name; suggs.style.display='none';
-  document.getElementById('bigPrice').innerText = 'Loading...';
-  document.getElementById('verGrp').style.display='block';
-  document.getElementById('versionSelect').innerHTML = '<option>Loading...</option>';
-  const response = await callAPI('getCardVersionsEncoded', { name: name });
-  if (response.success) versionsRx(response.data);
-}
-
-function versionsRx(json) {
-  const vers = JSON.parse(json);
-  const sel = document.getElementById('versionSelect');
-  sel.innerHTML = '';
-  if (vers.length === 0) { sel.innerHTML = '<option>No versions found</option>'; document.getElementById('copyNameBtn').disabled = false; updateUI(); return; }
-  let cheapestPrice = Infinity; let bestVersionIndex = 0;
-  const commonSetCodes = ["CMD", "CMA", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24", "CC1", "CC2", "KMC", "CMR", "CLB", "2X2", "2XM", "CMT"];
-  vers.forEach((v, index) => {
-     const opt = document.createElement('option');
-     opt.value = JSON.stringify(v);
-     opt.text = `${v.setName||v.set} (${v.set}) #${v.code} (${v.year})`;
-     sel.add(opt);
-     const normalPrice = v.prices.USD.normal || Infinity;
-     if (commonSetCodes.includes(v.set.toUpperCase())) bestVersionIndex = index;
-     else if (normalPrice < cheapestPrice) { cheapestPrice = normalPrice; bestVersionIndex = index; }
-  });
-  sel.selectedIndex = bestVersionIndex;
-  document.getElementById('copyNameBtn').disabled = false;
-  updateUI();
-}
-
-function updateUI() {
-  const sel = document.getElementById('versionSelect');
-  if(sel.value) currentCardData = JSON.parse(sel.value);
-  document.getElementById('setCode').value = currentCardData.set;
-  document.getElementById('colNum').value = currentCardData.code;
-  const img = document.getElementById('cardPreview');
-  if(currentCardData.image) { img.src = currentCardData.image; img.style.display='block'; }
-  calculateTotalValue();
-}
-
-function calculateTotalValue() {
-  const qty = parseInt(document.getElementById('quantityInput').value)||1;
-  const isFoil = document.getElementById('foil-on').checked;
-  const currency = document.getElementById('currencySelect').value;
-  let p = 0, sym = "$";
-  if (currentCardData && currentCardData.prices) {
-      if(currency==='EUR') { p = isFoil ? currentCardData.prices.EUR.foil : currentCardData.prices.EUR.normal; sym="€"; } 
-      else if(currency==='CAD') { p = isFoil ? currentCardData.prices.CAD.foil : currentCardData.prices.CAD.normal; sym="C$"; } 
-      else { p = isFoil ? currentCardData.prices.USD.foil : currentCardData.prices.USD.normal; }
-  }
-  document.getElementById('cardPriceInput').value = p;
-  document.getElementById('bigPrice').innerText = sym + (p||0).toFixed(2);
-  document.getElementById('totalValue').innerText = sym + ((p||0)*qty).toFixed(2);
-}
-
-async function submitForm(f) {
-  document.getElementById('subBtn').disabled=true;
-  const locInput = document.getElementById('locationInput');
-  const currentLoc = locInput.value;
-  localStorage.setItem('mtgManager_LastLocation', currentLoc);
-  const formData = {
-      setCode: document.getElementById('setCode').value,
-      colNum: document.getElementById('colNum').value,
-      quantity: document.getElementById('quantityInput').value,
-      isFoil: document.getElementById('foil-on').checked,
-      cardLocation: currentLoc,
-      cardName: document.getElementById('search').value,
-      cardPrice: document.getElementById('cardPriceInput').value
-  };
-  const response = await callAPI('processForm', formData);
-  document.getElementById('subBtn').disabled=false;
-  if (response.success) {
-      alert("Added!"); f.reset();
-      locInput.value = currentLoc;
-      document.getElementById('search').value='';
-      document.getElementById('bigPrice').innerText='--';
-      document.getElementById('totalValue').innerText='$0.00';
-      document.getElementById('cardPreview').style.display='none';
-      document.getElementById('verGrp').style.display='none';
-      currentCardData = null;
-      loadLocations();
-  }
-}
-
-// --- BULK IMPORT ---
-function handleImport() {
-    const fileInput = document.getElementById('csvInput');
-    const statusDiv = document.getElementById('importStatus');
-    if (!fileInput.files.length) { alert("Please select a file first."); return; }
-    statusDiv.style.display = 'block'; statusDiv.innerText = "Parsing CSV...";
-    Papa.parse(fileInput.files[0], {
-        header: true, skipEmptyLines: true,
-        complete: async function(results) {
-            const rawData = results.data;
-            if (rawData.length === 0) { statusDiv.innerText = "Error: CSV is empty."; return; }
-            statusDiv.innerText = `Found ${rawData.length} rows. Starting upload...`;
-            const cards = rawData.map(r => ({
-                name: r.Name || r.name || "Unknown", set: r.Set || r.set || "", code: r.Code || r.code || "",
-                qty: parseInt(r.Qty || r.quantity || r.Quantity || 1), foil: (r.Foil || r.foil || "false")
-            })).filter(c => c.name !== "Unknown");
-            const CHUNK_SIZE = 10;
-            const chunks = [];
-            for (let i = 0; i < cards.length; i += CHUNK_SIZE) chunks.push(cards.slice(i, i + CHUNK_SIZE));
-            let processedCount = 0;
-            for (let i = 0; i < chunks.length; i++) {
-                statusDiv.innerText = `Uploading batch ${i + 1}/${chunks.length} (${processedCount}/${cards.length} cards)...`;
-                const response = await callAPI('processBatch', { cards: chunks[i], location: document.getElementById('locationInput').value || "Bulk Import" });
-                if (response.success) processedCount += chunks[i].length;
-            }
-            statusDiv.innerText = `Done! Imported ${processedCount} cards. Refreshing list...`;
-            loadCollection();
-            setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
-        }
-    });
-}
-
-// --- VIEW & EXPORT ---
-async function loadCollection() {
-  document.getElementById('collectionList').innerText = 'Loading...';
-  const response = await callAPI('getCollectionData');
-  if (response.success) {
-    rawCollectionData = response.data;
-    filterCollection();
-    const locResponse = await callAPI('getUniqueLocations');
-    if (locResponse.success) populateCollectionFilter(locResponse.data);
-  } else { document.getElementById('collectionList').innerText = 'Error loading collection.'; }
-}
-
-function toggleViewMode() {
-    viewMode = (viewMode === 'list') ? 'grid' : 'list';
-    document.getElementById('viewToggle').innerText = (viewMode === 'list') ? "Show Grid ▦" : "Show List ☰";
-    filterCollection();
-}
-
-function filterCollection() {
-  const q = document.getElementById('collectionSearch').value.toLowerCase();
-  const selectedLocation = document.getElementById('locationFilter').value;
-  const list = rawCollectionData.filter(c => (c.Name.toLowerCase().includes(q) || c.SetCode.toLowerCase().includes(q) || (c.Location||"").toLowerCase().includes(q)) && (selectedLocation === "" || c.Location === selectedLocation));
-  const div = document.getElementById('collectionList');
-  div.innerHTML = '';
-  if (viewMode === 'grid') {
-      div.className = 'collection-grid';
-      list.forEach(c => {
-         const safeSet = c.SetCode.replace(/'/g, "\\'"); const safeCode = c.Code.replace(/'/g, "\\'");
-         div.innerHTML += `<div class="grid-card"><button class="grid-del" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">×</button><img src="${c.ImageURL}" loading="lazy"><div class="grid-overlay"><div class="grid-price">$${c.TotalValue}</div><div class="grid-meta"><span>${c.Finish==='Foil'?'✨':''} x${c.Quantity}</span><span>${c.Location.substring(0,8)}...</span></div></div></div>`;
-      });
-  } else {
-      div.className = '';
-      list.forEach(c => {
-         const safeSet = c.SetCode.replace(/'/g, "\\'"); const safeCode = c.Code.replace(/'/g, "\\'");
-         div.innerHTML += `<div class="list-item"><img src="${c.ImageURL}"><div class="list-details"><div class="list-name">${c.Name}</div><div class="list-meta">${c.SetCode} #${c.Code} • ${c.Location}</div></div><div class="list-value">$${c.TotalValue} <button class="delete-btn" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">x</button></div></div>`;
-      });
-  }
-}
-
-async function del(s,c,f) {
-   if(confirm("Delete this card?")) {
-       const response = await callAPI('deleteCardRow', { s: s, c: c, f: f });
-       if (response.success) loadCollection(); else alert("Failed to delete.");
-   }
-}
-
-function exportCSV(btn) {
-    if (!rawCollectionData || rawCollectionData.length === 0) { alert("No data."); return; }
-    const headers = ["Set", "Code", "Name", "Finish", "Quantity", "Price", "Location"];
-    const rows = rawCollectionData.map(c => [c.SetCode, c.Code, `"${c.Name.replace(/"/g, '""')}"`, c.Finish, c.Quantity, c.TotalValue, `"${c.Location.replace(/"/g, '""')}"`]);
-    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "mtg_collection.csv");
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-}
-
-async function updatePrices(btn) {
-    btn.disabled = true; btn.innerText = "Updating...";
-    const response = await callAPI('refreshCollectionPrices');
-    btn.disabled = false; btn.innerText = "🔄 Update Prices";
-    if (response.success) { alert(`Updated ${response.data.updatedCount} rows.`); loadCollection(); } else alert("Failed.");
-}
-
-async function runDeckCheck(btn) {
-    const text = document.getElementById('deckInput').value; if(!text) return;
-    btn.disabled = true; btn.innerText = "Checking...";
-    const response = await callAPI('checkDeckList', { deckText: text });
-    btn.disabled = false; btn.innerText = "Check Deck";
-    if (response.success) renderDeckCheck(response.data);
-}
-
-function renderDeckCheck(res) {
-    const div = document.getElementById('deckResults'); div.innerHTML = '';
-    const totalReq = res.found.length + res.missing.length;
-    if (totalReq === 0) { div.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8;'>No cards found.</div>"; return; }
-    const percentage = Math.round((res.found.length / totalReq) * 100);
-    div.innerHTML += `<div class="deck-dashboard"><div style="display:flex; justify-content:space-between; align-items:center;"><h3 style="margin:0; font-size:18px;">Deck Status: ${percentage}% Complete</h3><button class="copy-btn" onclick="copyMissing()">📋 Copy Missing</button></div><div class="progress-container"><div class="progress-bar" style="width: ${percentage}%"></div></div><div class="dash-stats"><span style="color:#166534">✅ Own: ${res.found.length} cards</span><span style="color:#991b1b">❌ Need: ${res.missing.length} cards</span></div></div>`;
-    if(res.missing.length > 0) {
-        div.innerHTML += `<div class="deck-section-title" style="color:#991b1b; border-color:#fecaca;">🛒 Missing Cards</div><div class="collection-grid">`;
-        res.missing.forEach(item => {
-            const imgUrl = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(item.name.replace(/\[.*\]|\(.*\)/g, '').trim())}&format=image`;
-            div.innerHTML += `<div class="grid-card missing-card" onclick="window.open('https://scryfall.com/search?q=${encodeURIComponent(item.name)}','_blank')"><div class="missing-badge-overlay">Need ${item.req}</div><img src="${imgUrl}" loading="lazy"><div class="grid-overlay"><div class="grid-price">Buy</div><div class="grid-meta"><span>${item.name}</span></div></div></div>`;
-        });
-        div.innerHTML += `</div>`;
-    }
-    if(res.found.length > 0) {
-        div.innerHTML += `<div class="deck-section-title" style="color:#166534; border-color:#bbf7d0;">✅ In Collection</div><div class="collection-grid">`;
-        res.found.forEach(item => {
-            div.innerHTML += `<div class="grid-card"><div class="missing-badge-overlay" style="background:#166534;">Have ${item.have}</div><img src="${item.image}" loading="lazy"><div class="grid-overlay"><div class="grid-price">✅ Owned</div><div class="grid-meta" style="flex-direction: column;"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${item.name}</span></div></div></div>`;
-        });
-        div.innerHTML += `</div>`;
-    }
-    window.missingCardsList = res.missing.map(m => `${m.req} ${m.name}`).join("\n");
-}
-function copyMissing() { if(window.missingCardsList) navigator.clipboard.writeText(window.missingCardsList); }
-
-async function loadAnalytics() { 
-    const response = await callAPI('getAnalyticsData');
-    if (response.success) renderAnalytics(response.data);
-}
-
-function renderAnalytics(data) {
-   if(!data) return;
-   document.getElementById('stat-count').innerText = data.totalCards;
-   document.getElementById('stat-value').innerText = "$" + data.totalValue;
-   const mov = document.getElementById('moversList'); mov.innerHTML = '';
-   if(data.biggestMovers.length===0) mov.innerHTML="<div style='text-align:center;color:#888'>No Movers</div>";
-   data.biggestMovers.forEach(c => {
-      const col = c.change>=0?'#10b981':'#ef4444'; const s = c.change>=0?'+':'';
-      mov.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:${col}">${s}$${c.change.toFixed(2)}</div></div>`;
-   });
-   const topCardsList = document.getElementById('topCardsList'); topCardsList.innerHTML = '';
-   data.topCards.forEach(c => { topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`; });
-
-   // HISTORY CHART
-   const ctxHistory = document.getElementById('historyChart').getContext('2d');
-   if (charts.history) charts.history.destroy();
-   let historyLabels = [], historyData = [];
-   if (data.history && data.history.length > 0) {
-       historyLabels = data.history.map(h => new Date(h.date).toLocaleDateString());
-       historyData = data.history.map(h => h.value);
-   } else {
-       historyLabels = [new Date().toLocaleDateString()];
-       historyData = [parseFloat(data.totalValue) || 0];
-   }
-   charts.history = new Chart(ctxHistory, {
-       type: 'line',
-       data: {
-           labels: historyLabels,
-           datasets: [{
-               label: 'Portfolio Value',
-               data: historyData,
-               borderColor: '#6200ea',
-               backgroundColor: 'rgba(98, 0, 234, 0.1)',
-               fill: true,
-               tension: 0.3
-           }]
-       },
-       options: { 
-           responsive: true, 
-           maintainAspectRatio: false,
-           scales: { y: { beginAtZero: false, ticks: { callback: function(value) { return '$' + value; } } } } 
-       }
-   });
-
-   const ctxColor = document.getElementById('colorChart').getContext('2d');
-   if (charts.color) charts.color.destroy();
-   charts.color = new Chart(ctxColor, { type: 'doughnut', data: { labels: ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi', 'Colorless'], datasets: [{ data: [data.colors.W, data.colors.U, data.colors.B, data.colors.R, data.colors.G, data.colors.Multi, data.colors.Colorless], backgroundColor: ['#f0f2c9', '#b3ceea', '#aeb2b7', '#eaa6a5', '#b6d7a8', '#dcc689', '#d7d7d7'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-
-   const ctxRarity = document.getElementById('rarityChart').getContext('2d');
-   if (charts.rarity) charts.rarity.destroy();
-   charts.rarity = new Chart(ctxRarity, { type: 'bar', data: { labels: ['Common', 'Uncommon', 'Rare', 'Mythic'], datasets: [{ label: 'Count', data: [data.rarity.common, data.rarity.uncommon, data.rarity.rare, data.rarity.mythic], backgroundColor: ['#0f172a', '#94a3b8', '#d4af37', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+function loadFinishSetting() { if (localStorage.getItem('mtgManager_LastFinish')) document.getElementById('foil-on').checked = true; else document.getElementById('foil-off').checked = true; }
+function loadLastLocation() { const lastLoc = localStorage.getItem('mtgManager_LastLocation'); if (lastLoc) document.getElementById('locationInput').value = lastLoc; }
+async function loadLocations() { const res = await callAPI('getUniqueLocations'); if (res.success) populateLocationDatalist(res.data); }
+function populateLocationDatalist(locs) { const dl = document.getElementById('locationOptions'); dl.innerHTML = ''; locs.forEach(loc => { const o = document.createElement('option'); o.value = loc; dl.appendChild(o); }); }
+function setQuantity(n) { document.getElementById('quantityInput').value = n; calculateTotalValue(); }
+const search = document.getElementById('search'), suggs = document.getElementById('suggestions');
+search.addEventListener('input', function(e) { const q = e.target.value; clearTimeout(debounceTimer); if(q.length < 3) { suggs.style.display='none'; return; } debounceTimer = setTimeout(() => { fetch('https://api.scryfall.com/cards/autocomplete?q=' + encodeURIComponent(q)).then(r => r.json()).then(j => { if(j.data) { suggs.innerHTML = ''; j.data.forEach(n => { const d = document.createElement('div'); d.className='s-item'; d.innerText=n; d.onclick = () => selectCard(n); suggs.appendChild(d); }); suggs.style.display='block'; } }); }, 300); });
+async function selectCard(name) { search.value = name; suggs.style.display='none'; document.getElementById('bigPrice').innerText = 'Loading...'; document.getElementById('verGrp').style.display='block'; document.getElementById('versionSelect').innerHTML = '<option>Loading...</option>'; const res = await callAPI('getCardVersionsEncoded', { name: name }); if (res.success) versionsRx(res.data); }
+function versionsRx(j) { const vers = JSON.parse(j); const sel = document.getElementById('versionSelect'); sel.innerHTML = ''; if (!vers.length) { sel.innerHTML = '<option>No versions</option>'; updateUI(); return; } let best = 0, low = Infinity; vers.forEach((v, i) => { const o = document.createElement('option'); o.value = JSON.stringify(v); o.text = `${v.setName||v.set} (${v.set}) #${v.code} (${v.year})`; sel.add(o); if(v.prices.USD.normal < low) { low = v.prices.USD.normal; best = i; } }); sel.selectedIndex = best; updateUI(); document.getElementById('copyNameBtn').disabled = false; }
+function updateUI() { const sel = document.getElementById('versionSelect'); if(sel.value) currentCardData = JSON.parse(sel.value); document.getElementById('setCode').value = currentCardData.set; document.getElementById('colNum').value = currentCardData.code; const img = document.getElementById('cardPreview'); if(currentCardData.image) { img.src = currentCardData.image; img.style.display='block'; } calculateTotalValue(); }
+function calculateTotalValue() { const qty = parseInt(document.getElementById('quantityInput').value)||1; const foil = document.getElementById('foil-on').checked; const cur = document.getElementById('currencySelect').value; let p = 0, sym = "$"; if (currentCardData && currentCardData.prices) { if(cur==='EUR') { p = foil ? currentCardData.prices.EUR.foil : currentCardData.prices.EUR.normal; sym="€"; } else if(cur==='CAD') { p = foil ? currentCardData.prices.CAD.foil : currentCardData.prices.CAD.normal; sym="C$"; } else { p = foil ? currentCardData.prices.USD.foil : currentCardData.prices.USD.normal; } } document.getElementById('cardPriceInput').value = p; document.getElementById('bigPrice').innerText = sym + (p||0).toFixed(2); document.getElementById('totalValue').innerText = sym + ((p||0)*qty).toFixed(2); }
+async function submitForm(f) { document.getElementById('subBtn').disabled=true; const loc = document.getElementById('locationInput').value; localStorage.setItem('mtgManager_LastLocation', loc); const fd = { setCode: document.getElementById('setCode').value, colNum: document.getElementById('colNum').value, quantity: document.getElementById('quantityInput').value, isFoil: document.getElementById('foil-on').checked, cardLocation: loc, cardName: document.getElementById('search').value, cardPrice: document.getElementById('cardPriceInput').value }; const res = await callAPI('processForm', fd); document.getElementById('subBtn').disabled=false; if (res.success) { alert("Added!"); f.reset(); document.getElementById('locationInput').value = loc; currentCardData = null; loadLocations(); } }
+function handleImport() { const fi = document.getElementById('csvInput'), st = document.getElementById('importStatus'); if (!fi.files.length) return; st.style.display = 'block'; st.innerText = "Parsing..."; Papa.parse(fi.files[0], { header: true, skipEmptyLines: true, complete: async function(res) { const d = res.data; const cards = d.map(r => ({ name: r.Name||r.name, set: r.Set||r.set, code: r.Code||r.code, qty: parseInt(r.Qty||r.quantity||1), foil: r.Foil||r.foil })).filter(c => c.name); const chunks = []; for (let i=0; i<cards.length; i+=10) chunks.push(cards.slice(i, i+10)); let count = 0; for (let i=0; i<chunks.length; i++) { st.innerText = `Batch ${i+1}/${chunks.length}...`; await callAPI('processBatch', { cards: chunks[i], location: document.getElementById('locationInput').value || "Import" }); count += chunks[i].length; } st.innerText = `Done! ${count} cards.`; loadCollection(); setTimeout(() => st.style.display='none', 4000); } }); }
+async function loadCollection() { document.getElementById('collectionList').innerText = 'Loading...'; const res = await callAPI('getCollectionData'); if (res.success) { rawCollectionData = res.data; filterCollection(); const l = await callAPI('getUniqueLocations'); if (l.success) { const s = document.getElementById('locationFilter'); s.innerHTML='<option value="">All Locations</option>'; l.data.forEach(x => { if(x) { const o = document.createElement('option'); o.value = x; o.text = x; s.appendChild(o); } }); } } }
+function toggleViewMode() { viewMode = (viewMode === 'list') ? 'grid' : 'list'; filterCollection(); }
+function filterCollection() { const q = document.getElementById('collectionSearch').value.toLowerCase(), loc = document.getElementById('locationFilter').value; const list = rawCollectionData.filter(c => (c.Name.toLowerCase().includes(q) || c.SetCode.toLowerCase().includes(q) || (c.Location||"").toLowerCase().includes(q)) && (loc === "" || c.Location === loc)); const div = document.getElementById('collectionList'); div.innerHTML = ''; if (viewMode === 'grid') { div.className = 'collection-grid'; list.forEach(c => div.innerHTML += `<div class="grid-card"><button class="grid-del" onclick="del('${c.SetCode.replace(/'/g,"\\'")}','${c.Code.replace(/'/g,"\\'")}','${c.Finish==='Foil'}')">×</button><img src="${c.ImageURL}" loading="lazy"><div class="grid-overlay"><div class="grid-price">$${c.TotalValue}</div><div class="grid-meta"><span>${c.Finish==='Foil'?'✨':''} x${c.Quantity}</span><span>${c.Location.substring(0,8)}...</span></div></div></div>`); } else { div.className = ''; list.forEach(c => div.innerHTML += `<div class="list-item"><img src="${c.ImageURL}"><div class="list-details"><div class="list-name">${c.Name}</div><div class="list-meta">${c.SetCode} #${c.Code} • ${c.Location}</div></div><div class="list-value">$${c.TotalValue} <button class="delete-btn" onclick="del('${c.SetCode.replace(/'/g,"\\'")}','${c.Code.replace(/'/g,"\\'")}','${c.Finish==='Foil'}')">x</button></div></div>`); } }
+async function del(s,c,f) { if(confirm("Delete?")) { const r = await callAPI('deleteCardRow', { s: s, c: c, f: f === 'true' }); if (r.success) loadCollection(); } }
+function exportCSV(btn) { if (!rawCollectionData.length) return; const csv = "data:text/csv;charset=utf-8," + ["Set,Code,Name,Finish,Qty,Price,Loc"].join(",") + "\n" + rawCollectionData.map(c => [c.SetCode, c.Code, `"${c.Name.replace(/"/g, '""')}"`, c.Finish, c.Quantity, c.TotalValue, `"${c.Location}"`].join(",")).join("\n"); const l = document.createElement("a"); l.href = encodeURI(csv); l.download = "mtg_export.csv"; l.click(); }
+async function updatePrices(btn) { btn.disabled = true; btn.innerText = "..."; const r = await callAPI('refreshCollectionPrices'); btn.disabled = false; btn.innerText = "🔄 Update Prices"; if (r.success) { alert(`Updated ${r.data.updatedCount}`); loadCollection(); } }
+async function runDeckCheck(btn) { const t = document.getElementById('deckInput').value; if(!t) return; btn.disabled=true; const r = await callAPI('checkDeckList', { deckText: t }); btn.disabled=false; if(r.success) { const res = r.data, d = document.getElementById('deckResults'); d.innerHTML = ''; if(!res.found.length && !res.missing.length) { d.innerText = "No cards found."; return; } const p = Math.round((res.found.length / (res.found.length+res.missing.length))*100); d.innerHTML = `<div class="deck-dashboard"><h3>Deck Status: ${p}%</h3><div class="progress-container"><div class="progress-bar" style="width: ${p}%"></div></div></div>`; if(res.missing.length) { d.innerHTML += `<h4>Missing</h4><div class="collection-grid">` + res.missing.map(m => `<div class="grid-card missing-card"><div class="missing-badge-overlay">Need ${m.req}</div><img src="https://api.scryfall.com/cards/named?exact=${encodeURIComponent(m.name.split('[')[0].trim())}&format=image"><div class="grid-overlay"><div class="grid-meta">${m.name}</div></div></div>`).join('') + `</div>`; } if(res.found.length) { d.innerHTML += `<h4>Owned</h4><div class="collection-grid">` + res.found.map(m => `<div class="grid-card"><div class="missing-badge-overlay" style="background:green">Have ${m.have}</div><img src="${m.image}"><div class="grid-overlay"><div class="grid-meta">${m.name}</div></div></div>`).join('') + `</div>`; } } }
+async function loadAnalytics() { const r = await callAPI('getAnalyticsData'); if (r.success) renderAnalytics(r.data); }
+function renderAnalytics(d) { if(!d) return; document.getElementById('stat-count').innerText = d.totalCards; document.getElementById('stat-value').innerText = "$" + d.totalValue; document.getElementById('moversList').innerHTML = d.biggestMovers.map(c => `<div class="top-card-row"><div>${c.name}</div><div style="color:${c.change>=0?'green':'red'}">${c.change>=0?'+':''}${c.change.toFixed(2)}</div></div>`).join(''); document.getElementById('topCardsList').innerHTML = d.topCards.map(c => `<div class="top-card-row"><div>${c.name}</div><div style="color:green">$${c.price}</div></div>`).join('');
+   const ctxH = document.getElementById('historyChart').getContext('2d'); if(charts.history) charts.history.destroy(); charts.history = new Chart(ctxH, { type: 'line', data: { labels: d.history.map(h => new Date(h.date).toLocaleDateString()), datasets: [{ label: 'Value', data: d.history.map(h => h.value), borderColor: '#6200ea', fill: true }] } });
+   const ctxC = document.getElementById('colorChart').getContext('2d'); if(charts.color) charts.color.destroy(); charts.color = new Chart(ctxC, { type: 'doughnut', data: { labels: ['W','U','B','R','G','M','C'], datasets: [{ data: [d.colors.W, d.colors.U, d.colors.B, d.colors.R, d.colors.G, d.colors.Multi, d.colors.Colorless], backgroundColor: ['#f0f2c9','#b3ceea','#aeb2b7','#eaa6a5','#b6d7a8','#dcc689','#d7d7d7'] }] } });
+   const ctxR = document.getElementById('rarityChart').getContext('2d'); if(charts.rarity) charts.rarity.destroy(); charts.rarity = new Chart(ctxR, { type: 'bar', data: { labels: ['C','U','R','M'], datasets: [{ label: 'Count', data: [d.rarity.common, d.rarity.uncommon, d.rarity.rare, d.rarity.mythic], backgroundColor: ['#0f172a','#94a3b8','#d4af37','#ef4444'] }] } });
 }
 </script>
 </body>
