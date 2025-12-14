@@ -10,7 +10,7 @@ This is the public repository showcasing the **client-side HTML, CSS, and JavaSc
 
 You can access and use the live application here:
 
-**[GRIMOIRE LIVE APPLICATION URL HERE]** *(Please replace this placeholder with your actual GitHub Pages or custom domain link)*
+**https://wmmalwareresearch.github.io/mtg-tracker-client/**
 
 ---
 
