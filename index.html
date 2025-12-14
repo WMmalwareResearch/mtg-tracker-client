@@ -24,7 +24,7 @@
             --red: #dc2626; /* Error/Delete (Crimson Red) */
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
             
-            /* NEW: Chart Colors (Matching Grimoire theme) */
+            /* Chart Colors (Matching Grimoire theme) */
             --chart-color-1: #d946ef; /* Fuchsia */
             --chart-color-2: #dc2626; /* Crimson */
             --chart-color-3: #a78bfa; /* Violet */
@@ -539,7 +539,6 @@
                 if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active');
             });
 
-            // Clear charts when leaving the analytics view
             if (view !== 'analytics') {
                 clearCharts();
             }
@@ -800,13 +799,11 @@
                 manaCurveInstance.destroy();
                 manaCurveInstance = null;
             }
-            // Clear the chart container and analysis results
             document.getElementById('deck-charts').classList.add('hidden');
-            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Load a ritual (deck) from the Rituals tab to view its metrics here.</p>';
+            // We do *not* clear deck-analysis-results here, as it may contain the results of a validation
         }
         
         function renderTypeChart(typeData) {
-            // Destroy only the relevant chart if it exists
             if (typeChartInstance) typeChartInstance.destroy();
 
             const ctx = document.getElementById('typeChart').getContext('2d');
@@ -843,7 +840,6 @@
         }
 
         function renderManaCurve(cmcData) {
-            // Destroy only the relevant chart if it exists
             if (manaCurveInstance) manaCurveInstance.destroy();
 
             const ctx = document.getElementById('manaCurve').getContext('2d');
@@ -937,11 +933,10 @@
             const resultsEl = document.getElementById('deck-analysis-results');
             const btn = document.getElementById('validateDeckBtn');
             
-            // CRITICAL: Ensure the Analysis view is visible to display the results and charts
-            nav('analytics', 'analytics'); 
-            
             if (!listText) return showToast("Ritual list is empty.", "error");
 
+            // No navigation switch here, it should only run validation on the current view.
+            
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
             btn.innerText = "Resolving Relics (0/0)...";
             btn.disabled = true;
@@ -1105,16 +1100,22 @@
 
         function loadDeckIntoEditor(id) {
             const d = window.myDecks.find(x => x.id == id);
+            
+            // 1. Load data into the Deck Editor inputs
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
             
-            // CRITICAL: Load the saved ritual into the analysis view as a preview (no charts yet)
-            const resultsEl = document.getElementById('deck-analysis-results');
-            resultsEl.innerHTML = `<p style="font-weight:600; color:var(--primary);">Ritual '${d.name}' loaded for editing and analysis.</p>
-                                   <p style="font-size:12px; color:var(--subtext);">Click 'Validate & Resolve Ritual' to generate charts.</p>`;
+            // 2. Prepare the Analytics View for results
+            document.getElementById('deck-analysis-results').innerHTML = `<p style="font-weight:600; color:var(--primary);">Processing Ritual: ${d.name}...</p>
+                                   <p style="font-size:12px; color:var(--subtext);">Generating metrics...</p>`;
+            clearCharts();
+
+            // 3. Switch to the Analytics View (where charts are displayed)
+            nav('analytics', 'analytics'); 
             
-            clearCharts(); // Clear any previous charts
-            nav('decks', 'decks'); // Ensure the user is viewing the deck editor
+            // 4. Trigger the validation and chart generation
+            // The validation results will overwrite the temporary message in step 2.
+            validateDeck();
         }
 
         async function deleteDeck(id, e) {
