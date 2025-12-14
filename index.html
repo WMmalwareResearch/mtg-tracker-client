@@ -17,10 +17,10 @@
         
         /* --- LOGIN SCREEN --- */
         #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; justify-content: center; align-items: center; flex-direction: column; }
-        .auth-box { background: var(--card); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 300px; text-align: center; }
-        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: white; box-sizing: border-box;}
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { opacity: 0.9; }
+        .auth-box { background: var(--card); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 300px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: white; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
         .hidden { display: none !important; }
 
         /* --- APP LAYOUT --- */
@@ -32,51 +32,57 @@
         .main { padding: 30px; overflow-y: auto; }
         
         /* --- COMPONENTS --- */
-        .card-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .card-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; font-size: 20px; }
         .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
         .stat-val { font-size: 24px; font-weight: 800; color: var(--primary); }
-        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 700; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 700; margin-top: 5px; }
         
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         .grid-card:hover { transform: translateY(-5px); }
         .grid-card img { width: 100%; height: 100%; object-fit: cover; }
-        .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.8); font-size: 12px; font-weight: bold; color: white; }
+        .overlay { position: absolute; bottom: 0; width: 100%; padding: 8px; background: rgba(0,0,0,0.85); font-size: 11px; font-weight: bold; color: white; display:flex; justify-content:space-between; box-sizing: border-box; }
         
         /* DECK CHECK */
         .deck-area { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        textarea { width: 100%; height: 300px; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; font-family: monospace; border-radius: 8px; box-sizing: border-box; }
+        textarea { width: 100%; height: 300px; background: var(--bg); border: 1px solid var(--border); color: white; padding: 15px; font-family: monospace; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
 
-        @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; } .sidebar { display: none; } }
+        @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; } .sidebar { display: none; } .stat-grid { grid-template-columns: 1fr 1fr; } .deck-area { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <div id="auth-screen">
         <div class="auth-box">
-            <h1 style="margin:0 0 20px 0;">🔮 Grimoire</h1>
-            <input type="email" id="email" placeholder="Email">
+            <div style="font-size:40px; margin-bottom:10px;">🔮</div>
+            <h2 style="margin:0 0 20px 0;">Grimoire Cloud</h2>
+            <input type="email" id="email" placeholder="Email Address">
             <input type="password" id="password" placeholder="Password">
             <button onclick="handleLogin()">Sign In / Sign Up</button>
-            <p id="auth-msg" style="font-size:12px; color:var(--subtext); margin-top:15px;"></p>
+            <p id="auth-msg" style="font-size:12px; color:var(--subtext); margin-top:15px; line-height: 1.4;">Enter your email to create an account.<br>We'll send a magic link or create a user.</p>
         </div>
     </div>
 
     <div id="app" class="app-container hidden">
         <div class="sidebar">
             <div class="logo"><span>🔮</span> Grimoire</div>
-            <div class="nav-item active" onclick="nav('home')">Home</div>
-            <div class="nav-item" onclick="nav('add')">Add Cards</div>
-            <div class="nav-item" onclick="nav('collection')">Collection</div>
-            <div class="nav-item" onclick="nav('decks')">Decks</div>
+            <div class="nav-item active" onclick="nav('home', this)">Dashboard</div>
+            <div class="nav-item" onclick="nav('add', this)">Add Cards</div>
+            <div class="nav-item" onclick="nav('collection', this)">Collection</div>
+            <div class="nav-item" onclick="nav('decks', this)">Decks</div>
             <div style="flex-grow:1;"></div>
-            <button onclick="handleLogout()" style="background:var(--border);">Log Out</button>
+            <button onclick="handleLogout()" style="background:rgba(255,255,255,0.05); color:var(--subtext);">Log Out</button>
         </div>
 
         <div class="main">
             <div id="view-home">
-                <h2 style="margin-top:0;">Dashboard</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="margin:0;">Dashboard</h2>
+                    <span id="user-email" style="font-size:12px; color:var(--subtext);"></span>
+                </div>
+                
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Cards</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Value</div></div>
@@ -84,38 +90,48 @@
                     <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">P/L</div></div>
                 </div>
                 <div class="card-box">
-                    <h3>Recent Adds</h3>
-                    <div class="collection-grid" id="recent-grid">Loading...</div>
+                    <h3>Recent Acquisitions</h3>
+                    <div class="collection-grid" id="recent-grid" style="min-height:100px;">
+                        <div style="color:var(--subtext); padding:20px; font-size:13px;">No cards found. Go to 'Add Cards' to start!</div>
+                    </div>
                 </div>
             </div>
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width:500px; margin:0 auto;">
                     <h2>Add Asset</h2>
-                    <input type="text" id="search" placeholder="Card Name (e.g. Sol Ring)..." onchange="fetchCardMeta()">
+                    <input type="text" id="search" placeholder="Search Scryfall (e.g. Black Lotus)..." oninput="debounceSearch()">
+                    <div style="margin-bottom:10px; font-size:12px; color:var(--subtext);" id="search-status"></div>
+                    
                     <div style="display:flex; gap:10px;">
-                        <input id="set" placeholder="Set Code" readonly style="background:var(--bg); opacity:0.5;">
+                        <input id="set" placeholder="Set" readonly style="background:var(--bg); opacity:0.5;">
                         <input id="num" placeholder="#" readonly style="background:var(--bg); opacity:0.5;">
                     </div>
                     <div style="display:flex; gap:10px;">
                         <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
                         <input type="number" id="qty" placeholder="Qty" value="1">
                     </div>
-                    <img id="preview" style="width:100%; border-radius:8px; margin-bottom:10px; display:none;">
-                    <button onclick="addCard()">Add to Collection</button>
+                    <div style="text-align:center; min-height:200px; background:var(--bg); border-radius:8px; margin-bottom:10px; display:flex; align-items:center; justify-content:center;">
+                        <img id="preview" style="max-width:100%; border-radius:8px; display:none;">
+                        <span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span>
+                    </div>
+                    <button onclick="addCard()">Save to Database</button>
                 </div>
             </div>
 
             <div id="view-collection" class="hidden">
-                <h2>My Collection</h2>
-                <div class="collection-grid" id="collection-grid">Loading...</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>My Collection</h2>
+                    <button style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadCollection()">Refresh</button>
+                </div>
+                <div class="collection-grid" id="collection-grid" style="margin-top:20px;">Loading...</div>
             </div>
 
             <div id="view-decks" class="hidden">
                 <h2>Deck Library</h2>
                 <div class="deck-area">
                     <div class="card-box">
-                        <input id="deckName" placeholder="Deck Name">
+                        <input id="deckName" placeholder="Deck Name (e.g. Commander 2025)">
                         <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
                         <button onclick="saveDeck()" style="margin-top:10px;">Save Deck</button>
                     </div>
@@ -130,27 +146,37 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        // PASTE YOUR KEYS HERE FROM SUPABASE SETTINGS
-        const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; 
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"; 
+        const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
         
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let session = null;
         let tempCardData = null;
+        let searchTimer;
 
         // --- 2. AUTHENTICATION ---
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            // Try sign in
+            if(!email || !password) return alert("Please enter email and password");
+            
+            const btn = document.querySelector('#auth-screen button');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            // 1. Try Sign In
             let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            
             if (error) {
-                // If fail, try sign up
-                let signUp = await supabase.auth.signUp({ email, password });
+                // 2. If Sign In fails, Try Sign Up
+                console.log("Sign in failed, trying sign up...", error.message);
+                const signUp = await supabase.auth.signUp({ email, password });
+                
                 if (signUp.error) {
-                    document.getElementById('auth-msg').innerText = signUp.error.message;
+                    alert("Error: " + signUp.error.message);
+                    btn.innerText = "Sign In / Sign Up"; btn.disabled = false;
                 } else {
-                    document.getElementById('auth-msg').innerText = "Account created! Check your email to confirm.";
+                    alert("Account created! Please check your email to confirm registration before logging in.");
+                    btn.innerText = "Sign In / Sign Up"; btn.disabled = false;
                 }
             }
         }
@@ -160,19 +186,25 @@
             window.location.reload();
         }
 
+        // Listen for Auth Changes
         supabase.auth.onAuthStateChange((event, _session) => {
             session = _session;
             if (session) {
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
+                document.getElementById('user-email').innerText = session.user.email;
                 loadData();
             }
         });
 
         // --- 3. NAVIGATION ---
-        function nav(view) {
+        function nav(view, btn) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             document.getElementById('view-' + view).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+
             if(view === 'collection') loadCollection();
             if(view === 'decks') loadDecks();
         }
@@ -180,19 +212,37 @@
         // --- 4. DATA LOGIC ---
         
         // Add Card Helper (Scryfall)
+        function debounceSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(fetchCardMeta, 500);
+        }
+
         async function fetchCardMeta() {
             const name = document.getElementById('search').value;
-            if(name.length < 3) return;
-            const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
-            const data = await res.json();
-            if(data.object !== 'error') {
-                document.getElementById('set').value = data.set.toUpperCase();
-                document.getElementById('num').value = data.collector_number;
-                const img = data.image_uris ? data.image_uris.normal : "";
-                document.getElementById('preview').src = img;
-                document.getElementById('preview').style.display = 'block';
-                tempCardData = { name: data.name, set: data.set.toUpperCase(), num: data.collector_number, img: img };
-            }
+            const status = document.getElementById('search-status');
+            if(name.length < 3) { status.innerText = ""; return; }
+            
+            status.innerText = "Searching Scryfall...";
+            
+            try {
+                const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+                const data = await res.json();
+                
+                if(data.object !== 'error') {
+                    status.innerText = "Found: " + data.name;
+                    document.getElementById('set').value = data.set.toUpperCase();
+                    document.getElementById('num').value = data.collector_number;
+                    const img = data.image_uris ? data.image_uris.normal : (data.card_faces ? data.card_faces[0].image_uris.normal : "");
+                    
+                    document.getElementById('preview').src = img;
+                    document.getElementById('preview').style.display = 'block';
+                    document.getElementById('preview-text').style.display = 'none';
+                    
+                    tempCardData = { name: data.name, set: data.set.toUpperCase(), num: data.collector_number, img: img };
+                } else {
+                    status.innerText = "Card not found.";
+                }
+            } catch(e) { status.innerText = "Error fetching data."; }
         }
 
         // INSERT (Cards)
@@ -200,7 +250,10 @@
             if(!tempCardData) return alert("Search for a card first");
             const cost = document.getElementById('cost').value || 0;
             const qty = document.getElementById('qty').value || 1;
+            const btn = document.querySelector('#view-add button');
             
+            btn.innerText = "Saving..."; btn.disabled = true;
+
             const { error } = await supabase.from('cards').insert({
                 user_id: session.user.id,
                 name: tempCardData.name,
@@ -211,25 +264,32 @@
                 quantity: qty
             });
 
+            btn.innerText = "Save to Database"; btn.disabled = false;
+
             if(!error) { 
                 alert("Saved!"); 
                 document.getElementById('search').value = ""; 
                 document.getElementById('preview').style.display = 'none';
-                loadData();
-            } else { alert(error.message); }
+                document.getElementById('preview-text').style.display = 'block';
+                document.getElementById('search-status').innerText = "";
+                tempCardData = null;
+                loadData(); // Refresh stats
+            } else { alert("Database Error: " + error.message); }
         }
 
-        // READ (Dashboard)
+        // READ (Dashboard Stats)
         async function loadData() {
-            const { data: cards } = await supabase.from('cards').select('*');
+            const { data: cards, error } = await supabase.from('cards').select('*');
+            if(error) return console.error(error);
+
             let totalVal = 0, totalCost = 0, count = 0;
             
-            // Note: In a real app, we'd fetch live prices. For MVP, we use buy_price as proxy or static
-            // Let's assume Market Price = Buy Price for now to show data flow
+            // Note: In MVP, assuming Market Value = Buy Price for demo.
+            // In V5, we would fetch live prices again.
             cards.forEach(c => {
                 count += c.quantity;
-                totalCost += (c.buy_price * c.quantity);
-                totalVal += (c.buy_price * c.quantity); // Placeholder logic
+                totalCost += (Number(c.buy_price) * c.quantity);
+                totalVal += (Number(c.buy_price) * c.quantity); 
             });
 
             document.getElementById('stat-count').innerText = count;
@@ -237,24 +297,41 @@
             document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
             
             // Recent Grid
-            const recent = cards.slice(-5).reverse();
-            document.getElementById('recent-grid').innerHTML = recent.map(c => `
+            if(cards.length > 0) {
+                const recent = cards.slice(-5).reverse();
+                document.getElementById('recent-grid').innerHTML = recent.map(c => `
+                    <div class="grid-card">
+                        <img src="${c.image_url}">
+                        <div class="overlay"><span>${c.name}</span><span>$${c.buy_price}</span></div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // READ (Collection List)
+        async function loadCollection() {
+            document.getElementById('collection-grid').innerHTML = "Loading...";
+            const { data } = await supabase.from('cards').select('*').order('created_at', { ascending: false });
+            
+            if(data.length === 0) {
+                document.getElementById('collection-grid').innerHTML = '<div style="color:var(--subtext);">No cards found.</div>';
+                return;
+            }
+
+            document.getElementById('collection-grid').innerHTML = data.map(c => `
                 <div class="grid-card">
-                    <img src="${c.image_url}">
-                    <div class="overlay">${c.name}</div>
+                    <div class="grid-del" style="position:absolute; top:5px; right:5px; background:rgba(220,38,38,0.9); padding:2px 6px; border-radius:4px; font-size:10px; z-index:10;" onclick="deleteCard('${c.id}')">✕</div>
+                    <img src="${c.image_url}" loading="lazy">
+                    <div class="overlay"><span>${c.quantity}x</span><span>$${c.buy_price}</span></div>
                 </div>
             `).join('');
         }
 
-        // READ (Collection)
-        async function loadCollection() {
-            const { data } = await supabase.from('cards').select('*').order('created_at', { ascending: false });
-            document.getElementById('collection-grid').innerHTML = data.map(c => `
-                <div class="grid-card">
-                    <img src="${c.image_url}" loading="lazy">
-                    <div class="overlay">${c.quantity}x $${c.buy_price}</div>
-                </div>
-            `).join('');
+        async function deleteCard(id) {
+            if(!confirm("Delete this card?")) return;
+            await supabase.from('cards').delete().eq('id', id);
+            loadCollection();
+            loadData();
         }
 
         // DECK LOGIC
@@ -270,13 +347,15 @@
             });
             
             if(!error) { alert("Deck Saved"); loadDecks(); }
+            else { alert(error.message); }
         }
 
         async function loadDecks() {
             const { data } = await supabase.from('decks').select('*').order('updated_at', { ascending: false });
             document.getElementById('saved-decks-list').innerHTML = data.map(d => `
-                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer;" onclick="loadDeckIntoEditor('${d.id}')">
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between;" onclick="loadDeckIntoEditor('${d.id}')">
                     <strong>${d.name}</strong>
+                    <span style="font-size:12px; color:var(--red);" onclick="deleteDeck('${d.id}', event)">✕</span>
                 </div>
             `).join('');
             window.myDecks = data;
@@ -286,6 +365,13 @@
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
+        }
+
+        async function deleteDeck(id, e) {
+            e.stopPropagation();
+            if(!confirm("Delete deck?")) return;
+            await supabase.from('decks').delete().eq('id', id);
+            loadDecks();
         }
     </script>
 </body>
