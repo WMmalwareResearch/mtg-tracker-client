@@ -101,13 +101,19 @@
 
         /* MAIN CONTENT */
         .main { 
+            /* REMOVED: max-width: 1400px; - Allows Dashboard/Vault to fill screen */
             padding: 40px clamp(1rem, 2vw + 1rem, 5rem); 
-            max-width: 1400px; 
             margin: 0 auto;
             overflow-y: auto; 
             flex: 1; 
         }
         
+        /* Apply Max-Width specifically to the Rituals View */
+        #view-decks {
+            max-width: 1400px; 
+            margin: 0 auto;
+        }
+
         /* --- COMPONENTS --- */
         .card-box { 
             background: var(--card-bg); 
@@ -173,16 +179,24 @@
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
 
-        /* DECK WORKSPACE SPECIFIC LAYOUTS */
+        /* Media Query for Stat Grid on Medium Desktops */
+        @media (min-width: 901px) and (max-width: 1300px) {
+            .stat-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+        }
+
+        /* GRIDS */
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         
-        /* 1. Ritual Library Mode (Left: Editor, Right: Deck List) */
+        /* DECK WORKSPACE SPECIFIC LAYOUTS */
         .deck-area-edit {
             display: grid;
             grid-template-columns: 1fr 300px; 
             gap: 20px;
         }
 
-        /* 2. Ritual Detail Mode (Left: Decklist, Right: Charts) */
         .deck-area-detail {
             display: grid;
             grid-template-columns: 1fr 400px; 
@@ -218,43 +232,11 @@
             flex-direction: column; 
             gap: 10px; 
         }
-        .deck-item-preview {
-            background: rgba(255,255,255,0.05); 
-            padding:15px; 
-            border-radius:8px; 
-            border:1px solid var(--border); 
-            cursor:pointer; 
-            display:flex; 
-            justify-content:space-between; 
-            align-items:center;
-            position: relative;
-        }
-        .deck-item-preview:hover {
-            border-color: var(--primary);
-        }
-        .deck-item-info {
-            font-size: 12px;
-            color: var(--subtext);
-            font-weight: 400;
-            margin-top: 5px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
 
         /* LOGIN SCREEN */
         #auth-screen { 
             background: radial-gradient(circle at center, #450a0a, #0f0a1c); 
         }
-        .auth-box { 
-            background: rgba(255,255,255,0.05); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid var(--border); 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
-        }
-
-        /* MOBILE BOTTOM NAV */
-        .bottom-nav { display: none; } 
 
         /* RESPONSIVE */
         @media (max-width: 900px) {
@@ -270,7 +252,6 @@
                 background: rgba(15, 10, 28, 0.9); 
                 border-top: 1px solid var(--border); 
             }
-            .b-item.active { color: var(--primary); }
         }
     </style>
 </head>
@@ -939,7 +920,6 @@
         }
         
         async function validateDeck() {
-            // NOTE: This function reads from the deckList textarea
             const listText = document.getElementById('deckList').value;
             const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); 
             const btn = document.getElementById('validateDeckBtn');
@@ -949,7 +929,6 @@
                 return showToast("Ritual list is empty.", "error");
             }
 
-            // Set analysis context before the network call
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
             if(btn) {
                 btn.innerText = "Resolving Relics (0/0)...";
@@ -1094,8 +1073,7 @@
         function clearDeckEditor() {
             document.getElementById('deckName').value = '';
             document.getElementById('deckList').value = '';
-            // Restore editor context message
-            document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
+            document.getElementById('detail-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
             clearCharts();
             showToast("Ritual editor cleared.", "info");
         }
@@ -1122,7 +1100,6 @@
         }
 
         async function loadDecks() {
-            // CRITICAL: Ensure we switch back to the editor view when loading the list of decks
             showRitualEditor(); 
             
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
