@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.4.0</title>
+    <title>The Grimoire | v1.5.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,7 +23,7 @@
             --green: #d946ef; 
             --red: #dc2626; 
             --yellow: #facc15;
-            --gold: #fbbf24;
+            --blue: #3b82f6; /* Oracle Blue */
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
             /* Chart Colors */
@@ -63,7 +63,7 @@
 
         /* MAIN CONTENT */
         .main { padding: 40px clamp(1rem, 2vw + 1rem, 5rem); overflow-y: auto; flex: 1; }
-        #view-dashboard, #view-add, #view-collection { max-width: 1400px; margin: 0 auto; }
+        #view-dashboard, #view-add, #view-collection, #view-oracle { max-width: 1400px; margin: 0 auto; }
         #view-decks { margin: 0 auto; }
 
         /* --- COMPONENTS --- */
@@ -92,7 +92,7 @@
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
         @media (min-width: 901px) and (max-width: 1300px) { .stat-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; } }
 
-        /* TREASURY LIST (TOP ASSETS) */
+        /* TREASURY LIST */
         .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .asset-row:last-child { border-bottom: none; }
         .asset-info { display: flex; align-items: center; gap: 15px; }
@@ -177,7 +177,7 @@
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);" id="edit-card-name">Edit Relic</h2>
             <input type="hidden" id="edit-card-id">
-            <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
+            <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity (Set 0 for Watchlist)</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
             <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">💰</span><input type="number" id="edit-cost" step="0.01" style="padding-left:40px;"></div></div>
             <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button><button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button></div>
         </div>
@@ -216,11 +216,12 @@
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
+            <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
             <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.4.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.5.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -233,9 +234,9 @@
                 </div>
                 
                 <div class="stat-grid">
-                    <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Relics</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Current Value</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Total Investment</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Relics Owned</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Portfolio Value</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-oracle">$0</div><div class="stat-lbl">Oracle (Wishlist) Cost</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">Arcane Gain/Loss</div></div>
                 </div>
 
@@ -246,11 +247,9 @@
                             <div style="color:var(--subtext); padding:20px; text-align:center;">No relics found.</div>
                         </div>
                     </div>
-
                     <div class="card-box">
                         <h3>Recent Acquisitions</h3>
-                        <div class="collection-grid" id="recent-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-                            </div>
+                        <div class="collection-grid" id="recent-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));"></div>
                     </div>
                 </div>
             </div>
@@ -275,7 +274,10 @@
                         <img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;">
                         <span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span>
                     </div>
-                    <button onclick="addCard()">Bind to Vault</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="addCard(false)" style="flex:2;">Bind to Vault</button>
+                        <button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Watch</button>
+                    </div>
                 </div>
             </div>
             
@@ -288,13 +290,20 @@
                     <div class="input-group" style="flex:1; margin-bottom:0;"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search Vault..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;"></div>
                     <select id="vaultSort" onchange="filterVault()" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;">
                         <option value="date-new">Date (Newest)</option>
-                        <option value="date-old">Date (Oldest)</option>
                         <option value="price-high">Value (High $)</option>
-                        <option value="price-low">Value (Low $)</option>
                         <option value="name">Name (A-Z)</option>
                     </select>
                 </div>
                 <div class="collection-grid" id="collection-grid">Loading...</div>
+            </div>
+
+            <div id="view-oracle" class="hidden">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="color:var(--blue);">👁️ The Oracle (Wishlist)</h2>
+                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadOracle()">Refresh</button>
+                </div>
+                <p style="color:var(--subtext); margin-bottom:20px;">Items observed in the ether (Quantity: 0).</p>
+                <div class="collection-grid" id="oracle-grid">Loading...</div>
             </div>
 
             <div id="view-decks" class="hidden">
@@ -332,6 +341,7 @@
             <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
             <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
             <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Vault</div>
+            <div class="b-item" onclick="nav('oracle', 'oracle')"><span class="b-icon">👁️</span>Oracle</div>
             <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Rituals</div>
         </div>
     </div>
@@ -386,7 +396,7 @@
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(el => { if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active'); });
             document.querySelectorAll('.b-item').forEach(el => el.classList.remove('active')); document.querySelectorAll('.b-item').forEach(el => { if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active'); });
             if (view !== 'decks') { showRitualEditor(false); clearCharts(); }
-            if(view === 'collection') loadCollection(); if(view === 'decks') loadDecks();
+            if(view === 'collection') loadCollection(); if(view === 'oracle') loadOracle(); if(view === 'decks') loadDecks();
         }
         function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(fetchCardMeta, 500); }
         async function fetchCardMeta() {
@@ -412,15 +422,25 @@
             const preview = document.getElementById('preview'); preview.src = imageUrl; preview.style.display = 'block'; document.getElementById('preview-text').style.display = 'none';
             tempCardData = { name: v.name, set: v.set.toUpperCase(), num: v.collector_number, img: imageUrl, market_price: parseFloat(usdPrice) };
         }
-        async function addCard() {
+        
+        async function addCard(isWatchlist = false) {
             if(!tempCardData) return showToast("Search and select a Relic version first", "error");
-            const costInput = document.getElementById('cost').value; const qty = document.getElementById('qty').value || 1; const btn = document.querySelector('#view-add button');
-            if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error");
-            btn.innerText = "Binding..."; btn.disabled = true;
+            const costInput = document.getElementById('cost').value; 
+            let qty = document.getElementById('qty').value || 1;
+            
+            // ORACLE LOGIC: Force qty to 0 if adding to watchlist
+            if(isWatchlist) qty = 0;
+            else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error");
+
             const costToSave = costInput.length > 0 ? parseFloat(costInput) : null;
             const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, last_price_update: new Date().toISOString() });
-            btn.innerText = "Bind to Vault"; btn.disabled = false;
-            if(!error) { showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); } else { showToast(error.message, "error"); }
+            
+            if(!error) { 
+                if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success");
+                else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); 
+                
+                document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); 
+            } else { showToast(error.message, "error"); }
         }
 
         // --- BULK IMPORT ---
@@ -454,41 +474,54 @@
         async function loadData() {
             const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             if(error) return console.error(error); cardsCache = cards; 
-            let totalVal = 0, totalCost = 0, count = 0;
-            cards.forEach(c => { count += c.quantity; if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; totalVal += (Number(c.market_price_usd || 0) * c.quantity); });
-            document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
+            
+            let totalVal = 0, totalCost = 0, count = 0, oracleCost = 0;
+            
+            cards.forEach(c => { 
+                if (c.quantity > 0) {
+                    // Vault Items
+                    count += c.quantity; 
+                    if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; 
+                    totalVal += (Number(c.market_price_usd || 0) * c.quantity); 
+                } else {
+                    // Oracle (Wishlist) Items
+                    oracleCost += Number(c.market_price_usd || 0);
+                }
+            });
+
+            document.getElementById('stat-count').innerText = count; 
+            document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); 
+            document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
+            document.getElementById('stat-oracle').innerText = "$" + oracleCost.toFixed(2);
+            
             const gain = totalVal - totalCost; const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
             
-            // Render Recent
-            if(cards.length > 0) { const recent = cards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
+            // Only show owned cards in Dashboard Recent
+            const ownedCards = cards.filter(c => c.quantity > 0);
+            if(ownedCards.length > 0) { const recent = ownedCards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
 
-            // NEW: Render Top Assets (The Treasury)
-            const topAssets = [...cards].sort((a,b) => (b.market_price_usd || 0) - (a.market_price_usd || 0)).slice(0, 5);
+            const topAssets = [...ownedCards].sort((a,b) => (b.market_price_usd || 0) - (a.market_price_usd || 0)).slice(0, 5);
             if (topAssets.length > 0 && topAssets[0].market_price_usd > 0) {
                 document.getElementById('top-assets-list').innerHTML = topAssets.map(c => `
                     <div class="asset-row">
-                        <div class="asset-info">
-                            <img src="${c.image_url}" class="asset-img">
-                            <div>
-                                <div style="font-weight:600; font-size:14px;">${c.name}</div>
-                                <div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div>
-                            </div>
-                        </div>
+                        <div class="asset-info"><img src="${c.image_url}" class="asset-img"><div><div style="font-weight:600; font-size:14px;">${c.name}</div><div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div></div></div>
                         <div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div>
                     </div>
                 `).join('');
-            } else {
-                document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>';
-            }
+            } else { document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>'; }
         }
 
         async function loadCollection() { if(cardsCache.length === 0) { const { data: cards } = await sb.from('cards').select('*').order('created_at', { ascending: false }); cardsCache = cards || []; } filterVault(); }
+        
         function filterVault() {
             const term = document.getElementById('vaultSearch').value.toLowerCase(); const sort = document.getElementById('vaultSort').value;
-            let filtered = cardsCache.filter(c => c.name.toLowerCase().includes(term));
+            // FILTER: Only show Quantity > 0
+            let filtered = cardsCache.filter(c => c.quantity > 0 && c.name.toLowerCase().includes(term));
+            
             if (sort === 'price-high') filtered.sort((a,b) => (b.market_price_usd||0) - (a.market_price_usd||0)); else if (sort === 'price-low') filtered.sort((a,b) => (a.market_price_usd||0) - (b.market_price_usd||0)); else if (sort === 'date-old') filtered.sort((a,b) => new Date(a.created_at) - new Date(b.created_at)); else if (sort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name)); else filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)); 
             renderVaultGrid(filtered);
         }
+
         function renderVaultGrid(cards) {
             const grid = document.getElementById('collection-grid');
             if(cards.length === 0) { grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">No matching relics found.</div>'; return; }
@@ -504,62 +537,27 @@
             `).join('');
         }
 
-        // --- EXPORT CSV (NEW) ---
-        function exportCSV() {
-            if (!cardsCache || cardsCache.length === 0) return showToast("No data to export.", "error");
+        // --- ORACLE (WISHLIST) ---
+        function loadOracle() {
+            if(cardsCache.length === 0) loadData(); // Ensure cache is loaded
+            const grid = document.getElementById('oracle-grid');
+            const oracleCards = cardsCache.filter(c => c.quantity === 0);
             
-            const headers = ["Name", "Set", "Collector Number", "Quantity", "Buy Price", "Market Price", "Last Updated"];
-            const rows = cardsCache.map(c => [
-                `"${c.name.replace(/"/g, '""')}"`, // Escape quotes
-                c.set_code,
-                c.collector_number,
-                c.quantity,
-                c.buy_price || 0,
-                c.market_price_usd || 0,
-                c.last_price_update
-            ]);
-
-            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "grimoire_export.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast("Export successful!", "success");
-        }
-
-        // --- NEW: EDIT CARD LOGIC ---
-        function openEditModal(id, e) {
-            e.stopPropagation();
-            const card = cardsCache.find(c => c.id == id);
-            if(!card) return;
-            document.getElementById('edit-card-id').value = id;
-            document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`;
-            document.getElementById('edit-qty').value = card.quantity;
-            document.getElementById('edit-cost').value = card.buy_price || '';
-            document.getElementById('edit-modal').classList.remove('hidden');
-        }
-
-        async function saveEdit() {
-            const id = document.getElementById('edit-card-id').value;
-            const qty = document.getElementById('edit-qty').value;
-            const cost = document.getElementById('edit-cost').value;
-            if(qty < 1) return showToast("Quantity must be at least 1", "error");
-
-            const costVal = cost ? parseFloat(cost) : null;
-            const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal }).eq('id', id);
+            if(oracleCards.length === 0) { grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">The Oracle sees nothing. Add cards to your watchlist!</div>'; return; }
             
-            if(error) { showToast(error.message, "error"); } 
-            else {
-                showToast("Relic updated.", "success");
-                document.getElementById('edit-modal').classList.add('hidden');
-                // Update local cache manually to avoid full re-fetch
-                const idx = cardsCache.findIndex(c => c.id == id);
-                if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; }
-                loadData(); filterVault();
-            }
+            grid.innerHTML = oracleCards.map(c => `
+                <div class="grid-card" id="card-${c.id}" style="border-color:var(--blue);">
+                    <div class="overlay" style="top:5px; height:auto; background:none; align-items:flex-start; justify-content:space-between; width:100%; padding:5px;">
+                        <button style="background:var(--primary); padding:4px 8px; border-radius:4px; font-size:12px; width:auto; transform:none;" onclick="openEditModal('${c.id}', event)">✎</button>
+                        <button style="background:var(--red); padding:4px 8px; border-radius:4px; font-size:12px; width:auto; transform:none;" onclick="deleteCard('${c.id}', event)">🗑️</button>
+                    </div>
+                    <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
+                    <div class="overlay" style="background:linear-gradient(to top, rgba(59, 130, 246, 0.9), transparent);">
+                        <span style="color:var(--blue); font-weight:800;">👁️ WATCH</span>
+                        <span>$${Number(c.market_price_usd || 0).toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
         }
 
         async function deleteCard(id, e) {
@@ -569,7 +567,29 @@
             const { error } = await sb.from('cards').delete().eq('id', id);
             if(error) { showToast(`Error: ${error.message}`, "error"); if(cardEl) cardEl.style.display = 'block'; } 
             else { showToast("Relic sacrificed.", "success"); }
-            loadData(); filterVault(); 
+            loadData(); filterVault(); loadOracle();
+        }
+
+        // --- EXPORT CSV ---
+        function exportCSV() {
+            if (!cardsCache || cardsCache.length === 0) return showToast("No data to export.", "error");
+            const headers = ["Name", "Set", "Collector Number", "Quantity", "Buy Price", "Market Price", "Last Updated"];
+            const rows = cardsCache.map(c => [ `"${c.name.replace(/"/g, '""')}"`, c.set_code, c.collector_number, c.quantity, c.buy_price || 0, c.market_price_usd || 0, c.last_price_update ]);
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "grimoire_export.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("Export successful!", "success");
+        }
+
+        // --- EDIT LOGIC ---
+        function openEditModal(id, e) {
+            e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return;
+            document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-modal').classList.remove('hidden');
+        }
+        async function saveEdit() {
+            const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value;
+            if(qty < 0) return showToast("Quantity cannot be negative", "error");
+            const costVal = cost ? parseFloat(cost) : null;
+            const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal }).eq('id', id);
+            if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; } loadData(); filterVault(); loadOracle(); }
         }
 
         // --- DECK LOGIC ---
