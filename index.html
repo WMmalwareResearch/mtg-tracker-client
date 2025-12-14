@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.0.0</title>
+    <title>The Grimoire | v2.1.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,80 +12,43 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME & VARS (DARK GRIMOIRE) --- */
+        /* --- THEME & VARS --- */
         :root { 
-            --primary: #a78bfa; 
-            --bg-dark: #0f0a1c; 
-            --card-bg: rgba(45, 21, 60, 0.8); 
-            --text: #f8fafc; 
-            --subtext: #a1a1aa; 
-            --border: rgba(167, 139, 250, 0.2); 
-            --green: #d946ef; 
-            --red: #dc2626; 
-            --yellow: #facc15;
-            --blue: #3b82f6; 
+            --primary: #a78bfa; --bg-dark: #0f0a1c; --card-bg: rgba(45, 21, 60, 0.8); 
+            --text: #f8fafc; --subtext: #a1a1aa; --border: rgba(167, 139, 250, 0.2); 
+            --green: #d946ef; --red: #dc2626; --yellow: #facc15; --blue: #3b82f6; 
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-            
-            /* Chart Colors */
             --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: radial-gradient(circle at top left, #450a0a, #0f0a1c); 
-            background-attachment: fixed;
-            color: var(--text); 
-            margin: 0; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem);
-        }
-
-        /* --- GLOBAL STYLES --- */
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #450a0a, #0f0a1c); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem); }
         * { box-sizing: border-box; }
         .hidden { display: none !important; }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } 
-        ::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.5); }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.5); }
 
         /* --- LAYOUT --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
-        
-        /* SIDEBAR */
         .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
-        .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; text-shadow: 0 0 5px rgba(167, 139, 250, 0.5); }
+        .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; }
         .nav-item { padding: 12px 15px; cursor: pointer; color: var(--subtext); font-weight: 500; border-radius: 8px; transition: all 0.2s; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
         .nav-item:hover { background: rgba(167, 139, 250, 0.08); color: white; }
         .nav-item.active { background: rgba(167, 139, 250, 0.2); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
-
-        /* MAIN CONTENT */
         .main { padding: 40px clamp(1rem, 2vw + 1rem, 5rem); overflow-y: auto; flex: 1; }
-        #view-dashboard, #view-add, #view-collection, #view-oracle { max-width: 1400px; margin: 0 auto; }
-        #view-decks { margin: 0 auto; }
         #view-battlefield { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 50; background: #0f0a1c; overflow: hidden; display: flex; flex-direction: column; }
 
         /* --- COMPONENTS --- */
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); }
-        h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 20px; }
-        h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; letter-spacing: 0.5px; font-size: 12px; margin-bottom: 15px;}
-
-        /* INPUTS */
+        h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
+        h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;}
         .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; }
         .input-icon { position: absolute; left: 12px; color: var(--subtext); font-size: 16px; pointer-events: none; }
-        input, select { width: 100%; padding: 14px 14px 14px 40px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: white; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; font-family: 'Inter', sans-serif; margin: 0; }
+        input, select { width: 100%; padding: 14px 14px 14px 40px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: white; font-size: 14px; margin: 0; }
         textarea { padding: 14px; margin-bottom: 15px; height: 350px; resize: vertical; }
-
-        /* BUTTONS */
         button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s; }
-        button:hover { opacity: 0.85; }
-        button:active { transform: scale(0.98); }
+        button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
-        #validateDeckBtn { background: var(--green); margin-bottom: 10px; }
-
+        
         /* DASHBOARD */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -93,7 +56,6 @@
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
         .dashboard-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .asset-row:last-child { border-bottom: none; }
         .asset-info { display: flex; align-items: center; gap: 15px; }
         .asset-img { width: 40px; height: 56px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
         .asset-val { font-weight: 700; color: var(--green); }
@@ -101,7 +63,7 @@
         /* GRIDS & CARDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         #recent-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: rgba(0,0,0,0.3); box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: rgba(0,0,0,0.3); border: 1px solid var(--border); }
         .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); }
         .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
@@ -115,9 +77,12 @@
         .deck-card-meta { color: var(--subtext); font-size: 12px; }
         .new-deck-card { border: 1px dashed var(--subtext); display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--subtext); }
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); }
+        
         .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* VISUAL DECK GRID */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -126,8 +91,14 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
+        
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
         #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
+        .deck-item-preview { background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; position: relative; }
+        .deck-item-preview:hover { border-color: var(--primary); }
+        .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* THE LINK */
         .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
         .is-owned { color: var(--green); border-left: 2px solid var(--green); background: rgba(217, 70, 239, 0.05); }
         .is-partial { color: var(--yellow); border-left: 2px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
@@ -135,28 +106,32 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
-        /* --- THE BATTLEFIELD (V2.0.0) --- */
+        /* BATTLEFIELD */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
         .bf-field { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; }
-        .bf-hand-area { height: 160px; background: rgba(0,0,0,0.6); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; gap: 10px; overflow-x: auto; align-items: center; }
-        .bf-card { width: 100px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; position: relative; }
-        .bf-card img { width: 100%; border-radius: 6px; }
-        .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 10px var(--primary); }
-        .bf-tapped { transform: rotate(90deg); opacity: 0.8; }
-        .bf-zone-btn { width: 120px; height: 140px; border: 1px dashed var(--subtext); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--subtext); cursor: pointer; margin-right: 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .bf-hand-area { height: 200px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
+        .bf-card { width: 120px; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; position: relative; }
+        .bf-card img { width: 100%; border-radius: 8px; }
+        .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 15px var(--primary); }
+        .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
+        .bf-zone-btn { width: 100px; height: 140px; border: 1px dashed var(--subtext); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--subtext); cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
         .bf-zone-btn:hover { border-color: var(--primary); color: white; background: rgba(255,255,255,0.05); }
 
         /* MODALS */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 10, 28, 0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .modal-content { width: 90%; max-width: 800px; text-align: center; }
+        .prophecy-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 30px 0; min-height: 200px; }
+        .prophecy-card { width: 140px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.3s; cursor: pointer; animation: deal 0.5s ease-out forwards; opacity: 0; }
+        .prophecy-card:hover { transform: scale(1.1) translateY(-10px); z-index: 10; }
+        @keyframes deal { from { transform: translateY(50px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
         
-        /* LOGIN SCREEN */
+        /* AUTH SCREEN */
         #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; }
 
-        /* MOBILE BOTTOM NAV */
+        /* MOBILE NAV */
         .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
         .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
         .b-icon { font-size: 20px; margin-bottom: 4px; }
@@ -222,7 +197,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.0.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.1.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -326,25 +301,11 @@
                     <div class="bf-stat"><span style="color:var(--subtext);">Turn:</span> <span id="bf-turn">1</span> <button style="width:auto; padding:2px 8px; font-size:10px;" onclick="nextTurn()">Next</button></div>
                     <div class="bf-stat"><button style="width:auto; padding:5px 15px; background:var(--red);" onclick="initBattlefield()">Reset Game</button></div>
                 </div>
-                
-                <div class="bf-main">
-                    <div id="bf-battlefield" class="bf-field">
-                        </div>
-                </div>
-
+                <div class="bf-main"><div id="bf-battlefield" class="bf-field"></div></div>
                 <div class="bf-hand-area">
-                    <div class="bf-zone-btn" onclick="drawCard()">
-                        <div>📚 Library</div>
-                        <div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
-                    <div class="bf-zone-btn" style="border-color:var(--red);">
-                        <div>💀 Graveyard</div>
-                        <div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
-                    <div class="bf-zone-btn" style="border-color:var(--blue);">
-                        <div>🌀 Exile</div>
-                        <div id="bf-exile-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
+                    <div class="bf-zone-btn" onclick="drawCard()"><div>📚 Library</div><div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div></div>
+                    <div class="bf-zone-btn" style="border-color:var(--red);"><div>💀 Graveyard</div><div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div></div>
+                    <div class="bf-zone-btn" style="border-color:var(--blue);"><div>🌀 Exile</div><div id="bf-exile-count" style="font-size:18px; font-weight:700;">0</div></div>
                     <div id="bf-hand" style="display:flex; gap:10px; overflow-x:auto; padding:5px; flex:1;"></div>
                 </div>
             </div>
@@ -360,36 +321,34 @@
     </div>
 
     <script>
-        // --- CONFIG ---
-        const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
+        const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[];
-        const CHART_COLORS = ['#d946ef', '#dc2626', '#a78bfa', '#4f46e5', '#059669', '#737373', '#facc15'];
+        const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
 
-        function showToast(msg, type='info'){
-            let c=document.getElementById('toast-container'); if(!c){ c=document.createElement('div'); c.id='toast-container'; document.body.appendChild(c); }
-            const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<span>${msg}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`; c.appendChild(t); setTimeout(()=>{t.classList.add('hiding');t.addEventListener('animationend',()=>t.remove())},3000);
+        function showToast(m,t='info'){
+            let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)}
+            const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000);
         }
 
-        // --- AUTH & NAV ---
-        function toggleResetMode(){ isResetMode=!isResetMode; const g=document.getElementById('password').parentElement; if(isResetMode){g.classList.add('hidden');document.getElementById('auth-btn').innerText="Send Recovery";document.getElementById('forgot-link').innerText="Back";}else{g.classList.remove('hidden');document.getElementById('auth-btn').innerText="Summon Session";document.getElementById('forgot-link').innerText="Forgot Password?";} }
-        async function handleAuthAction(){ if(isResetMode){ const e=document.getElementById('email').value; const {error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href}); if(error) showToast(error.message,"error"); else showToast("Check email!","success"); } else { const e=document.getElementById('email').value, p=document.getElementById('password').value; const {data,error}=await sb.auth.signInWithPassword({email:e,password:p}); if(error) showToast(error.message,"error"); else { session=data.session; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText=session.user.email; loadData(); } } }
-        async function handleLogout(){ await sb.auth.signOut(); window.location.reload(); }
-        sb.auth.onAuthStateChange((e,s)=>{ if(e==='SIGNED_IN'){session=s; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText=s.user.email; loadData();} });
-        
-        function nav(view, id){
-            document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden')); document.getElementById('view-'+view).classList.remove('hidden');
+        // --- AUTH ---
+        function toggleResetMode(){ isResetMode=!isResetMode; const g=document.getElementById('password').parentElement; if(isResetMode){g.classList.add('hidden');document.getElementById('auth-btn').innerText="Send Recovery";document.getElementById('forgot-link').innerText="Back";}else{g.classList.remove('hidden');document.getElementById('auth-btn').innerText="Summon Session";document.getElementById('forgot-link').innerText="Forgot Password?";}}
+        async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error)showToast(error.message,"error");else{session=data.session;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=session.user.email;loadData()}}}
+        async function handleLogout(){await sb.auth.signOut();window.location.reload()}
+        sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData()}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
+
+        // --- NAV & SEARCH ---
+        function nav(v,i){
+            document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); document.querySelectorAll('.b-item').forEach(el=>el.classList.remove('active'));
-            if(view==='decks') loadDecks(); if(view==='collection') loadCollection(); if(view==='oracle') loadOracle();
+            if(v==='decks'){ loadDecks(); } else { document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden'); showRitualEditor(false); clearCharts(); }
+            if(v==='collection') loadCollection(); if(v==='oracle') loadOracle(); 
         }
-
-        // --- DATA & CARDS ---
         function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(fetchCardMeta,500); }
         async function fetchCardMeta(){
-            const name=document.getElementById('search').value; if(name.length<3)return;
-            try{ const res=await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&unique=prints`); const data=await res.json();
-            if(data.data){ allVersions=data.data; const sel=document.getElementById('versionSelect'); sel.innerHTML=''; allVersions.forEach((v,i)=>{ const opt=document.createElement('option'); opt.value=i; opt.text=`${v.set_name} - $${v.prices.usd||'N/A'}`; sel.appendChild(opt); }); updateSelectedVersion(); } }catch(e){}
+            const n=document.getElementById('search').value; if(n.length<3)return;
+            try{ const res=await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(n)}&unique=prints`); const d=await res.json();
+            if(d.data){ allVersions=d.data; const s=document.getElementById('versionSelect'); s.innerHTML=''; allVersions.forEach((v,i)=>{ const o=document.createElement('option'); o.value=i; o.text=`${v.set_name} - $${v.prices.usd||'N/A'}`; s.appendChild(o); }); updateSelectedVersion(); } }catch(e){}
         }
         function updateSelectedVersion(){
             const v=allVersions[document.getElementById('versionSelect').value]; if(!v)return;
@@ -404,150 +363,254 @@
             showToast(isWatch?"Added to Watchlist":"Added to Vault", "success"); loadData();
         }
 
-        // --- BATTLEFIELD ENGINE (V2.0.0) ---
-        let gameState = { library: [], hand: [], field: [], grave: [], exile: [], life: 20, turn: 1 };
-        
-        function initBattlefield() {
-            if (currentDeckCache.length === 0) return showToast("Resolve deck first!", "error");
-            document.getElementById('view-decks').classList.add('hidden');
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.add('hidden'); // Immersive mode
-
-            // Reset State
-            gameState = { library: [], hand: [], field: [], grave: [], exile: [], life: 20, turn: 1 };
-            
-            // Build Library
-            currentDeckCache.forEach(card => {
-                for(let i=0; i<card.quantity; i++) {
-                    gameState.library.push({ 
-                        id: Math.random().toString(36), // Unique instance ID
-                        ...card,
-                        isTapped: false 
-                    });
-                }
-            });
-
-            // Shuffle
-            for (let i = gameState.library.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [gameState.library[i], gameState.library[j]] = [gameState.library[j], gameState.library[i]];
+        // --- BULK ---
+        function openBulkModal(){ document.getElementById('bulk-modal').classList.remove('hidden'); }
+        function closeBulkModal(){ document.getElementById('bulk-modal').classList.add('hidden'); }
+        async function processBulkImport(){
+            const t=document.getElementById('bulkList').value; if(!t.trim())return; const {cards}=parseDeckList(t);
+            const ids=cards.map(c=>({name:c.name})); const chunkSize=75; let finalInserts=[];
+            for(let i=0; i<Math.ceil(ids.length/chunkSize); i++){
+                const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:ids.slice(i*chunkSize,(i+1)*chunkSize)})});
+                const d=await res.json();
+                d.data.forEach(sc=>{
+                    const orig=cards.find(c=>c.name.toLowerCase()===sc.name.toLowerCase())||cards.find(c=>sc.name.toLowerCase().includes(c.name.toLowerCase()));
+                    if(orig) finalInserts.push({user_id:session.user.id, name:sc.name, set_code:sc.set.toUpperCase(), collector_number:sc.collector_number, image_url:sc.image_uris?.normal, quantity:orig.qty, market_price_usd:parseFloat(sc.prices.usd||0), last_price_update:new Date().toISOString()});
+                });
             }
-
-            // Draw Opening Hand (7)
-            for(let i=0; i<7; i++) { if(gameState.library.length > 0) gameState.hand.push(gameState.library.pop()); }
-            
-            renderBattlefield();
+            if(finalInserts.length>0){ await sb.from('cards').insert(finalInserts); showToast("Bulk import complete!","success"); closeBulkModal(); loadData(); }
         }
 
-        function renderBattlefield() {
-            document.getElementById('bf-life').innerText = gameState.life;
-            document.getElementById('bf-turn').innerText = gameState.turn;
-            document.getElementById('bf-lib-count').innerText = gameState.library.length;
-            document.getElementById('bf-grave-count').innerText = gameState.grave.length;
-            document.getElementById('bf-exile-count').innerText = gameState.exile.length;
-
-            // Render Hand
-            const handEl = document.getElementById('bf-hand');
-            handEl.innerHTML = gameState.hand.map(c => `
-                <div class="bf-card" onclick="playCard('${c.id}')">
-                    <img src="${c.image_uris?.normal || c.card_faces?.[0].image_uris.normal}">
-                </div>
-            `).join('');
-
-            // Render Field
-            const fieldEl = document.getElementById('bf-battlefield');
-            fieldEl.innerHTML = gameState.field.map(c => `
-                <div class="bf-card ${c.isTapped ? 'bf-tapped' : ''}" 
-                     onclick="tapCard('${c.id}')" 
-                     oncontextmenu="destroyCard('${c.id}', event)">
-                    <img src="${c.image_uris?.normal || c.card_faces?.[0].image_uris.normal}">
-                </div>
-            `).join('');
-        }
-
-        function drawCard() {
-            if(gameState.library.length === 0) return showToast("Library empty!", "error");
-            gameState.hand.push(gameState.library.pop());
-            renderBattlefield();
-        }
-
-        function playCard(id) {
-            const idx = gameState.hand.findIndex(c => c.id === id);
-            if(idx > -1) {
-                const card = gameState.hand.splice(idx, 1)[0];
-                gameState.field.push(card);
-                renderBattlefield();
-            }
-        }
-
-        function tapCard(id) {
-            const card = gameState.field.find(c => c.id === id);
-            if(card) { card.isTapped = !card.isTapped; renderBattlefield(); }
-        }
-
-        function destroyCard(id, e) {
-            e.preventDefault(); // Block context menu
-            const idx = gameState.field.findIndex(c => c.id === id);
-            if(idx > -1) {
-                const card = gameState.field.splice(idx, 1)[0];
-                card.isTapped = false; // Reset state
-                gameState.grave.push(card);
-                renderBattlefield();
-            }
-        }
-
-        function updateLife(amt) { gameState.life += amt; renderBattlefield(); }
-        function nextTurn() { 
-            gameState.turn++; 
-            gameState.field.forEach(c => c.isTapped = false); // Untap step
-            drawCard(); // Draw step
-            showToast(`Turn ${gameState.turn} started.`, "info");
-        }
-        function exitBattlefield() {
-            document.getElementById('view-battlefield').classList.add('hidden');
-            document.getElementById('view-decks').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.remove('hidden');
-        }
-
-        // --- STANDARD LOGIC ---
+        // --- VAULT & APPRAISAL ---
         async function loadData(){
             const {data}=await sb.from('cards').select('*'); cardsCache=data||[];
             let count=0, val=0, cost=0, oracle=0;
             cardsCache.forEach(c=>{ if(c.quantity>0){ count+=c.quantity; val+=(c.market_price_usd*c.quantity); cost+=(c.buy_price*c.quantity); } else { oracle+=c.market_price_usd; } });
-            document.getElementById('stat-count').innerText=count; document.getElementById('stat-value').innerText=`$${val.toFixed(2)}`;
-            document.getElementById('stat-cost').innerText=`$${cost.toFixed(2)}`; document.getElementById('stat-oracle').innerText=`$${oracle.toFixed(2)}`;
+            document.getElementById('stat-count').innerText=count; document.getElementById('stat-value').innerText=`$${val.toFixed(2)}`; document.getElementById('stat-cost').innerText=`$${cost.toFixed(2)}`; document.getElementById('stat-oracle').innerText=`$${oracle.toFixed(2)}`;
+            const owned=cardsCache.filter(c=>c.quantity>0); if(owned.length>0) document.getElementById('recent-grid').innerHTML=owned.slice(0,5).map(c=>`<div class="grid-card"><img src="${c.image_url}"><div class="overlay"><span>${c.name}</span><span>$${Number(c.market_price_usd).toFixed(2)}</span></div></div>`).join('');
+            const top=owned.sort((a,b)=>(b.market_price_usd||0)-(a.market_price_usd||0)).slice(0,5);
+            document.getElementById('top-assets-list').innerHTML=top.length?top.map(c=>`<div class="asset-row"><div class="asset-info"><img src="${c.image_url}" class="asset-img"><div><div style="font-weight:600;">${c.name}</div></div></div><div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div></div>`).join(''):'No relics.';
         }
-        function analyzeOwnership(txt){ /* ...Same as V1.9.0... */ } 
-        // Note: Shortened other functions for space, they remain identical to V1.9.0
-        // Important: Ensure parseDeckList, validateDeck, etc are present.
+        async function appraiseCollection(){
+            const btn=document.getElementById('btn-appraise'); btn.disabled=true; btn.innerText="Appraising...";
+            const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
+            for(let i=0; i<Math.ceil(ids.length/75); i++){
+                const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:ids.slice(i*75,(i+1)*75)})});
+                const d=await res.json();
+                for(const sc of d.data){
+                    const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
+                    if(local){ const np=parseFloat(sc.prices.usd||0); await sb.from('cards').update({market_price_usd:np}).eq('id',local.id); local.market_price_usd=np; }
+                }
+            }
+            btn.disabled=false; btn.innerText="🔄 Appraise Vault"; showToast("Appraisal Complete!","success"); loadData(); filterVault();
+        }
+        function loadCollection(){ if(!cardsCache.length) loadData(); filterVault(); }
+        function filterVault(){
+            const t=document.getElementById('vaultSearch').value.toLowerCase(); const s=document.getElementById('vaultSort').value;
+            let f=cardsCache.filter(c=>c.quantity>0 && c.name.toLowerCase().includes(t));
+            if(s==='price-high')f.sort((a,b)=>b.market_price_usd-a.market_price_usd); else f.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+            document.getElementById('collection-grid').innerHTML=f.map(c=>`<div class="grid-card" id="card-${c.id}"><div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${c.image_url}"></div>`).join('');
+        }
+        function loadOracle(){
+            const f=cardsCache.filter(c=>c.quantity===0);
+            document.getElementById('oracle-grid').innerHTML=f.map(c=>`<div class="grid-card" style="border-color:var(--blue);"><div class="overlay"><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${c.image_url}"></div>`).join('');
+        }
+        
+        // --- DECK LOGIC (FIXED V2.1.0) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
+
         async function validateDeck(){
-            const t=document.getElementById('deckList').value; 
-            document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden');
-            document.getElementById('editor-mode').classList.add('hidden'); document.getElementById('detail-mode').classList.remove('hidden');
-            const {cards}=parseDeckList(t); const ids=cards.map(c=>({name:c.name}));
-            const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:ids})});
-            const d=await res.json(); 
-            currentDeckCache=[];
-            d.data.forEach(c=>{ 
-                const dc=cards.find(x=>x.name.toLowerCase()===c.name.toLowerCase())||cards.find(x=>c.name.toLowerCase().includes(x.name.toLowerCase()));
-                if(dc) currentDeckCache.push({...c, quantity:dc.qty});
+            const listText = document.getElementById('deckList').value; const resultsEl = document.getElementById('detail-analysis-results'); const btn = document.getElementById('validateDeckBtn');
+            if (!listText) return showToast("Ritual list is empty.", "error");
+            
+            // Switch Views
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('editor-mode').classList.add('hidden'); 
+            document.getElementById('detail-mode').classList.remove('hidden'); 
+            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
+            document.getElementById('detail-decklist-viewer').classList.remove('hidden'); // Force Show List
+            document.getElementById('detail-visual-grid').classList.add('hidden');
+
+            analyzeOwnership(listText);
+
+            resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
+            if(btn) { btn.innerText = "Resolving..."; btn.disabled = true; }
+
+            const { totalCount, cards: parsedCards } = parseDeckList(listText);
+            if (parsedCards.length === 0) { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found.</p>'; return showToast("No valid ritual lines found.", "error"); }
+            const identifiers = parsedCards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let allMatchedCards = []; let allUnmatched = [];
+            try {
+                for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); if (data.object === 'error') throw new Error(data.details); allMatchedCards = allMatchedCards.concat(data.data); if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found); }
+                const typeAgg = {}; const cmcAgg = {}; let totalDeckPrice = 0; const colorAgg = { W:0, U:0, B:0, R:0, G:0, C:0 };
+                
+                currentDeckCache = [];
+                allMatchedCards.forEach(cardData => { 
+                    const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; 
+                    
+                    // Add to cache with quantity for Visual Mode
+                    currentDeckCache.push({ ...cardData, quantity: quantity });
+
+                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; 
+                    if (!cardData.type_line.toLowerCase().includes('land')) { const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; }
+                    const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0); totalDeckPrice += (price * quantity);
+                    if (cardData.mana_cost) { const cost = cardData.mana_cost; colorAgg['W'] += (cost.match(/{W}/g) || []).length * quantity; colorAgg['U'] += (cost.match(/{U}/g) || []).length * quantity; colorAgg['B'] += (cost.match(/{B}/g) || []).length * quantity; colorAgg['R'] += (cost.match(/{R}/g) || []).length * quantity; colorAgg['G'] += (cost.match(/{G}/g) || []).length * quantity; colorAgg['C'] += (cost.match(/{C}/g) || []).length * quantity; }
+                });
+                document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
+                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`; output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`;
+                if (allUnmatched.length > 0) { output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`; allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`); output += `</ul><p>Please fix these names in the editor.</p>`; showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error"); } else { output += `<p style="color:var(--green);">All unique relic names resolved!</p>`; showToast(`Ritual successfully resolved!`, "success"); }
+                resultsEl.innerHTML = output;
+                if (allUnmatched.length === 0) { document.getElementById('deck-charts').classList.remove('hidden'); renderTypeChart(typeAgg); renderManaCurve(cmcAgg); renderColorChart(colorAgg); }
+                
+                // Initialize in Text Mode
+                document.getElementById('detail-decklist-viewer').classList.remove('hidden');
+                document.getElementById('detail-visual-grid').classList.add('hidden');
+
+            } catch (error) { resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`; showToast("Validation Error.", "error"); } finally { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } }
+        }
+
+        // NEW: TOGGLE DECK VIEW
+        function toggleDeckView() {
+            const textView = document.getElementById('detail-decklist-viewer');
+            const visualView = document.getElementById('detail-visual-grid');
+            
+            if (textView.classList.contains('hidden')) {
+                // Switch to Text
+                textView.classList.remove('hidden');
+                visualView.classList.add('hidden');
+            } else {
+                // Switch to Visual
+                if (currentDeckCache.length === 0) return showToast("Resolve deck first to see visuals.", "error");
+                renderDeckVisuals();
+                textView.classList.add('hidden');
+                visualView.classList.remove('hidden');
+            }
+        }
+
+        function renderDeckVisuals() {
+            const container = document.getElementById('detail-visual-grid');
+            container.innerHTML = '';
+            
+            // Group by Type
+            const groups = {};
+            currentDeckCache.forEach(card => {
+                const type = card.type_line.split('—')[0].trim();
+                if (!groups[type]) groups[type] = [];
+                groups[type].push(card);
             });
-            document.getElementById('detail-decklist-viewer').classList.remove('hidden');
+
+            // Order of types
+            const typeOrder = ["Creature", "Planeswalker", "Instant", "Sorcery", "Artifact", "Enchantment", "Land"];
+            
+            typeOrder.forEach(type => {
+                if (groups[type]) {
+                    renderSection(container, type, groups[type]);
+                    delete groups[type];
+                }
+            });
+            // Render remaining types (e.g. Battle, Tribal)
+            for (const type in groups) {
+                renderSection(container, type, groups[type]);
+            }
         }
-        async function loadDecks() {
+
+        function renderSection(container, title, cards) {
+            const section = document.createElement('div');
+            section.className = 'visual-section';
+            
+            const count = cards.reduce((a, c) => a + c.quantity, 0);
+            
+            section.innerHTML = `<div class="visual-header">${title} (${count})</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'visual-card-grid';
+            
+            cards.forEach(card => {
+                const imgUrl = card.image_uris ? card.image_uris.normal : (card.card_faces ? card.card_faces[0].image_uris.normal : '');
+                const price = card.prices.usd || card.prices.usd_foil || 'N/A';
+                
+                // Repeat card based on quantity? No, show once with badge.
+                const item = document.createElement('div');
+                item.className = 'visual-card';
+                item.innerHTML = `
+                    <img src="${imgUrl}" loading="lazy">
+                    <div class="visual-badge">${card.quantity}x</div>
+                `;
+                item.title = `${card.name} ($${price})`;
+                grid.appendChild(item);
+            });
+            
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+
+        function openProphecy() { document.getElementById('prophecy-modal').classList.remove('hidden'); drawProphecy(); }
+        function closeProphecy() { document.getElementById('prophecy-modal').classList.add('hidden'); }
+        async function drawProphecy() {
+            const container = document.getElementById('prophecy-hand-container'); container.innerHTML = '<p style="color:var(--subtext);">Shuffling the ether...</p>';
+            const listText = document.getElementById('deckList').value; const { cards } = parseDeckList(listText); let fullDeck = [];
+            cards.forEach(c => { for(let i=0; i<c.qty; i++) fullDeck.push(c.name); });
+            if(fullDeck.length < 7) { container.innerHTML = '<p style="color:var(--red);">Deck is too small for a prophecy.</p>'; return; }
+            for (let i = fullDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]]; }
+            const handNames = fullDeck.slice(0, 7); const identifiers = handNames.map(name => ({ name }));
+            try {
+                const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers }) });
+                const data = await response.json(); container.innerHTML = '';
+                handNames.forEach((handCardName, index) => {
+                    const cardData = data.data.find(c => c.name === handCardName) || data.data.find(c => c.name.includes(handCardName)); 
+                    if (cardData) { const imgUrl = cardData.image_uris ? cardData.image_uris.normal : (cardData.card_faces ? cardData.card_faces[0].image_uris.normal : ''); const delay = index * 0.1; container.innerHTML += `<div class="prophecy-card" style="animation-delay: ${delay}s"><img src="${imgUrl}" style="width:100%; border-radius:10px;"></div>`; } 
+                    else { container.innerHTML += `<div class="prophecy-card" style="background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; color:white; font-size:10px;">${handCardName}</div>`; }
+                });
+            } catch(e) { container.innerHTML = '<p style="color:var(--red);">The vision is clouded (API Error).</p>'; }
+        }
+        function viewRitualDetails(id) { 
+            document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden');
+            currentViewedDeckId = id; const d = window.myDecks.find(x => x.id == id); if (!d) return showToast("Ritual not found in local cache.", "error"); document.getElementById('deckName').value = d.name; document.getElementById('deckList').value = d.card_list; validateDeck(); 
+        }
+        function showRitualEditor(keepData = false) { 
+            document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('detail-mode').classList.add('hidden'); document.getElementById('editor-mode').classList.remove('hidden'); clearCharts(); currentViewedDeckId = null; 
+            if (!keepData) { document.getElementById('deckName').value = ''; document.getElementById('deckList').value = ''; const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); if(resultsEl) resultsEl.innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>'; } 
+        }
+        function clearDeckEditor() { showRitualEditor(false); showToast("Ritual editor cleared.", "info"); }
+        async function saveDeck() { const name = document.getElementById('deckName').value; const list = document.getElementById('deckList').value; if(!name) return showToast("Name required", "error"); const { totalCount } = parseDeckList(list); let error; if (currentViewedDeckId) { const res = await sb.from('decks').update({ name: name, card_list: list, card_count: totalCount }).eq('id', currentViewedDeckId); error = res.error; } else { const res = await sb.from('decks').insert({ user_id: session.user.id, name: name, card_list: list, card_count: totalCount }); error = res.error; } if(!error) { showToast(`💾 Ritual '${name}' saved!`, "success"); loadDecks(); } else { showToast(error.message, "error"); } }
+        async function loadDecks() { 
             document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden');
-            const {data}=await sb.from('decks').select('*'); const g=document.getElementById('deck-grid-container');
-            g.innerHTML = `
-                <div class="deck-card new-deck-card" onclick="showRitualEditor()"><span>➕</span><span>New Ritual</span></div>
-                ${data.map(d=>`<div class="deck-card" onclick="viewRitualDetails('${d.id}')"><h4>${d.name}</h4></div>`).join('')}
-            `;
-            window.myDecks = data;
+            const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false }); const gridEl = document.getElementById('deck-grid-container'); window.myDecks = data || [];
+            let html = ` <div class="deck-card new-deck-card" onclick="showRitualEditor()"> <span style="font-size:30px; margin-bottom:10px;">➕</span> <span style="font-weight:600;">Forge New Ritual</span> </div> `;
+            if (data && data.length > 0) { html += data.map(d => { const date = new Date(d.updated_at).toLocaleDateString(); return ` <div class="deck-card" onclick="viewRitualDetails('${d.id}')"> <div> <div style="display:flex; justify-content:space-between; align-items:start;"> <h4>${d.name}</h4> <span style="color:var(--red); font-size:16px; padding:5px; margin:-5px -5px 0 0;" onclick="deleteDeck('${d.id}', event)">✕</span> </div> <div class="deck-item-info" style="margin-top:5px;">${d.card_count || 0} Relics</div> </div> <div class="deck-item-info">Updated: ${date}</div> </div> `; }).join(''); } gridEl.innerHTML = html;
         }
-        function viewRitualDetails(id){ document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); currentViewedDeckId=id; const d=window.myDecks.find(x=>x.id==id); document.getElementById('deckName').value=d.name; document.getElementById('deckList').value=d.card_list; validateDeck(); }
-        function showRitualEditor(){ document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); document.getElementById('detail-mode').classList.add('hidden'); document.getElementById('editor-mode').classList.remove('hidden'); currentViewedDeckId=null; document.getElementById('deckName').value=''; document.getElementById('deckList').value=''; }
-        function closeDeck(){ loadDecks(); }
-        async function saveDeck(){ const n=document.getElementById('deckName').value, l=document.getElementById('deckList').value; const {totalCount}=parseDeckList(l); if(currentViewedDeckId) await sb.from('decks').update({name:n,card_list:l,card_count:totalCount}).eq('id',currentViewedDeckId); else await sb.from('decks').insert({user_id:session.user.id,name:n,card_list:l,card_count:totalCount}); loadDecks(); }
+        function closeDeck() { loadDecks(); } // Go back to grid
+        async function deleteDeck(id, e) { e.stopPropagation(); if(!confirm("Delete ritual?")) return; if (currentViewedDeckId == id) { showRitualEditor(false); } await sb.from('decks').delete().eq('id', id); showToast("Ritual removed.", "success"); loadDecks(); }
+
+        // --- BATTLEFIELD (V2.1.0) ---
+        let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
+        function initBattlefield(){
+            if(!currentDeckCache.length) return showToast("Resolve deck first!","error");
+            document.getElementById('view-decks').classList.add('hidden'); document.getElementById('view-battlefield').classList.remove('hidden'); document.querySelector('.sidebar').classList.add('hidden');
+            gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
+            currentDeckCache.forEach(c=>{ for(let i=0;i<c.quantity;i++) gameState.lib.push({id:Math.random(), ...c, tapped:false}); });
+            for(let i=gameState.lib.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
+            for(let i=0;i<7;i++) gameState.hand.push(gameState.lib.pop());
+            renderBF();
+        }
+        function renderBF(){
+            document.getElementById('bf-life').innerText=gameState.life; document.getElementById('bf-turn').innerText=gameState.turn;
+            document.getElementById('bf-lib-count').innerText=gameState.lib.length; document.getElementById('bf-grave-count').innerText=gameState.grave.length; document.getElementById('bf-exile-count').innerText=gameState.exile.length;
+            document.getElementById('bf-hand').innerHTML=gameState.hand.map(c=>`<div class="bf-card" onclick="playCard(${c.id})"><img src="${c.image_uris?.normal}"></div>`).join('');
+            document.getElementById('bf-battlefield').innerHTML=gameState.field.map(c=>`<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard(${c.id})" oncontextmenu="killCard(${c.id},event)"><img src="${c.image_uris?.normal}"></div>`).join('');
+        }
+        function drawCard(){ if(gameState.lib.length) gameState.hand.push(gameState.lib.pop()); renderBF(); }
+        function playCard(id){ const i=gameState.hand.findIndex(c=>c.id==id); if(i>-1) gameState.field.push(gameState.hand.splice(i,1)[0]); renderBF(); }
+        function tapCard(id){ const c=gameState.field.find(c=>c.id==id); if(c) c.tapped=!c.tapped; renderBF(); }
+        function killCard(id,e){ e.preventDefault(); const i=gameState.field.findIndex(c=>c.id==id); if(i>-1){ const c=gameState.field.splice(i,1)[0]; c.tapped=false; gameState.grave.push(c); } renderBF(); }
+        function nextTurn(){ gameState.turn++; gameState.field.forEach(c=>c.tapped=false); drawCard(); showToast("Untap, Upkeep, Draw."); }
+        function updateLife(n){ gameState.life+=n; renderBF(); }
+        function exitBattlefield(){ document.getElementById('view-battlefield').classList.add('hidden'); document.getElementById('view-decks').classList.remove('hidden'); document.querySelector('.sidebar').classList.remove('hidden'); }
+        
+        // --- HELPERS (Charts, etc) ---
+        function analyzeOwnership(t){ const lines=t.split('\n'); let html=''; const r=/^(\d+)\s+(.+)/; lines.forEach(x=>{ const m=x.match(r); if(m){ const q=parseInt(m[1]), n=m[2]; let has=0; cardsCache.forEach(c=>{if(c.name.toLowerCase()===n.toLowerCase()) has+=c.quantity}); const cl=has>=q?'is-owned':has>0?'is-partial':'is-missing'; html+=`<div class="deck-line ${cl}"><strong>${q}</strong> ${n} <span style="float:right;">(${has})</span></div>`; } }); document.getElementById('detail-decklist-viewer').innerHTML=html; }
+        function renderColorChart(c){ if(colorChartInstance)colorChartInstance.destroy(); colorChartInstance=new Chart(document.getElementById('colorChart'),{type:'polarArea',data:{labels:['W','U','B','R','G','C'],datasets:[{data:[c.W,c.U,c.B,c.R,c.G,c.C],backgroundColor:['#f0f2c0','#b3ceea','#a69f9d','#ea9f82','#c4d3ca','#d8d8d8']}]}}); }
+        function renderTypeChart(d){ if(typeChartInstance)typeChartInstance.destroy(); typeChartInstance=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:Object.keys(d),datasets:[{data:Object.values(d),backgroundColor:CHART_COLORS}]}}); }
+        function renderManaCurve(d){ if(manaCurveInstance)manaCurveInstance.destroy(); manaCurveInstance=new Chart(document.getElementById('manaCurve'),{type:'bar',data:{labels:Object.keys(d),datasets:[{data:Object.values(d),backgroundColor:'#a78bfa'}]}}); }
 
         sb.auth.getSession().then(({ data: { session: s } }) => { if (s) { session = s; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText = s.user.email; loadData(); } });
     </script>
