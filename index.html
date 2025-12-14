@@ -445,6 +445,8 @@
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
                 session = null;
+            } else if (event === 'PASSWORD_RECOVERY') {
+                showToast("Recovery successful. Please change your password.", "success");
             }
         });
 
@@ -581,64 +583,32 @@
         }
 
         // --- 5. DECK LOGIC (LOCAL ANALYTICS & THE LINK) ---
-        // NEW: analyzeOwnership compares deck list vs cardsCache locally
         function analyzeOwnership(deckListText) {
             const vaultMap = {};
-            cardsCache.forEach(c => {
-                const key = c.name.toLowerCase().trim();
-                vaultMap[key] = (vaultMap[key] || 0) + c.quantity;
-            });
-
-            const lines = deckListText.split('\n');
-            let html = '';
-            let totalCards = 0;
-            let totalOwned = 0;
-            const regex = /^(\d+)\s+(.+)/;
-
+            cardsCache.forEach(c => { const key = c.name.toLowerCase().trim(); vaultMap[key] = (vaultMap[key] || 0) + c.quantity; });
+            const basics = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes', 'snow-covered plains', 'snow-covered island', 'snow-covered swamp', 'snow-covered mountain', 'snow-covered forest'];
+            const lines = deckListText.split('\n'); let html = ''; let totalCards = 0; let totalOwned = 0; const regex = /^(\d+)\s+(.+)/;
             lines.forEach(line => {
                 const match = line.trim().match(regex);
                 if (match) {
-                    const qtyNeeded = parseInt(match[1]);
-                    const name = match[2].trim();
-                    const key = name.toLowerCase().replace(/[^a-z0-9]/g, ''); // Normalize
-                    
-                    // Simple fuzzy match on map keys (approximate)
+                    const qtyNeeded = parseInt(match[1]); const name = match[2].trim(); const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
                     let qtyOwned = 0;
-                    // Try exact match first, then fuzzy
-                    for (let vKey in vaultMap) {
-                        const vKeyClean = vKey.replace(/[^a-z0-9]/g, '');
-                        if (vKeyClean === key || vKeyClean.includes(key) || key.includes(vKeyClean)) {
-                            qtyOwned += vaultMap[vKey];
-                        }
-                    }
-
+                    if (basics.includes(name.toLowerCase())) { qtyOwned = qtyNeeded; } 
+                    else { for (let vKey in vaultMap) { const vKeyClean = vKey.replace(/[^a-z0-9]/g, ''); if (vKeyClean === key || vKeyClean.includes(key) || key.includes(vKeyClean)) { qtyOwned += vaultMap[vKey]; } } }
                     totalCards += qtyNeeded;
                     const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
                     totalOwned += ownedForThisLine;
-
                     let statusClass = 'is-missing';
-                    if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
-                    else if (qtyOwned > 0) statusClass = 'is-partial';
-
-                    html += `<div class="deck-line ${statusClass}">
-                        <strong>${qtyNeeded}</strong> ${name} 
-                        <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span>
-                    </div>`;
-                } else if (line.trim().length > 0) {
-                    html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`;
-                }
+                    if (qtyOwned >= qtyNeeded) statusClass = 'is-owned'; else if (qtyOwned > 0) statusClass = 'is-partial';
+                    html += `<div class="deck-line ${statusClass}"><strong>${qtyNeeded}</strong> ${name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
+                } else if (line.trim().length > 0) { html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`; }
             });
-
             const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0;
             document.getElementById('detail-decklist-viewer').innerHTML = html;
             document.getElementById('detail-owned-percent').innerText = `${percent}%`;
             document.getElementById('detail-owned-bar').style.width = `${percent}%`;
-            
-            // Color bar based on completeness
             const bar = document.getElementById('detail-owned-bar');
-            if(percent === 100) bar.style.backgroundColor = 'var(--green)';
-            else if(percent > 50) bar.style.backgroundColor = 'var(--primary)';
-            else bar.style.backgroundColor = 'var(--red)';
+            if(percent === 100) bar.style.backgroundColor = 'var(--green)'; else if(percent > 50) bar.style.backgroundColor = 'var(--primary)'; else bar.style.backgroundColor = 'var(--red)';
         }
 
         let typeChartInstance = null; let manaCurveInstance = null;
