@@ -459,7 +459,7 @@
         </div>
     </div>
 
-    <script>
+  <script>
         // --- 1. CONFIGURATION ---
         const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
@@ -506,9 +506,16 @@
             const msg = document.getElementById('auth-msg');
             btn.innerText = "Processing..."; btn.disabled = true;
 
+            // Attempt Sign In
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
+                // If sign in fails, check if we should try sign up
+                if (error.message.includes("Invalid login credentials")) {
+                    showToast("Invalid credentials. If you are new, we will attempt to create an account.", "info");
+                }
+
+                // Attempt Sign Up as fallback
                 const signUp = await sb.auth.signUp({ 
                     email, password,
                     options: { emailRedirectTo: window.location.href }
@@ -519,16 +526,29 @@
                     btn.innerText = "Summon Session"; btn.disabled = false;
                 } else {
                     if(signUp.data.session) {
-                        // Signed up (and logged in)
+                        // Immediate login on signup success
+                        finalizeLogin(signUp.data.session);
                     } else {
                         msg.innerText = "✅ Pact Forged! Check your email.";
                         msg.style.color = "var(--green)";
                         btn.innerText = "Check Email";
+                        btn.disabled = false;
                     }
                 }
             } else {
-                btn.innerText = "Summoning...";
+                // SUCCESSFUL LOGIN
+                finalizeLogin(data.session);
             }
+        }
+
+        // Helper to switch UI state immediately upon login
+        function finalizeLogin(newSession) {
+            session = newSession;
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            document.getElementById('user-email').innerText = session.user.email;
+            loadData();
+            showToast("Welcome back, Warlock.", "success");
         }
 
         async function handleLogout() {
@@ -536,16 +556,18 @@
             window.location.reload(); 
         }
 
+        // Passive Listener (Backup)
         sb.auth.onAuthStateChange((event, _session) => {
-            session = _session;
-            if (session) {
+            if (event === 'SIGNED_IN' && _session) {
+                session = _session;
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('user-email').innerText = session.user.email;
-                loadData();
-            } else {
+                if(cardsCache.length === 0) loadData(); // Only load if not already loaded
+            } else if (event === 'SIGNED_OUT') {
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
+                session = null;
             }
         });
 
@@ -889,6 +911,7 @@
             
             if (!listText) return showToast("Ritual list is empty.", "error");
 
+            // Ensure we switch to detail view to see results
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
             document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
@@ -1076,3 +1099,4 @@
     </script>
 </body>
 </html>
+
