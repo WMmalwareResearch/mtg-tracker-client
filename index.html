@@ -4,23 +4,28 @@
 <base target="_top">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MTG Manager (Hybrid)</title>
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root { --primary: #6200ea; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #10b981; --red: #ef4444; --border: #e2e8f0; }
   body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
   .container { max-width: 900px; margin: 0 auto; }
   
-  /* TABS */
-  .tabs { display: flex; background: var(--card); padding: 5px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  /* HEADER & TABS */
+  .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .tabs { display: flex; background: var(--card); padding: 5px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); flex-grow: 1; margin-right: 10px; }
   .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; border-radius: 8px; font-weight: 600; color: #64748b; transition: 0.2s; }
   .tab.active { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(98, 0, 234, 0.3); }
   .view { display: none; } .view.active { display: block; }
+  
+  .settings-btn { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px 15px; cursor: pointer; font-size: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  .settings-btn:hover { background: #f1f5f9; }
 
-  /* CARDS */
+  /* CARDS & LAYOUT */
   .card-box { background: var(--card); padding: 24px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   .main-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
   @media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
@@ -40,7 +45,7 @@
   .action-btn:hover { background: #f8fafc; }
   .view-toggle-btn { background: #fff; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: #64748b; margin-left: 10px; }
 
-  /* TOGGLES */
+  /* UI COMPONENTS */
   .finish-toggle { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; border: 1px solid var(--border); }
   .finish-option { flex: 1; text-align: center; }
   .finish-option input { display: none; }
@@ -48,7 +53,7 @@
   .finish-option input:checked + .finish-label { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(98, 0, 234, 0.3); }
   .finish-option input[value="true"]:checked + .finish-label { color: #9333ea; }
 
-  /* LIST VIEW */
+  /* LIST/GRID ITEMS */
   .list-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .list-item img { width: 40px; height: 56px; border-radius: 4px; margin-right: 12px; object-fit: cover; border: 1px solid #eee; }
   .list-details { flex-grow: 1; min-width: 0; }
@@ -57,7 +62,6 @@
   .list-value { font-weight: 700; color: #059669; text-align: right; min-width: 70px; font-size: 14px; }
   .delete-btn { padding: 4px 8px; margin-left: 10px; background: #fee2e2; border-radius: 6px; color: #dc2626; border: none; cursor: pointer; font-size: 12px; }
 
-  /* GRID VIEW */
   .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
   .grid-card { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; background: #000; aspect-ratio: 2.5/3.5; }
   .grid-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
@@ -69,21 +73,17 @@
   .grid-del { position: absolute; top: 5px; right: 5px; background: rgba(220, 38, 38, 0.8); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; display: none; font-size: 10px; }
   .grid-card:hover .grid-del { display: block; }
 
-  /* DECK CHECK VISUALS */
+  /* DECK CHECK & ANALYTICS */
   .deck-dashboard { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
   .progress-container { background: #f1f5f9; border-radius: 10px; height: 20px; width: 100%; margin: 15px 0; overflow: hidden; }
   .progress-bar { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 1s ease-in-out; }
   .dash-stats { display: flex; justify-content: space-between; font-size: 14px; color: #475569; font-weight: 600; }
   .copy-btn { background: #fff; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #334155; }
-  .copy-btn:hover { background: #f8fafc; border-color: #94a3b8; }
-  
   .deck-section-title { font-size: 16px; font-weight: 700; margin: 30px 0 15px 0; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; }
-  /* Missing Card Specifics */
   .missing-card { filter: grayscale(100%); opacity: 0.8; }
   .missing-card:hover { filter: grayscale(0%); opacity: 1; }
   .missing-badge-overlay { position: absolute; top: 5px; left: 5px; background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
 
-  /* SEARCH & STATS */
   #suggestions { position: absolute; background: white; width: 100%; border: 1px solid #e2e8f0; z-index: 99; max-height: 200px; overflow-y: auto; display: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-top: 4px; }
   .s-item { padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
   .s-item:hover { background: #f8fafc; color: var(--primary); }
@@ -93,32 +93,42 @@
   .stat-num { font-size: 20px; font-weight: 800; color: var(--primary); }
   .stat-label { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; }
   .top-card-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-
-  /* CHARTS */
   .chart-container { position: relative; height: 250px; width: 100%; margin-bottom: 30px; }
-
-  /* FOOTER STYLES */
-  #version-footer { 
-      font-size: 10px; 
-      color: #94a3b8; 
-      text-align: right; 
-      margin-top: 15px; 
-      padding-top: 10px;
-      border-top: 1px solid #e2e8f0;
-  }
   
+  #version-footer { font-size: 10px; color: #94a3b8; text-align: right; margin-top: 15px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
   #importStatus { font-size: 12px; font-weight: bold; color: var(--primary); margin-top: 10px; display: none; }
+
+  /* SETUP MODAL */
+  #setupModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+  .modal-content { background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .hidden { display: none !important; }
 
 </style>
 </head>
 <body>
 
+<div id="setupModal" class="hidden">
+    <div class="modal-content">
+        <h2 style="margin-top:0;">🔮 Connect Your Grimoire</h2>
+        <p style="color:#64748b; font-size:14px;">Enter your <b>Google Apps Script Web App URL</b> to connect this interface to your personal spreadsheet.</p>
+        <div class="input-group">
+            <label>API URL</label>
+            <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/..." style="font-family:monospace;">
+        </div>
+        <button class="btn-primary" onclick="saveApiUrl()">Connect</button>
+        <p style="font-size:11px; color:#94a3b8; margin-top:15px; text-align:center;">Don't have a URL? <a href="#" onclick="alert('1. Make a Copy of the MTG Tracker Sheet.\n2. Open Extensions > Apps Script.\n3. Click Deploy > New Deployment > Web App > Anyone.\n4. Copy the URL.')">Click here for instructions.</a></p>
+    </div>
+</div>
+
 <div class="container">
-  <div class="tabs">
-    <div class="tab active" onclick="nav('add')">Add Cards</div>
-    <div class="tab" onclick="nav('collection')">My Collection</div>
-    <div class="tab" onclick="nav('deckcheck')">Deck Check</div>
-    <div class="tab" onclick="nav('analytics')">Analytics</div>
+  <div class="header-row">
+      <div class="tabs">
+        <div class="tab active" onclick="nav('add')">Add Cards</div>
+        <div class="tab" onclick="nav('collection')">My Collection</div>
+        <div class="tab" onclick="nav('deckcheck')">Deck Check</div>
+        <div class="tab" onclick="nav('analytics')">Analytics</div>
+      </div>
+      <button class="settings-btn" onclick="showSetup()" title="Settings">⚙️</button>
   </div>
 
   <div id="view-add" class="view active">
@@ -128,7 +138,7 @@
         <div class="input-group">
           <label>Card Name</label>
           <div style="display:flex; gap:5px; align-items:center;">
-            <input type="text" id="search" placeholder="Start typing (e.g. Sol Ring)..." autocomplete="off" style="flex-grow:1;">
+            <input type="text" id="search" placeholder="Start typing..." autocomplete="off" style="flex-grow:1;">
             <button type="button" class="action-btn" style="flex:0 0 40px; padding: 12px 0; font-size: 14px;" onclick="copyCardName()" id="copyNameBtn" disabled>📋</button>
           </div>
           <div id="suggestions"></div>
@@ -153,14 +163,12 @@
           <div class="input-group">
             <label for="locationInput">Location</label>
             <input list="locationOptions" id="locationInput" name="cardLocation" placeholder="Select or type new location">
-            <datalist id="locationOptions">
-              </datalist>
+            <datalist id="locationOptions"></datalist>
           </div>
           <div class="input-group">
             <label>Quantity</label>
             <div style="display:flex; gap:5px; align-items:center;">
               <input type="number" name="quantity" id="quantityInput" value="1" min="1" oninput="calculateTotalValue()" style="flex-grow:1;">
-              
               <button type="button" class="action-btn" style="flex:0 0 30px; padding: 12px 0;" onclick="setQuantity(1)">C</button>
               <button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(4)">4x</button>
               <button type="button" class="action-btn" style="flex:0 0 35px; padding: 12px 0;" onclick="setQuantity(10)">10x</button>
@@ -181,8 +189,8 @@
 
   <div id="view-collection" class="view">
     <div class="card-box" style="background:#f8fafc; border:1px dashed #cbd5e1;">
-        <h3 style="font-size:16px;">📥 Bulk Import (Active)</h3>
-        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Select a CSV with columns: <b>Name, Set, Code, Qty, Foil (true/false)</b>.</p>
+        <h3 style="font-size:16px;">📥 Bulk Import</h3>
+        <p style="font-size:12px; color:#64748b; margin-bottom:10px;">Columns: <b>Name, Set, Code, Qty, Foil</b>.</p>
         <div style="display:flex; gap:10px; align-items:center;">
             <input type="file" id="csvInput" accept=".csv" style="font-size:12px;">
             <button onclick="handleImport()" class="action-btn">Start Import</button>
@@ -191,10 +199,8 @@
     </div>
     <div class="card-box">
       <div style="display:flex; gap:10px; margin-bottom:15px;">
-        <input type="text" id="collectionSearch" placeholder="Filter by Name/Set..." oninput="filterCollection()" style="flex:1;">
-        <select id="locationFilter" onchange="filterCollection()" style="flex:1;">
-            <option value="">All Locations</option>
-            </select>
+        <input type="text" id="collectionSearch" placeholder="Filter..." oninput="filterCollection()" style="flex:1;">
+        <select id="locationFilter" onchange="filterCollection()" style="flex:1;"><option value="">All Locations</option></select>
         <button id="viewToggle" class="view-toggle-btn" onclick="toggleViewMode()">Show Grid ▦</button>
       </div>
       <div class="action-row"><button class="action-btn" onclick="updatePrices(this)">🔄 Update Prices</button><button class="action-btn" onclick="exportCSV(this)">⬇️ Export CSV</button></div>
@@ -206,17 +212,10 @@
     <div class="main-grid">
       <div class="card-box">
          <h3>📋 Deck Check</h3>
-         <p style="font-size:12px; color:#64748b;">Paste your decklist (e.g. "1 Sol Ring [C19]"). We'll check what you own.</p>
-         <div class="input-group">
-            <textarea id="deckInput" placeholder="1 Sol Ring [C19]&#10;1 Command Tower&#10;4 Brainstorm [2XM]..."></textarea>
-         </div>
+         <div class="input-group"><textarea id="deckInput" placeholder="1 Sol Ring [C19]..."></textarea></div>
          <button class="btn-primary" onclick="runDeckCheck(this)">Check Deck</button>
       </div>
-      <div class="card-box">
-         <div id="deckResults">
-            <div style="text-align:center; color:#94a3b8; padding:20px;">Results will appear here...</div>
-         </div>
-      </div>
+      <div class="card-box"><div id="deckResults"><div style="text-align:center; color:#94a3b8; padding:20px;">Results will appear here...</div></div></div>
     </div>
   </div>
 
@@ -226,69 +225,72 @@
         <div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Cards</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-value">$0.00</div><div class="stat-label">Total Value</div></div>
       </div>
-      
-      <h3 style="margin-top:20px;">Color Distribution</h3>
-      <div class="chart-container">
-          <canvas id="colorChart"></canvas>
-      </div>
-      
-      <h3 style="margin-top:20px;">Rarity Breakdown</h3>
-      <div class="chart-container">
-          <canvas id="rarityChart"></canvas>
-      </div>
-
+      <h3 style="margin-top:20px;">Color Distribution</h3><div class="chart-container"><canvas id="colorChart"></canvas></div>
+      <h3 style="margin-top:20px;">Rarity Breakdown</h3><div class="chart-container"><canvas id="rarityChart"></canvas></div>
     </div>
     <div class="card-box"><h3>Daily Movers</h3><div id="moversList"></div></div>
     <div class="card-box"><h3>Top Cards</h3><div id="topCardsList"></div></div>
   </div>
 
   <div id="version-footer"></div>
-
 </div>
 
 <script>
-// --- VERSION INFO ---
-const APP_VERSION_HTML = "V1.9 (Favicon Added)";
+const APP_VERSION_HTML = "V2.0 (BYOB Edition)";
 const APP_VERSION_GS = "V37.0 (Batch Mode)";
-// --- END VERSION INFO ---
 
-// --- CRITICAL: YOUR API ENDPOINT ---
-// Pre-filled with your working URL
-const API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwd77Efgh_YW6NAsK54LI9CmQLdzBzV2FlylHBTgRKApElhCuT0GKJpUZIASNewmCNrSw/exec';
-// --- END CRITICAL SETUP ---
-
+let API_ENDPOINT = ""; // Populated from LocalStorage
 let rawCollectionData = [], currentCardData = null, debounceTimer;
 let viewMode = 'list';
-let charts = { color: null, rarity: null }; // Store chart instances
+let charts = { color: null, rarity: null };
 
-/**
- * Universal API Caller Function (using modern fetch)
- */
-async function callAPI(action, data = {}) {
-    if (!API_ENDPOINT.includes('script.google.com')) {
-        alert("CRITICAL ERROR: API Endpoint is invalid.");
-        return { success: false, error: "API Endpoint not configured." };
+// --- SETUP & CONNECTION LOGIC ---
+window.onload = function() {
+    document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`;
+    checkConnection();
+};
+
+function checkConnection() {
+    const storedUrl = localStorage.getItem('mtg_api_url');
+    if (!storedUrl) {
+        showSetup();
+    } else {
+        API_ENDPOINT = storedUrl;
+        init();
     }
-    
+}
+
+function showSetup() {
+    document.getElementById('setupModal').classList.remove('hidden');
+    document.getElementById('apiUrlInput').value = localStorage.getItem('mtg_api_url') || "";
+}
+
+function saveApiUrl() {
+    const input = document.getElementById('apiUrlInput').value.trim();
+    if (!input.includes('script.google.com')) {
+        alert("That doesn't look like a valid Google Apps Script URL.");
+        return;
+    }
+    localStorage.setItem('mtg_api_url', input);
+    API_ENDPOINT = input;
+    document.getElementById('setupModal').classList.add('hidden');
+    init(); // Start the app
+}
+
+// --- CORE APP LOGIC ---
+
+async function callAPI(action, data = {}) {
+    if (!API_ENDPOINT) { alert("Not Connected."); showSetup(); return {success:false}; }
     const separator = API_ENDPOINT.includes('?') ? '&' : '?';
     const url = `${API_ENDPOINT}${separator}action=${action}`;
     const payload = { ...data, action: action };
     
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(payload)
-        });
-
+        const response = await fetch(url, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) });
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const text = await response.text();
         const apiResponse = JSON.parse(text);
-
-        if (apiResponse.success === false) {
-            console.error(`Server Error in ${action}:`, apiResponse.error);
-        }
+        if (apiResponse.success === false) console.error(`Server Error in ${action}:`, apiResponse.error);
         return apiResponse;
     } catch (error) {
         console.error(`Fetch error for ${action}:`, error);
@@ -296,15 +298,12 @@ async function callAPI(action, data = {}) {
     }
 }
 
-
 function init() {
     loadFinishSetting();
     loadLastLocation(); 
     loadLocations(); 
     calculateTotalValue();
-    document.getElementById('version-footer').innerHTML = `HTML: ${APP_VERSION_HTML} | GS: ${APP_VERSION_GS}`;
 }
-
 
 function nav(t) {
   document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
@@ -315,263 +314,42 @@ function nav(t) {
   if(t==='analytics') loadAnalytics();
 }
 
-
+// ... EXISTING HELPERS (Copy/Paste logic, Settings, etc) ...
 function copyCardName() {
     const name = document.getElementById('search').value;
-    if (name) {
-        navigator.clipboard.writeText(name).then(() => {
-            alert(`Copied "${name}" to clipboard.`);
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
-            alert('Copy failed. Please copy the text manually.');
-        });
-    }
+    if (name) navigator.clipboard.writeText(name);
 }
-
-
-function saveFinishSetting() {
-    const isFoil = document.getElementById('foil-on').checked;
-    localStorage.setItem('mtgManager_LastFinish', isFoil ? 'Foil' : 'Normal');
+function saveFinishSetting() { localStorage.setItem('mtgManager_LastFinish', document.getElementById('foil-on').checked ? 'Foil' : 'Normal'); }
+function loadFinishSetting() { 
+    if (localStorage.getItem('mtgManager_LastFinish')) document.getElementById('foil-on').checked = true;
+    else document.getElementById('foil-off').checked = true;
 }
-
-function loadFinishSetting() {
-    const lastFinish = localStorage.getItem('mtgManager_LastFinish');
-    if (lastFinish) { 
-        document.getElementById('foil-on').checked = true;
-    } else {
-        document.getElementById('foil-off').checked = true;
-    }
-}
-
 function loadLastLocation() {
     const lastLoc = localStorage.getItem('mtgManager_LastLocation');
-    if (lastLoc) {
-        document.getElementById('locationInput').value = lastLoc;
-    }
+    if (lastLoc) document.getElementById('locationInput').value = lastLoc;
 }
 
-// --- NEW: BULK IMPORT LOGIC ---
-function handleImport() {
-    const fileInput = document.getElementById('csvInput');
-    const statusDiv = document.getElementById('importStatus');
-    
-    if (!fileInput.files.length) {
-        alert("Please select a file first.");
-        return;
-    }
-
-    statusDiv.style.display = 'block';
-    statusDiv.innerText = "Parsing CSV...";
-
-    Papa.parse(fileInput.files[0], {
-        header: true,
-        skipEmptyLines: true,
-        complete: async function(results) {
-            const rawData = results.data;
-            if (rawData.length === 0) {
-                statusDiv.innerText = "Error: CSV is empty.";
-                return;
-            }
-
-            statusDiv.innerText = `Found ${rawData.length} rows. Starting upload...`;
-            
-            // Map CSV columns to our internal format
-            // Expected headers roughly: Name, Set, Code, Qty, Foil
-            const cards = rawData.map(r => ({
-                name: r.Name || r.name || "Unknown",
-                set: r.Set || r.set || "",
-                code: r.Code || r.code || "",
-                qty: parseInt(r.Qty || r.quantity || r.Quantity || 1),
-                foil: (r.Foil || r.foil || "false")
-            })).filter(c => c.name !== "Unknown"); // simple validation
-
-            // Process in Chunks of 10 to be safe
-            const CHUNK_SIZE = 10;
-            const chunks = [];
-            for (let i = 0; i < cards.length; i += CHUNK_SIZE) {
-                chunks.push(cards.slice(i, i + CHUNK_SIZE));
-            }
-
-            let processedCount = 0;
-            const total = cards.length;
-
-            for (let i = 0; i < chunks.length; i++) {
-                statusDiv.innerText = `Uploading batch ${i + 1}/${chunks.length} (${processedCount}/${total} cards)...`;
-                
-                const response = await callAPI('processBatch', { 
-                    cards: chunks[i],
-                    location: document.getElementById('locationInput').value || "Bulk Import" 
-                });
-
-                if (response.success) {
-                    processedCount += chunks[i].length;
-                } else {
-                    statusDiv.innerText = `Error in batch ${i+1}: ${response.error}`;
-                    // Optional: Continue or Stop? We'll continue for now.
-                }
-            }
-
-            statusDiv.innerText = `Done! Imported ${processedCount} cards. Refreshing list...`;
-            loadCollection();
-            setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
-        }
-    });
-}
-
-
-// --- API Rewrites ---
-
+// --- API ACTIONS ---
 async function loadLocations() {
     const response = await callAPI('getUniqueLocations');
-    if (response.success) {
-      populateLocationDatalist(response.data);
-    }
+    if (response.success) populateLocationDatalist(response.data);
 }
-
 function populateLocationDatalist(locations) {
   const datalist = document.getElementById('locationOptions');
   datalist.innerHTML = ''; 
-  locations.forEach(loc => {
-    const option = document.createElement('option');
-    option.value = loc;
-    datalist.appendChild(option);
-  });
+  locations.forEach(loc => { const option = document.createElement('option'); option.value = loc; datalist.appendChild(option); });
 }
-
-
 function populateCollectionFilter(locations) {
     const selector = document.getElementById('locationFilter');
     selector.innerHTML = '<option value="">All Locations</option>';
-
-    locations.forEach(loc => {
-        if (loc && loc.trim() !== "") {
-            const option = document.createElement('option');
-            option.value = loc;
-            option.text = loc;
-            selector.appendChild(option);
-        }
-    });
+    locations.forEach(loc => { if(loc){ const option = document.createElement('option'); option.value = loc; option.text = loc; selector.appendChild(option);} });
 }
-
-
 function setQuantity(amount) {
-    const qtyInput = document.getElementById('quantityInput');
-    qtyInput.value = amount;
+    document.getElementById('quantityInput').value = amount;
     calculateTotalValue();
 }
 
-
-async function runDeckCheck(btn) {
-    const text = document.getElementById('deckInput').value;
-    if(!text) return;
-    btn.disabled = true;
-    btn.innerText = "Checking...";
-    
-    const response = await callAPI('checkDeckList', { deckText: text });
-
-    btn.disabled = false;
-    btn.innerText = "Check Deck";
-
-    if (response.success) {
-        renderDeckCheck(response.data);
-    }
-}
-
-
-function renderDeckCheck(res) {
-    const div = document.getElementById('deckResults');
-    div.innerHTML = '';
-
-    const totalReq = res.found.length + res.missing.length;
-    if (totalReq === 0) {
-        div.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8;'>No cards found.</div>";
-        return;
-    }
-
-    const percentage = Math.round((res.found.length / totalReq) * 100);
-    
-    // DASHBOARD
-    div.innerHTML += `
-    <div class="deck-dashboard">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h3 style="margin:0; font-size:18px;">Deck Status: ${percentage}% Complete</h3>
-            <button class="copy-btn" onclick="copyMissing()">📋 Copy Missing</button>
-        </div>
-        <div class="progress-container">
-            <div class="progress-bar" style="width: ${percentage}%"></div>
-        </div>
-        <div class="dash-stats">
-            <span style="color:#166534">✅ Own: ${res.found.length} cards</span>
-            <span style="color:#991b1b">❌ Need: ${res.missing.length} cards</span>
-        </div>
-    </div>`;
-
-    // 1. MISSING SECTION (RED PILE)
-    if(res.missing.length > 0) {
-        div.innerHTML += `<div class="deck-section-title" style="color:#991b1b; border-color:#fecaca;">🛒 Missing Cards</div>`;
-        let missingGrid = `<div class="collection-grid">`;
-        res.missing.forEach(item => {
-            let searchName = item.name.replace(/\[.*\]|\(.*\)/g, '').trim(); 
-            const imgUrl = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(searchName)}&format=image`;
-            
-            missingGrid += `
-            <div class="grid-card missing-card" onclick="window.open('https://scryfall.com/search?q=${encodeURIComponent(item.name)}','_blank')">
-                <div class="missing-badge-overlay">Need ${item.req}</div>
-                <img src="${imgUrl}" loading="lazy">
-                <div class="grid-overlay">
-                    <div class="grid-price">Buy</div>
-                    <div class="grid-meta"><span>${item.name}</span></div>
-                </div>
-            </div>`;
-        });
-        missingGrid += `</div>`;
-        div.innerHTML += missingGrid;
-    }
-
-    // 2. FOUND SECTION (GREEN PILE)
-    if(res.found.length > 0) {
-        div.innerHTML += `<div class="deck-section-title" style="color:#166534; border-color:#bbf7d0;">✅ In Collection</div>`;
-        let foundGrid = `<div class="collection-grid">`;
-        res.found.forEach(item => {
-            let locSummary = item.locations.map(loc => {
-                if (loc.location.includes("Deck")) {
-                    return `— ${loc.location} — (${loc.qty}x)`;
-                }
-                return `${loc.location} (${loc.qty}x)`;
-            }).join(' | ');
-            
-            let locs = item.locations.map(l => `${l.set} (${l.location})`).join("\n");
-            
-            foundGrid += `
-            <div class="grid-card" title="${locs}">
-                <div class="missing-badge-overlay" style="background:#166534;">Have ${item.have}</div>
-                <img src="${item.image}" loading="lazy">
-                <div class="grid-overlay">
-                    <div class="grid-price">✅ Owned</div>
-                    <div class="grid-meta" style="flex-direction: column;">
-                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${item.name}</span>
-                        <span style="font-size: 9px; color: #a1a1aa; margin-top: 2px;">${locSummary}</span>
-                    </div>
-                </div>
-            </div>`;
-        });
-        foundGrid += `</div>`;
-        div.innerHTML += foundGrid;
-    }
-    
-    window.missingCardsList = res.missing.map(m => `${m.req} ${m.name}`).join("\n");
-}
-
-function copyMissing() {
-    if(!window.missingCardsList) { alert("Nothing to copy!"); return; }
-    
-    navigator.clipboard.writeText(window.missingCardsList).then(() => {
-        alert("Shopping list copied! The list uses the format: [Quantity] [Card Name].");
-    });
-}
-
-
-// EXISTING LOGIC
+// --- SEARCH & ADD ---
 const search = document.getElementById('search');
 const suggs = document.getElementById('suggestions');
 search.addEventListener('input', function(e) {
@@ -600,54 +378,30 @@ async function selectCard(name) {
   document.getElementById('bigPrice').innerText = 'Loading...';
   document.getElementById('verGrp').style.display='block';
   document.getElementById('versionSelect').innerHTML = '<option>Loading...</option>';
-  
   const response = await callAPI('getCardVersionsEncoded', { name: name });
-
-  if (response.success) {
-    versionsRx(response.data);
-  }
+  if (response.success) versionsRx(response.data);
 }
 
 function versionsRx(json) {
   const vers = JSON.parse(json);
   const sel = document.getElementById('versionSelect');
   sel.innerHTML = '';
-  
-  if (vers.length === 0) {
-    sel.innerHTML = '<option>No versions found</option>';
-    document.getElementById('copyNameBtn').disabled = false;
-    updateUI();
-    return;
-  }
-
-  let cheapestPrice = Infinity;
-  let bestVersionIndex = 0;
+  if (vers.length === 0) { sel.innerHTML = '<option>No versions found</option>'; document.getElementById('copyNameBtn').disabled = false; updateUI(); return; }
+  let cheapestPrice = Infinity; let bestVersionIndex = 0;
   const commonSetCodes = ["CMD", "CMA", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24", "CC1", "CC2", "KMC", "CMR", "CLB", "2X2", "2XM", "CMT"];
-
   vers.forEach((v, index) => {
      const opt = document.createElement('option');
      opt.value = JSON.stringify(v);
-     const sName = v.setName ? v.setName : v.set;
-     opt.text = `${sName} (${v.set}) #${v.code} (${v.year})`;
+     opt.text = `${v.setName||v.set} (${v.set}) #${v.code} (${v.year})`;
      sel.add(opt);
-     
      const normalPrice = v.prices.USD.normal || Infinity;
-     
-     if (commonSetCodes.includes(v.set.toUpperCase())) {
-         bestVersionIndex = index;
-     } 
-     else if (normalPrice < cheapestPrice) {
-         cheapestPrice = normalPrice;
-         bestVersionIndex = index;
-     }
+     if (commonSetCodes.includes(v.set.toUpperCase())) bestVersionIndex = index;
+     else if (normalPrice < cheapestPrice) { cheapestPrice = normalPrice; bestVersionIndex = index; }
   });
-  
   sel.selectedIndex = bestVersionIndex;
   document.getElementById('copyNameBtn').disabled = false;
-
   updateUI();
 }
-
 
 function updateUI() {
   const sel = document.getElementById('versionSelect');
@@ -676,11 +430,9 @@ function calculateTotalValue() {
 
 async function submitForm(f) {
   document.getElementById('subBtn').disabled=true;
-  
   const locInput = document.getElementById('locationInput');
   const currentLoc = locInput.value;
   localStorage.setItem('mtgManager_LastLocation', currentLoc);
-  
   const formData = {
       setCode: document.getElementById('setCode').value,
       colNum: document.getElementById('colNum').value,
@@ -690,77 +442,63 @@ async function submitForm(f) {
       cardName: document.getElementById('search').value,
       cardPrice: document.getElementById('cardPriceInput').value
   };
-
   const response = await callAPI('processForm', formData);
-
   document.getElementById('subBtn').disabled=false;
-
   if (response.success) {
-      alert("Added!");
-      f.reset();
-      
+      alert("Added!"); f.reset();
       locInput.value = currentLoc;
-      
       document.getElementById('search').value='';
       document.getElementById('bigPrice').innerText='--';
       document.getElementById('totalValue').innerText='$0.00';
       document.getElementById('cardPreview').style.display='none';
       document.getElementById('verGrp').style.display='none';
       currentCardData = null;
-      document.getElementById('copyNameBtn').disabled = true;
-
       loadLocations();
   }
 }
 
-// --- EXPORT CSV FUNCTIONALITY ---
-function exportCSV(btn) {
-    if (!rawCollectionData || rawCollectionData.length === 0) {
-        alert("No collection data loaded. Please view your collection first.");
-        return;
-    }
-
-    const headers = ["Set", "Code", "Name", "Finish", "Quantity", "Price", "Location"];
-    const rows = rawCollectionData.map(c => [
-        c.SetCode,
-        c.Code,
-        `"${c.Name.replace(/"/g, '""')}"`, // Handle quotes and commas in names
-        c.Finish,
-        c.Quantity,
-        c.TotalValue,
-        `"${c.Location.replace(/"/g, '""')}"`
-    ]);
-
-    let csvContent = "data:text/csv;charset=utf-8," 
-        + headers.join(",") + "\n" 
-        + rows.map(e => e.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "mtg_collection_export.csv");
-    document.body.appendChild(link);
-    
-    link.click();
-    document.body.removeChild(link);
+// --- BULK IMPORT ---
+function handleImport() {
+    const fileInput = document.getElementById('csvInput');
+    const statusDiv = document.getElementById('importStatus');
+    if (!fileInput.files.length) { alert("Please select a file first."); return; }
+    statusDiv.style.display = 'block'; statusDiv.innerText = "Parsing CSV...";
+    Papa.parse(fileInput.files[0], {
+        header: true, skipEmptyLines: true,
+        complete: async function(results) {
+            const rawData = results.data;
+            if (rawData.length === 0) { statusDiv.innerText = "Error: CSV is empty."; return; }
+            statusDiv.innerText = `Found ${rawData.length} rows. Starting upload...`;
+            const cards = rawData.map(r => ({
+                name: r.Name || r.name || "Unknown", set: r.Set || r.set || "", code: r.Code || r.code || "",
+                qty: parseInt(r.Qty || r.quantity || r.Quantity || 1), foil: (r.Foil || r.foil || "false")
+            })).filter(c => c.name !== "Unknown");
+            const CHUNK_SIZE = 10;
+            const chunks = [];
+            for (let i = 0; i < cards.length; i += CHUNK_SIZE) chunks.push(cards.slice(i, i + CHUNK_SIZE));
+            let processedCount = 0;
+            for (let i = 0; i < chunks.length; i++) {
+                statusDiv.innerText = `Uploading batch ${i + 1}/${chunks.length} (${processedCount}/${cards.length} cards)...`;
+                const response = await callAPI('processBatch', { cards: chunks[i], location: document.getElementById('locationInput').value || "Bulk Import" });
+                if (response.success) processedCount += chunks[i].length;
+            }
+            statusDiv.innerText = `Done! Imported ${processedCount} cards. Refreshing list...`;
+            loadCollection();
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
+        }
+    });
 }
 
+// --- VIEW & EXPORT ---
 async function loadCollection() {
   document.getElementById('collectionList').innerText = 'Loading...';
-
   const response = await callAPI('getCollectionData');
-  
   if (response.success) {
     rawCollectionData = response.data;
     filterCollection();
-    
     const locResponse = await callAPI('getUniqueLocations');
-    if (locResponse.success) {
-        populateCollectionFilter(locResponse.data);
-    }
-  } else {
-    document.getElementById('collectionList').innerText = 'Error loading collection.';
-  }
+    if (locResponse.success) populateCollectionFilter(locResponse.data);
+  } else { document.getElementById('collectionList').innerText = 'Error loading collection.'; }
 }
 
 function toggleViewMode() {
@@ -772,41 +510,20 @@ function toggleViewMode() {
 function filterCollection() {
   const q = document.getElementById('collectionSearch').value.toLowerCase();
   const selectedLocation = document.getElementById('locationFilter').value;
-  
-  const list = rawCollectionData.filter(c => 
-     (c.Name.toLowerCase().includes(q) || c.SetCode.toLowerCase().includes(q) || (c.Location||"").toLowerCase().includes(q))
-     && (selectedLocation === "" || c.Location === selectedLocation)
-  );
-  
+  const list = rawCollectionData.filter(c => (c.Name.toLowerCase().includes(q) || c.SetCode.toLowerCase().includes(q) || (c.Location||"").toLowerCase().includes(q)) && (selectedLocation === "" || c.Location === selectedLocation));
   const div = document.getElementById('collectionList');
   div.innerHTML = '';
-  
   if (viewMode === 'grid') {
       div.className = 'collection-grid';
       list.forEach(c => {
-         const safeSet = c.SetCode.replace(/'/g, "\\'");
-         const safeCode = c.Code.replace(/'/g, "\\'");
-         div.innerHTML += `
-         <div class="grid-card">
-            <button class="grid-del" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">×</button>
-            <img src="${c.ImageURL}" loading="lazy">
-            <div class="grid-overlay">
-                <div class="grid-price">$${c.TotalValue}</div>
-                <div class="grid-meta"><span>${c.Finish==='Foil'?'✨':''} x${c.Quantity}</span><span>${c.Location.substring(0,8)}...</span></div>
-            </div>
-         </div>`;
+         const safeSet = c.SetCode.replace(/'/g, "\\'"); const safeCode = c.Code.replace(/'/g, "\\'");
+         div.innerHTML += `<div class="grid-card"><button class="grid-del" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">×</button><img src="${c.ImageURL}" loading="lazy"><div class="grid-overlay"><div class="grid-price">$${c.TotalValue}</div><div class="grid-meta"><span>${c.Finish==='Foil'?'✨':''} x${c.Quantity}</span><span>${c.Location.substring(0,8)}...</span></div></div></div>`;
       });
   } else {
       div.className = '';
       list.forEach(c => {
-         const safeSet = c.SetCode.replace(/'/g, "\\'");
-         const safeCode = c.Code.replace(/'/g, "\\'");
-         div.innerHTML += `
-         <div class="list-item">
-            <img src="${c.ImageURL}">
-            <div class="list-details"><div class="list-name">${c.Name}</div><div class="list-meta">${c.SetCode} #${c.Code} • ${c.Location}</div></div>
-            <div class="list-value">$${c.TotalValue} <button class="delete-btn" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">x</button></div>
-         </div>`;
+         const safeSet = c.SetCode.replace(/'/g, "\\'"); const safeCode = c.Code.replace(/'/g, "\\'");
+         div.innerHTML += `<div class="list-item"><img src="${c.ImageURL}"><div class="list-details"><div class="list-name">${c.Name}</div><div class="list-meta">${c.SetCode} #${c.Code} • ${c.Location}</div></div><div class="list-value">$${c.TotalValue} <button class="delete-btn" onclick="del('${safeSet}','${safeCode}',${c.Finish==='Foil'})">x</button></div></div>`;
       });
   }
 }
@@ -814,116 +531,85 @@ function filterCollection() {
 async function del(s,c,f) {
    if(confirm("Delete this card?")) {
        const response = await callAPI('deleteCardRow', { s: s, c: c, f: f });
-       if (response.success) {
-           loadCollection();
-       } else {
-           alert("Failed to delete card.");
-       }
+       if (response.success) loadCollection(); else alert("Failed to delete.");
    }
 }
 
-async function updatePrices(btn) {
-    btn.disabled = true;
-    btn.innerText = "Updating...";
-    
-    const response = await callAPI('refreshCollectionPrices');
-
-    btn.disabled = false;
-    btn.innerText = "🔄 Update Prices";
-
-    if (response.success) {
-        alert(`Prices updated! Updated ${response.data.updatedCount} rows.`);
-        loadCollection();
-    } else {
-        alert("Failed to update prices.");
-    }
+function exportCSV(btn) {
+    if (!rawCollectionData || rawCollectionData.length === 0) { alert("No data."); return; }
+    const headers = ["Set", "Code", "Name", "Finish", "Quantity", "Price", "Location"];
+    const rows = rawCollectionData.map(c => [c.SetCode, c.Code, `"${c.Name.replace(/"/g, '""')}"`, c.Finish, c.Quantity, c.TotalValue, `"${c.Location.replace(/"/g, '""')}"`]);
+    let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+    const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", "mtg_collection.csv");
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
+
+async function updatePrices(btn) {
+    btn.disabled = true; btn.innerText = "Updating...";
+    const response = await callAPI('refreshCollectionPrices');
+    btn.disabled = false; btn.innerText = "🔄 Update Prices";
+    if (response.success) { alert(`Updated ${response.data.updatedCount} rows.`); loadCollection(); } else alert("Failed.");
+}
+
+async function runDeckCheck(btn) {
+    const text = document.getElementById('deckInput').value; if(!text) return;
+    btn.disabled = true; btn.innerText = "Checking...";
+    const response = await callAPI('checkDeckList', { deckText: text });
+    btn.disabled = false; btn.innerText = "Check Deck";
+    if (response.success) renderDeckCheck(response.data);
+}
+
+function renderDeckCheck(res) {
+    const div = document.getElementById('deckResults'); div.innerHTML = '';
+    const totalReq = res.found.length + res.missing.length;
+    if (totalReq === 0) { div.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8;'>No cards found.</div>"; return; }
+    const percentage = Math.round((res.found.length / totalReq) * 100);
+    div.innerHTML += `<div class="deck-dashboard"><div style="display:flex; justify-content:space-between; align-items:center;"><h3 style="margin:0; font-size:18px;">Deck Status: ${percentage}% Complete</h3><button class="copy-btn" onclick="copyMissing()">📋 Copy Missing</button></div><div class="progress-container"><div class="progress-bar" style="width: ${percentage}%"></div></div><div class="dash-stats"><span style="color:#166534">✅ Own: ${res.found.length} cards</span><span style="color:#991b1b">❌ Need: ${res.missing.length} cards</span></div></div>`;
+    if(res.missing.length > 0) {
+        div.innerHTML += `<div class="deck-section-title" style="color:#991b1b; border-color:#fecaca;">🛒 Missing Cards</div><div class="collection-grid">`;
+        res.missing.forEach(item => {
+            const imgUrl = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(item.name.replace(/\[.*\]|\(.*\)/g, '').trim())}&format=image`;
+            div.innerHTML += `<div class="grid-card missing-card" onclick="window.open('https://scryfall.com/search?q=${encodeURIComponent(item.name)}','_blank')"><div class="missing-badge-overlay">Need ${item.req}</div><img src="${imgUrl}" loading="lazy"><div class="grid-overlay"><div class="grid-price">Buy</div><div class="grid-meta"><span>${item.name}</span></div></div></div>`;
+        });
+        div.innerHTML += `</div>`;
+    }
+    if(res.found.length > 0) {
+        div.innerHTML += `<div class="deck-section-title" style="color:#166534; border-color:#bbf7d0;">✅ In Collection</div><div class="collection-grid">`;
+        res.found.forEach(item => {
+            div.innerHTML += `<div class="grid-card"><div class="missing-badge-overlay" style="background:#166534;">Have ${item.have}</div><img src="${item.image}" loading="lazy"><div class="grid-overlay"><div class="grid-price">✅ Owned</div><div class="grid-meta" style="flex-direction: column;"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">${item.name}</span></div></div></div>`;
+        });
+        div.innerHTML += `</div>`;
+    }
+    window.missingCardsList = res.missing.map(m => `${m.req} ${m.name}`).join("\n");
+}
+function copyMissing() { if(window.missingCardsList) navigator.clipboard.writeText(window.missingCardsList); }
 
 async function loadAnalytics() { 
     const response = await callAPI('getAnalyticsData');
-
-    if (response.success) {
-        renderAnalytics(response.data);
-    } else {
-        document.getElementById('stat-count').innerText = '--';
-        document.getElementById('stat-value').innerText = '--';
-        document.getElementById('moversList').innerHTML = 'Error loading data.';
-        document.getElementById('topCardsList').innerHTML = 'Error loading data.';
-    }
+    if (response.success) renderAnalytics(response.data);
 }
 
 function renderAnalytics(data) {
    if(!data) return;
-   
-   // 1. STATS
    document.getElementById('stat-count').innerText = data.totalCards;
    document.getElementById('stat-value').innerText = "$" + data.totalValue;
-   
-   // 2. MOVERS LIST
-   const mov = document.getElementById('moversList');
-   mov.innerHTML = '';
+   const mov = document.getElementById('moversList'); mov.innerHTML = '';
    if(data.biggestMovers.length===0) mov.innerHTML="<div style='text-align:center;color:#888'>No Movers</div>";
    data.biggestMovers.forEach(c => {
-      const col = c.change>=0?'#10b981':'#ef4444';
-      const s = c.change>=0?'+':'';
+      const col = c.change>=0?'#10b981':'#ef4444'; const s = c.change>=0?'+':'';
       mov.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:${col}">${s}$${c.change.toFixed(2)}</div></div>`;
    });
-   
-   // 3. TOP CARDS LIST
-   const topCardsList = document.getElementById('topCardsList');
-   topCardsList.innerHTML = '';
-   data.topCards.forEach(c => {
-      topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`;
-   });
+   const topCardsList = document.getElementById('topCardsList'); topCardsList.innerHTML = '';
+   data.topCards.forEach(c => { topCardsList.innerHTML += `<div class="top-card-row"><div style="flex:1">${c.name}</div><div style="font-weight:bold;color:#059669">$${c.price}</div></div>`; });
 
-   // 4. CHARTS
-   // A. Color Distribution
    const ctxColor = document.getElementById('colorChart').getContext('2d');
    if (charts.color) charts.color.destroy();
-   charts.color = new Chart(ctxColor, {
-       type: 'doughnut',
-       data: {
-           labels: ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi', 'Colorless'],
-           datasets: [{
-               data: [
-                   data.colors.W, data.colors.U, data.colors.B, data.colors.R, 
-                   data.colors.G, data.colors.Multi, data.colors.Colorless
-               ],
-               backgroundColor: [
-                   '#f0f2c9', '#b3ceea', '#aeb2b7', '#eaa6a5', '#b6d7a8', '#dcc689', '#d7d7d7'
-               ]
-           }]
-       },
-       options: { responsive: true, maintainAspectRatio: false }
-   });
+   charts.color = new Chart(ctxColor, { type: 'doughnut', data: { labels: ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi', 'Colorless'], datasets: [{ data: [data.colors.W, data.colors.U, data.colors.B, data.colors.R, data.colors.G, data.colors.Multi, data.colors.Colorless], backgroundColor: ['#f0f2c9', '#b3ceea', '#aeb2b7', '#eaa6a5', '#b6d7a8', '#dcc689', '#d7d7d7'] }] }, options: { responsive: true, maintainAspectRatio: false } });
 
-   // B. Rarity Breakdown
    const ctxRarity = document.getElementById('rarityChart').getContext('2d');
    if (charts.rarity) charts.rarity.destroy();
-   charts.rarity = new Chart(ctxRarity, {
-       type: 'bar',
-       data: {
-           labels: ['Common', 'Uncommon', 'Rare', 'Mythic'],
-           datasets: [{
-               label: 'Count',
-               data: [
-                   data.rarity.common, data.rarity.uncommon, 
-                   data.rarity.rare, data.rarity.mythic
-               ],
-               backgroundColor: ['#0f172a', '#94a3b8', '#d4af37', '#ef4444']
-           }]
-       },
-       options: { 
-           responsive: true, 
-           maintainAspectRatio: false,
-           scales: { y: { beginAtZero: true } }
-       }
-   });
+   charts.rarity = new Chart(ctxRarity, { type: 'bar', data: { labels: ['Common', 'Uncommon', 'Rare', 'Mythic'], datasets: [{ label: 'Count', data: [data.rarity.common, data.rarity.uncommon, data.rarity.rare, data.rarity.mythic], backgroundColor: ['#0f172a', '#94a3b8', '#d4af37', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
 }
-
-window.onload = function() {
-    init();
-};
 </script>
 </body>
 </html>
