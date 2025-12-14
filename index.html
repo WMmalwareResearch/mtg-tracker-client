@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.2.0</title>
+    <title>The Grimoire | v2.3.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -68,6 +68,10 @@
         .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
+        
+        /* TAG BADGES (V2.3.0) */
+        .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
+        .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
         /* DECK WORKSPACE */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
@@ -127,7 +131,7 @@
         .prophecy-card:hover { transform: scale(1.1) translateY(-10px); z-index: 10; }
         @keyframes deal { from { transform: translateY(50px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
         
-        /* CODEX STYLES (V2.2.0) */
+        /* CODEX */
         .codex-layout { display: flex; gap: 30px; text-align: left; }
         .codex-img { width: 300px; border-radius: 15px; box-shadow: 0 0 30px rgba(167, 139, 250, 0.2); }
         .codex-info { flex: 1; }
@@ -178,6 +182,7 @@
             <input type="hidden" id="edit-card-id">
             <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity (Set 0 for Watchlist)</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
             <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">💰</span><input type="number" id="edit-cost" step="0.01" style="padding-left:40px;"></div></div>
+            <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Tags (comma separated)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">🏷️</span><input type="text" id="edit-tags" placeholder="Foil, Trade, Damaged..." style="padding-left:40px;"></div></div>
             <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button><button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button></div>
         </div>
     </div>
@@ -191,14 +196,9 @@
                     <div id="codex-title" class="codex-title">Card Name</div>
                     <div id="codex-type" class="codex-type">Type Line</div>
                     <div id="codex-text" class="codex-text">Oracle text goes here...</div>
-                    
                     <h4 style="margin:0; font-size:12px; color:var(--subtext); text-transform:uppercase;">Format Legality</h4>
                     <div id="codex-legality" class="legality-grid"></div>
-                    
-                    <div style="margin-top:20px; display:flex; gap:10px;">
-                        <button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close Codex</button>
-                        <button onclick="window.open(window.scryfallLink, '_blank')" style="width:auto; background:#2b253a;">View on Scryfall ↗</button>
-                    </div>
+                    <div style="margin-top:20px; display:flex; gap:10px;"><button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close Codex</button><button onclick="window.open(window.scryfallLink, '_blank')" style="width:auto; background:#2b253a;">View on Scryfall ↗</button></div>
                 </div>
             </div>
         </div>
@@ -236,7 +236,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.2.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.3.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -281,7 +281,7 @@
                 </div>
                 <div id="appraisal-status" style="margin-bottom:15px; font-size:12px; color:var(--subtext);" class="hidden"></div>
                 <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
-                    <div class="input-group" style="flex:1; margin-bottom:0;"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search Vault..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;"></div>
+                    <div class="input-group" style="flex:1; margin-bottom:0;"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search Vault (Names or Tags)..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;"></div>
                     <select id="vaultSort" onchange="filterVault()" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;"><option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option></select>
                 </div>
                 <div class="collection-grid" id="collection-grid">Loading...</div>
@@ -371,7 +371,6 @@
             const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000);
         }
 
-        // --- NEW: CENTRAL IMAGE HANDLER ---
         function getCardImage(c) {
             if(c.image_url) return c.image_url;
             if(c.image_uris && c.image_uris.normal) return c.image_uris.normal;
@@ -485,10 +484,24 @@
         function filterVault(){
             const t=document.getElementById('vaultSearch').value.toLowerCase(); const s=document.getElementById('vaultSort').value;
             let f=cardsCache.filter(c=>c.quantity>0 && c.name.toLowerCase().includes(t));
+            
+            // TAG FILTERING (V2.3.0)
+            if(t.startsWith('#')) {
+                const tagSearch = t.substring(1);
+                f = cardsCache.filter(c => c.quantity > 0 && c.tags && c.tags.some(tag => tag.toLowerCase().includes(tagSearch)));
+            }
+
             if(s==='price-high')f.sort((a,b)=>b.market_price_usd-a.market_price_usd); else f.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
             document.getElementById('collection-grid').innerHTML=f.map(c=>{
                 let badge=''; if(c.buy_price && c.market_price_usd){ const diff=c.market_price_usd-c.buy_price; const color=diff>=0?'var(--green)':'var(--red)'; const sign=diff>=0?'+':''; badge=`<div class="gain-badge" style="color:${color}">${sign}$${diff.toFixed(2)}</div>`; }
-                return `<div class="grid-card" id="card-${c.id}">${badge}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`
+                
+                // Render Tag Pills
+                let tagHtml = '';
+                if(c.tags && c.tags.length > 0) {
+                    tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`;
+                }
+
+                return `<div class="grid-card" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`
             }).join('');
         }
         function loadOracle(){
@@ -496,8 +509,44 @@
             document.getElementById('oracle-grid').innerHTML=f.map(c=>`<div class="grid-card" style="border-color:var(--blue);"><div class="overlay"><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`).join('');
         }
         async function deleteCard(id, e) { e.stopPropagation(); if(!confirm("Are you sure you want to sacrifice this relic?")) return; const cardEl = document.getElementById(`card-${id}`); if(cardEl) cardEl.style.display = 'none'; cardsCache = cardsCache.filter(c => c.id !== Number(id)); const { error } = await sb.from('cards').delete().eq('id', id); if(error) { showToast(`Error: ${error.message}`, "error"); if(cardEl) cardEl.style.display = 'block'; } else { showToast("Relic sacrificed.", "success"); } loadData(); filterVault(); loadOracle(); }
-        function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-modal').classList.remove('hidden'); }
-        async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; } loadData(); filterVault(); loadOracle(); } }
+        
+        function openEditModal(id, e) { 
+            e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; 
+            document.getElementById('edit-card-id').value = id; 
+            document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; 
+            document.getElementById('edit-qty').value = card.quantity; 
+            document.getElementById('edit-cost').value = card.buy_price || ''; 
+            // Load Tags
+            document.getElementById('edit-tags').value = (card.tags || []).join(', ');
+            document.getElementById('edit-modal').classList.remove('hidden'); 
+        }
+        
+        async function saveEdit() { 
+            const id = document.getElementById('edit-card-id').value; 
+            const qty = document.getElementById('edit-qty').value; 
+            const cost = document.getElementById('edit-cost').value; 
+            // Parse Tags
+            const tagStr = document.getElementById('edit-tags').value;
+            const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+            if(qty < 0) return showToast("Quantity cannot be negative", "error"); 
+            const costVal = cost ? parseFloat(cost) : null; 
+            
+            const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); 
+            if(error) { 
+                showToast(error.message, "error"); 
+            } else { 
+                showToast("Relic updated.", "success"); 
+                document.getElementById('edit-modal').classList.add('hidden'); 
+                const idx = cardsCache.findIndex(c => c.id == id); 
+                if(idx !== -1) { 
+                    cardsCache[idx].quantity = parseInt(qty); 
+                    cardsCache[idx].buy_price = costVal; 
+                    cardsCache[idx].tags = tags;
+                } 
+                loadData(); filterVault(); loadOracle(); 
+            } 
+        }
 
         // --- DECK LOGIC (FIXED V2.1.0) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
