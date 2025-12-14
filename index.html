@@ -14,15 +14,15 @@
     <style>
         /* --- THEME & VARS (DARK GRIMOIRE) --- */
         :root { 
-            --primary: #a78bfa; /* Deep Violet */
-            --bg-dark: #0f0a1c; /* Deep Black */
-            --card-bg: rgba(45, 21, 60, 0.8); /* Dark Purple Glass */
+            --primary: #a78bfa; 
+            --bg-dark: #0f0a1c; 
+            --card-bg: rgba(45, 21, 60, 0.8); 
             --text: #f8fafc; 
-            --subtext: #a1a1aa; /* Light Gray */
-            --border: rgba(167, 139, 250, 0.2); /* Primary Border Glow */
-            --green: #d946ef; /* Success/Profit (Fuchsia Glow) */
-            --red: #dc2626; /* Error/Delete (Crimson Red) */
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
+            --subtext: #a1a1aa; 
+            --border: rgba(167, 139, 250, 0.2); 
+            --green: #d946ef; 
+            --red: #dc2626; 
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
             /* Chart Colors */
             --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
@@ -44,7 +44,6 @@
         * { box-sizing: border-box; }
         .hidden { display: none !important; }
         
-        /* Scrollbar polish */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } 
@@ -110,21 +109,28 @@
         .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* LOGIN SCREEN */
-        #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); }
-        .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; }
+
+        /* MOBILE BOTTOM NAV - ENSURE HIDDEN ON DESKTOP */
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+        .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
+        .b-icon { font-size: 20px; margin-bottom: 4px; }
+        .b-item.active { color: var(--primary); }
 
         /* RESPONSIVE */
         @media (max-width: 900px) { .deck-area-edit, .deck-area-detail { grid-template-columns: 1fr; } }
         @media (max-width: 768px) { 
             .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
             .sidebar { display: none; } 
-            .main { padding: 20px; } 
-            .bottom-nav { background: rgba(15, 10, 28, 0.9); border-top: 1px solid var(--border); }
-            .b-item.active { color: var(--primary); }
+            .main { padding: 20px; padding-bottom: 100px; } 
+            .bottom-nav { display: flex; }
         }
     </style>
 </head>
 <body>
+
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div id="auth-screen">
         <div class="auth-box">
@@ -132,13 +138,17 @@
             <h2 style="margin:0 0 10px 0; color:white;">The Grimoire</h2>
             <p style="color:var(--subtext); margin-bottom:25px; font-size:14px;">Unleash your collection's true power.</p>
             
-            <input type="email" id="email" placeholder="Sacrificial Email">
-            <input type="password" id="password" placeholder="Runic Key">
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Sacrificial Email" style="padding-left: 14px;">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Runic Key" style="padding-left: 14px;">
+            </div>
             
             <button onclick="handleAuthAction()" id="auth-btn">Summon Session</button>
             
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; font-size:12px;">
-                <span id="auth-msg" style="color:var(--subtext);">First time? A pact will be forged upon login.</span>
+                <span id="auth-msg" style="color:var(--subtext); text-align: left; max-width: 60%;">First time? A pact will be forged upon login.</span>
                 <span id="forgot-link" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleResetMode()">Forgot Password?</span>
             </div>
         </div>
@@ -339,17 +349,18 @@
         function toggleResetMode() {
             isResetMode = !isResetMode;
             const passInput = document.getElementById('password');
+            const passGroup = passInput.parentElement; // The .input-group wrapper
             const btn = document.getElementById('auth-btn');
             const forgotLink = document.getElementById('forgot-link');
             const msg = document.getElementById('auth-msg');
 
             if (isResetMode) {
-                passInput.classList.add('hidden');
+                passGroup.classList.add('hidden');
                 btn.innerText = "Send Recovery Magic";
                 forgotLink.innerText = "Back to Login";
                 msg.innerText = "Enter your email to recover your pact.";
             } else {
-                passInput.classList.remove('hidden');
+                passGroup.classList.remove('hidden');
                 btn.innerText = "Summon Session";
                 forgotLink.innerText = "Forgot Password?";
                 msg.innerText = "First time? A pact will be forged upon login.";
@@ -378,7 +389,7 @@
             btn.disabled = false;
             if (error) {
                 btn.innerText = "Send Recovery Magic";
-                showToast(error.message, "error");
+                showToast("Failed: " + error.message, "error");
             } else {
                 btn.innerText = "Sent!";
                 showToast("Recovery magic sent! Check your inbox.", "success");
@@ -397,12 +408,10 @@
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
-                // If sign in fails, check if we should try sign up (or if it's just wrong creds)
                 if (error.message.includes("Invalid login credentials")) {
                     showToast("Invalid credentials. If you are new, we will attempt to create an account.", "info");
                 }
 
-                // Fallback: Attempt Sign Up
                 const signUp = await sb.auth.signUp({ 
                     email, password,
                     options: { emailRedirectTo: window.location.href }
@@ -453,7 +462,6 @@
                 session = null;
             } else if (event === 'PASSWORD_RECOVERY') {
                 showToast("Recovery successful. Please change your password.", "success");
-                // In a full app, you'd show a "New Password" form here.
             }
         });
 
