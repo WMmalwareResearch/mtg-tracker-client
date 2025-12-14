@@ -205,7 +205,7 @@
         @keyframes shimmer { 100% { transform: translateX(100%); } }
         .sk-card { aspect-ratio: 2.5/3.5; border-radius: 10px; }
 
-        /* NEW: Deck List Scrolling */
+        /* Deck List Scrolling */
         #saved-decks-list { 
             max-height: 450px; 
             overflow-y: auto; 
@@ -396,11 +396,13 @@
             toast.innerHTML = `<span>${message}</span> <span style="cursor:pointer; opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
             container.appendChild(toast);
             
+            // FIX: Set a double timeout to ensure the element is removed.
             setTimeout(() => { 
                 toast.classList.add('hiding'); 
                 toast.addEventListener('animationend', () => toast.remove()); 
             }, 3000); 
 
+            // Backup removal (in case animation event fails)
             setTimeout(() => {
                 if(toast.parentElement) {
                     toast.remove();
@@ -608,7 +610,7 @@
             btn.innerText = "Save to Collection"; btn.disabled = false;
 
             if(!error) { 
-                showToast(`✅ Added ${qty}x ${tempCardData.name} to Collection!`, "success"); // IMPROVED TOAST
+                showToast(`✅ Added ${qty}x ${tempCardData.name} to Collection!`, "success"); 
                 
                 document.getElementById('search').value = "";
                 document.getElementById('cost').value = "";
@@ -718,12 +720,11 @@
 
         // --- 5. DECK LOGIC ---
 
-        // Helper function to calculate total cards and parse the list into an array of unique names
         function parseDeckList(deckListText) {
             const lines = deckListText.split('\n');
             let total = 0;
-            const uniqueCardNames = new Map(); // Use Map to store unique names and aggregate quantity
-            const regex = /^(\d+)\s+(.+)/; // Matches "QTY CARD NAME"
+            const uniqueCardNames = new Map(); 
+            const regex = /^(\d+)\s+(.+)/; 
 
             lines.forEach(line => {
                 const trimmedLine = line.trim();
@@ -753,18 +754,6 @@
             return { totalCount: total, cards: Array.from(uniqueCardNames.values()) };
         }
         
-        // NEW Helper: Extracts the first 3 card names for a quick preview string
-        function getPreviewCardNames(deckListText) {
-            const lines = deckListText.split('\n').filter(line => line.trim().length > 0);
-            const previewLines = lines.slice(0, 3); // Get the first three lines
-            
-            return previewLines.map(line => {
-                const match = line.trim().match(/^(\d+)\s+(.+)/);
-                return match ? match[2].trim() : line.trim();
-            }).join(', ');
-        }
-
-
         async function validateDeck() {
             const listText = document.getElementById('deckList').value;
             const resultsEl = document.getElementById('deck-analysis-results');
@@ -890,14 +879,13 @@
 
             listEl.innerHTML = data.map(d => {
                 const countText = d.card_count ? `(${d.card_count} cards)` : '(count unknown)';
-                const previewNames = getPreviewCardNames(d.card_list); // NEW: Get card names for hover
                 
                 return `
                 <div class="deck-item-preview" onclick="loadDeckIntoEditor('${d.id}')">
                     <div>
                         <div style="font-weight:600; color:white;">${d.name}</div>
                         <div class="deck-item-info">
-                            ${countText} - Starting cards: ${previewNames}
+                            ${countText}
                         </div>
                     </div>
                     <span style="font-size:12px; color:var(--red); padding:5px;" onclick="deleteDeck('${d.id}', event)">✕</span>
