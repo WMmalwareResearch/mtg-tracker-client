@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v1.3.0</title>
+    <title>The Grimoire | v1.4.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,6 +23,7 @@
             --green: #d946ef; 
             --red: #dc2626; 
             --yellow: #facc15;
+            --gold: #fbbf24;
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
             /* Chart Colors */
@@ -90,6 +91,13 @@
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
         @media (min-width: 901px) and (max-width: 1300px) { .stat-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; } }
+
+        /* TREASURY LIST (TOP ASSETS) */
+        .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .asset-row:last-child { border-bottom: none; }
+        .asset-info { display: flex; align-items: center; gap: 15px; }
+        .asset-img { width: 40px; height: 56px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
+        .asset-val { font-weight: 700; color: var(--green); }
 
         /* GRIDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
@@ -169,24 +177,9 @@
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);" id="edit-card-name">Edit Relic</h2>
             <input type="hidden" id="edit-card-id">
-            
-            <div style="text-align:left; margin-bottom:10px;">
-                <label style="font-size:12px; color:var(--subtext);">Quantity</label>
-                <input type="number" id="edit-qty" style="margin-top:5px;">
-            </div>
-            
-            <div style="text-align:left; margin-bottom:20px;">
-                <label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label>
-                <div class="input-group" style="margin-top:5px;">
-                    <span class="input-icon">💰</span>
-                    <input type="number" id="edit-cost" step="0.01" style="padding-left:40px;">
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 20px; justify-content: center;">
-                <button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button>
-                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button>
-            </div>
+            <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
+            <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">💰</span><input type="number" id="edit-cost" step="0.01" style="padding-left:40px;"></div></div>
+            <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button><button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button></div>
         </div>
     </div>
 
@@ -227,7 +220,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.3.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v1.4.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -235,18 +228,29 @@
         <div class="main">
             <div id="view-dashboard">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-                    <h2 style="margin:0;">Dashboard</h2>
+                    <h2 style="margin:0;">The Treasury</h2>
+                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="exportCSV()">📉 Export Data (CSV)</button>
                 </div>
+                
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Relics</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Current Value</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Total Investment</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">Arcane Gain/Loss</div></div>
                 </div>
-                <div class="card-box">
-                    <h3>Recent Acquisitions (Last 5)</h3>
-                    <div class="collection-grid" id="recent-grid" style="min-height:100px;">
-                        <div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to 'Add Relic' to start!</div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="card-box">
+                        <h3>🏆 Top 5 High-Value Assets</h3>
+                        <div id="top-assets-list">
+                            <div style="color:var(--subtext); padding:20px; text-align:center;">No relics found.</div>
+                        </div>
+                    </div>
+
+                    <div class="card-box">
+                        <h3>Recent Acquisitions</h3>
+                        <div class="collection-grid" id="recent-grid" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
+                            </div>
                     </div>
                 </div>
             </div>
@@ -454,8 +458,30 @@
             cards.forEach(c => { count += c.quantity; if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; totalVal += (Number(c.market_price_usd || 0) * c.quantity); });
             document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
             const gain = totalVal - totalCost; const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
+            
+            // Render Recent
             if(cards.length > 0) { const recent = cards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
+
+            // NEW: Render Top Assets (The Treasury)
+            const topAssets = [...cards].sort((a,b) => (b.market_price_usd || 0) - (a.market_price_usd || 0)).slice(0, 5);
+            if (topAssets.length > 0 && topAssets[0].market_price_usd > 0) {
+                document.getElementById('top-assets-list').innerHTML = topAssets.map(c => `
+                    <div class="asset-row">
+                        <div class="asset-info">
+                            <img src="${c.image_url}" class="asset-img">
+                            <div>
+                                <div style="font-weight:600; font-size:14px;">${c.name}</div>
+                                <div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div>
+                            </div>
+                        </div>
+                        <div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>';
+            }
         }
+
         async function loadCollection() { if(cardsCache.length === 0) { const { data: cards } = await sb.from('cards').select('*').order('created_at', { ascending: false }); cardsCache = cards || []; } filterVault(); }
         function filterVault() {
             const term = document.getElementById('vaultSearch').value.toLowerCase(); const sort = document.getElementById('vaultSort').value;
@@ -476,6 +502,32 @@
                     <div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div>
                 </div>
             `).join('');
+        }
+
+        // --- EXPORT CSV (NEW) ---
+        function exportCSV() {
+            if (!cardsCache || cardsCache.length === 0) return showToast("No data to export.", "error");
+            
+            const headers = ["Name", "Set", "Collector Number", "Quantity", "Buy Price", "Market Price", "Last Updated"];
+            const rows = cardsCache.map(c => [
+                `"${c.name.replace(/"/g, '""')}"`, // Escape quotes
+                c.set_code,
+                c.collector_number,
+                c.quantity,
+                c.buy_price || 0,
+                c.market_price_usd || 0,
+                c.last_price_update
+            ]);
+
+            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "grimoire_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Export successful!", "success");
         }
 
         // --- NEW: EDIT CARD LOGIC ---
