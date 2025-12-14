@@ -681,25 +681,42 @@
 
         // --- 5. DECK LOGIC ---
 
-        // Helper function to calculate total cards and parse the list into an array
+        // Helper function to calculate total cards and parse the list into an array of unique names
         function parseDeckList(deckListText) {
             const lines = deckListText.split('\n');
             let total = 0;
-            const cardArray = [];
+            const uniqueCardNames = new Map(); // Use Map to store unique names and aggregate quantity
             const regex = /^(\d+)\s+(.+)/; // Matches "QTY CARD NAME"
 
             lines.forEach(line => {
-                const match = line.trim().match(regex);
+                const trimmedLine = line.trim();
+                const match = trimmedLine.match(regex);
+                
                 if (match) {
                     const quantity = parseInt(match[1]);
                     const name = match[2].trim();
+                    
                     if (!isNaN(quantity) && name.length > 0) {
                         total += quantity;
-                        cardArray.push({ qty: quantity, name: name });
+                        
+                        // Use a cleaned name (lowercase, no spaces) as the key for uniqueness
+                        const key = name.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+                        
+                        // Aggregate quantity for the same card name
+                        const existing = uniqueCardNames.get(key);
+                        if (existing) {
+                            existing.qty += quantity;
+                        } else {
+                            uniqueCardNames.set(key, { qty: quantity, name: name });
+                        }
                     }
+                } else if (trimmedLine.length > 0) {
+                    // Log non-matching lines for future debugging, if necessary
+                    console.warn("Skipped non-standard line in decklist:", trimmedLine);
                 }
             });
-            return { totalCount: total, cards: cardArray };
+
+            return { totalCount: total, cards: Array.from(uniqueCardNames.values()) };
         }
 
         // NEW FEATURE: Validates the deck structure and attempts Scryfall resolution
@@ -710,6 +727,7 @@
             
             if (!listText) return showToast("Deck list is empty.", "error");
 
+            resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing decklist...</p>`;
             btn.innerText = "Resolving Cards (0/0)...";
             btn.disabled = true;
 
@@ -718,55 +736,73 @@
             if (parsedCards.length === 0) {
                 btn.innerText = "✅ Validate & Resolve Deck";
                 btn.disabled = false;
-                return showToast("No valid card lines found in the list.", "error");
+                resultsEl.innerHTML = '<p style="color:var(--red);">No valid card lines found. Ensure format is "QTY Card Name".</p>';
+                return showToast("No valid card lines found.", "error");
             }
 
-            // 1. Prepare bulk request payload
-            const identifierPayload = {
-                identifiers: parsedCards.map(c => ({ name: c.name }))
-            };
+            // 1. Prepare unique identifiers and chunk them (max 75 per API call)
+            const identifiers = parsedCards.map(c => ({ name: c.name }));
+            const chunkSize = 75;
+            const totalChunks = Math.ceil(identifiers.length / chunkSize);
+            
+            let allMatchedCards = [];
+            let allUnmatched = [];
 
-            resultsEl.innerHTML = `<p style="color:var(--subtext);">Attempting to resolve ${parsedCards.length} unique card names...</p>`;
+            resultsEl.innerHTML = `<p style="color:var(--subtext);">Attempting to resolve ${identifiers.length} unique card names in ${totalChunks} batch(es)...</p>`;
 
             try {
-                // 2. Send request to Scryfall's identifier endpoint
-                const response = await fetch('https://api.scryfall.com/cards/collection', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(identifierPayload)
-                });
+                for (let i = 0; i < totalChunks; i++) {
+                    const start = i * chunkSize;
+                    const end = start + chunkSize;
+                    const chunk = identifiers.slice(start, end);
+                    
+                    btn.innerText = `Resolving Cards (${i + 1}/${totalChunks})...`;
 
-                const data = await response.json();
+                    // 2. Send request to Scryfall's identifier endpoint
+                    const response = await fetch('https://api.scryfall.com/cards/collection', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ identifiers: chunk })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Scryfall API call failed for batch ${i + 1}. Status: ${response.status}`);
+                    }
 
-                if (data.object === 'error') {
-                    throw new Error(data.details || 'Scryfall bulk request failed.');
+                    const data = await response.json();
+
+                    if (data.object === 'error') {
+                        throw new Error(data.details || `Scryfall error in batch ${i + 1}.`);
+                    }
+
+                    allMatchedCards = allMatchedCards.concat(data.data);
+                    if (data.not_found) {
+                        allUnmatched = allUnmatched.concat(data.not_found);
+                    }
                 }
                 
-                const matchedCards = data.data;
-                const unmatched = data.not_found;
-
-                let output = `<p style="color:var(--green); font-weight: 600;">✅ Deck Resolution Complete! (${totalCount} cards)</p>`;
-                
-                // 3. Process Matched Cards (e.g., Categorization, Count Checks)
-                output += `<p>Found **${matchedCards.length}** unique cards.</p>`;
+                // 3. Final Analysis
+                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Cards: ${totalCount}</p>`;
+                output += `<p>Found **${allMatchedCards.length}** unique card definitions.</p>`;
                 
                 // 4. Process Unmatched Cards (Errors)
-                if (unmatched && unmatched.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${unmatched.length} Card Names Unmatched:</p><ul>`;
-                    unmatched.forEach(u => {
-                        output += `<li style="margin-left: -20px;">* ${u.identifiers.name} (Typo?)</li>`;
+                if (allUnmatched.length > 0) {
+                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Card Names Unmatched:</p><ul>`;
+                    allUnmatched.forEach(u => {
+                        output += `<li style="margin-left: -20px;">* ${u.identifiers.name} (Typo/Misspelling)</li>`;
                     });
                     output += `</ul><p>Please fix these names in the editor above.</p>`;
-                    showToast(`Deck validation failed: ${unmatched.length} card(s) not found.`, "error");
+                    showToast(`Deck validation failed: ${allUnmatched.length} card(s) not found.`, "error");
                 } else {
+                    output += `<p style="color:var(--green);">All unique card names were successfully resolved!</p>`;
                     showToast(`Deck successfully resolved! ${totalCount} cards found.`, "success");
                 }
 
                 resultsEl.innerHTML = output;
 
             } catch (error) {
-                resultsEl.innerHTML = `<p style="color:var(--red);">Error: Could not resolve decklist. ${error.message}</p>`;
-                showToast("Deck resolution failed.", "error");
+                resultsEl.innerHTML = `<p style="color:var(--red);">API Error: Could not resolve decklist. ${error.message}</p>`;
+                showToast("Deck resolution failed due to an API error.", "error");
             } finally {
                 btn.innerText = "✅ Validate & Resolve Deck";
                 btn.disabled = false;
