@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.1.4</title>
+    <title>The Grimoire | v2.2.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -127,6 +127,18 @@
         .prophecy-card:hover { transform: scale(1.1) translateY(-10px); z-index: 10; }
         @keyframes deal { from { transform: translateY(50px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
         
+        /* CODEX STYLES (V2.2.0) */
+        .codex-layout { display: flex; gap: 30px; text-align: left; }
+        .codex-img { width: 300px; border-radius: 15px; box-shadow: 0 0 30px rgba(167, 139, 250, 0.2); }
+        .codex-info { flex: 1; }
+        .codex-title { font-size: 24px; font-weight: 700; color: white; margin-bottom: 5px; }
+        .codex-type { font-size: 14px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .codex-text { font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap; margin-bottom: 20px; font-style: italic; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid var(--primary); }
+        .legality-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        .legality-badge { font-size: 11px; padding: 5px 10px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
+        .is-legal { border-left: 3px solid var(--green); color: var(--green); }
+        .not-legal { border-left: 3px solid var(--red); color: var(--subtext); opacity: 0.6; }
+        
         /* AUTH SCREEN */
         #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
         .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; }
@@ -137,7 +149,12 @@
         .b-icon { font-size: 20px; margin-bottom: 4px; }
         .b-item.active { color: var(--primary); }
 
-        @media (max-width: 900px) { .deck-area-edit, .deck-area-detail { grid-template-columns: 1fr; } .dashboard-split { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { 
+            .deck-area-edit, .deck-area-detail { grid-template-columns: 1fr; } 
+            .dashboard-split { grid-template-columns: 1fr; } 
+            .codex-layout { flex-direction: column; }
+            .codex-img { width: 100%; max-width: 300px; margin: 0 auto; }
+        }
         @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } .sidebar { display: none; } .main { padding: 20px; padding-bottom: 100px; } .bottom-nav { display: flex; } }
     </style>
 </head>
@@ -162,6 +179,28 @@
             <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity (Set 0 for Watchlist)</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
             <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">💰</span><input type="number" id="edit-cost" step="0.01" style="padding-left:40px;"></div></div>
             <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button><button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button></div>
+        </div>
+    </div>
+
+    <div id="codex-modal" class="modal-overlay hidden">
+        <div class="modal-content card-box" style="max-width: 800px;">
+            <div id="codex-loading" style="padding: 40px; color: var(--subtext);">Consulting the archives...</div>
+            <div id="codex-content" class="codex-layout hidden">
+                <div><img id="codex-img" class="codex-img" src=""></div>
+                <div class="codex-info">
+                    <div id="codex-title" class="codex-title">Card Name</div>
+                    <div id="codex-type" class="codex-type">Type Line</div>
+                    <div id="codex-text" class="codex-text">Oracle text goes here...</div>
+                    
+                    <h4 style="margin:0; font-size:12px; color:var(--subtext); text-transform:uppercase;">Format Legality</h4>
+                    <div id="codex-legality" class="legality-grid"></div>
+                    
+                    <div style="margin-top:20px; display:flex; gap:10px;">
+                        <button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close Codex</button>
+                        <button onclick="window.open(window.scryfallLink, '_blank')" style="width:auto; background:#2b253a;">View on Scryfall ↗</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -197,7 +236,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.1.4</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.2.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -419,9 +458,9 @@
             document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2); document.getElementById('stat-oracle').innerText = "$" + oracleCost.toFixed(2);
             const gain = totalVal - totalCost; const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
             const ownedCards = cards.filter(c => c.quantity > 0);
-            if(ownedCards.length > 0) { const recent = ownedCards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
+            if(ownedCards.length > 0) { const recent = ownedCards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${getCardImage(c)}" loading="lazy" onclick="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
             const topAssets = [...ownedCards].sort((a,b) => (b.market_price_usd || 0) - (a.market_price_usd || 0)).slice(0, 5);
-            if (topAssets.length > 0 && topAssets[0].market_price_usd > 0) { document.getElementById('top-assets-list').innerHTML = topAssets.map(c => ` <div class="asset-row"> <div class="asset-info"><img src="${getCardImage(c)}" class="asset-img"><div><div style="font-weight:600; font-size:14px;">${c.name}</div><div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div></div></div> <div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div> </div> `).join(''); } else { document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>'; }
+            if (topAssets.length > 0 && topAssets[0].market_price_usd > 0) { document.getElementById('top-assets-list').innerHTML = topAssets.map(c => ` <div class="asset-row"> <div class="asset-info"><img src="${getCardImage(c)}" class="asset-img" onclick="openCodex('${c.set_code}', '${c.collector_number}')"><div><div style="font-weight:600; font-size:14px;">${c.name}</div><div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div></div></div> <div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div> </div> `).join(''); } else { document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>'; }
         }
         async function appraiseCollection(){
             if(cardsCache.length===0) return showToast("Vault is empty. Add cards first.", "info");
@@ -449,12 +488,12 @@
             if(s==='price-high')f.sort((a,b)=>b.market_price_usd-a.market_price_usd); else f.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
             document.getElementById('collection-grid').innerHTML=f.map(c=>{
                 let badge=''; if(c.buy_price && c.market_price_usd){ const diff=c.market_price_usd-c.buy_price; const color=diff>=0?'var(--green)':'var(--red)'; const sign=diff>=0?'+':''; badge=`<div class="gain-badge" style="color:${color}">${sign}$${diff.toFixed(2)}</div>`; }
-                return `<div class="grid-card" id="card-${c.id}">${badge}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1"></div>`
+                return `<div class="grid-card" id="card-${c.id}">${badge}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`
             }).join('');
         }
         function loadOracle(){
             const f=cardsCache.filter(c=>c.quantity===0);
-            document.getElementById('oracle-grid').innerHTML=f.map(c=>`<div class="grid-card" style="border-color:var(--blue);"><div class="overlay"><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1"></div>`).join('');
+            document.getElementById('oracle-grid').innerHTML=f.map(c=>`<div class="grid-card" style="border-color:var(--blue);"><div class="overlay"><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`).join('');
         }
         async function deleteCard(id, e) { e.stopPropagation(); if(!confirm("Are you sure you want to sacrifice this relic?")) return; const cardEl = document.getElementById(`card-${id}`); if(cardEl) cardEl.style.display = 'none'; cardsCache = cardsCache.filter(c => c.id !== Number(id)); const { error } = await sb.from('cards').delete().eq('id', id); if(error) { showToast(`Error: ${error.message}`, "error"); if(cardEl) cardEl.style.display = 'block'; } else { showToast("Relic sacrificed.", "success"); } loadData(); filterVault(); loadOracle(); }
         function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-modal').classList.remove('hidden'); }
@@ -548,9 +587,49 @@
             cards.forEach(card => {
                 const imgUrl = getCardImage(card); // Use Helper
                 const price = card.prices.usd || card.prices.usd_foil || 'N/A';
-                const item = document.createElement('div'); item.className = 'visual-card'; item.innerHTML = ` <img src="${imgUrl}" loading="lazy"> <div class="visual-badge">${card.quantity}x</div> `; item.title = `${card.name} ($${price})`; grid.appendChild(item);
+                const item = document.createElement('div'); item.className = 'visual-card'; 
+                item.onclick = function() { openCodex(card.set, card.collector_number); }; // CODEX LINK
+                item.innerHTML = ` <img src="${imgUrl}" loading="lazy"> <div class="visual-badge">${card.quantity}x</div> `; item.title = `${card.name} ($${price})`; grid.appendChild(item);
             });
             section.appendChild(grid); container.appendChild(section);
+        }
+
+        // CODEX (V2.2.0)
+        async function openCodex(set, num) {
+            const modal = document.getElementById('codex-modal');
+            const loading = document.getElementById('codex-loading');
+            const content = document.getElementById('codex-content');
+            
+            modal.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            content.classList.add('hidden');
+            
+            try {
+                // Fetch fresh data
+                const res = await fetch(`https://api.scryfall.com/cards/${set}/${num}`);
+                const card = await res.json();
+                
+                // Populate
+                document.getElementById('codex-img').src = getCardImage(card);
+                document.getElementById('codex-title').innerText = card.name;
+                document.getElementById('codex-type').innerText = card.type_line;
+                document.getElementById('codex-text').innerText = card.oracle_text || "No rule text.";
+                
+                // Legality
+                const fmts = ['commander', 'modern', 'standard', 'pauper'];
+                document.getElementById('codex-legality').innerHTML = fmts.map(f => {
+                    const status = card.legalities[f];
+                    const cls = status === 'legal' ? 'is-legal' : 'not-legal';
+                    return `<div class="legality-badge ${cls}"><span>${f.charAt(0).toUpperCase() + f.slice(1)}</span><span>${status.toUpperCase()}</span></div>`;
+                }).join('');
+                
+                window.scryfallLink = card.scryfall_uri;
+                
+                loading.classList.add('hidden');
+                content.classList.remove('hidden');
+            } catch(e) {
+                loading.innerText = "Error consulting archives.";
+            }
         }
 
         // CHARTS & HELPERS
