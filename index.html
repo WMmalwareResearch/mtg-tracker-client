@@ -235,11 +235,43 @@
             flex-direction: column; 
             gap: 10px; 
         }
+        .deck-item-preview {
+            background: rgba(255,255,255,0.05); 
+            padding:15px; 
+            border-radius:8px; 
+            border:1px solid var(--border); 
+            cursor:pointer; 
+            display:flex; 
+            justify-content:space-between; 
+            align-items:center;
+            position: relative;
+        }
+        .deck-item-preview:hover {
+            border-color: var(--primary);
+        }
+        .deck-item-info {
+            font-size: 12px;
+            color: var(--subtext);
+            font-weight: 400;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
 
         /* LOGIN SCREEN */
         #auth-screen { 
             background: radial-gradient(circle at center, #450a0a, #0f0a1c); 
         }
+        .auth-box { 
+            background: rgba(255,255,255,0.05); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid var(--border); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+        }
+
+        /* MOBILE BOTTOM NAV */
+        .bottom-nav { display: none; } 
 
         /* RESPONSIVE */
         @media (max-width: 900px) {
@@ -255,6 +287,7 @@
                 background: rgba(15, 10, 28, 0.9); 
                 border-top: 1px solid var(--border); 
             }
+            .b-item.active { color: var(--primary); }
         }
     </style>
 </head>
@@ -382,7 +415,7 @@
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                 <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
-                                <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor()">
+                                <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">
                                     ✍️ Edit Ritual
                                 </button>
                             </div>
@@ -422,7 +455,6 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        // REPLACE THESE WITH YOUR OWN KEYS IF YOU HAVEN'T ALREADY
         const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -432,9 +464,7 @@
         let allVersions = [];     
         let searchTimer;
         let cardsCache = []; 
-        
-        // NEW: Track the currently viewed deck ID for logic checks
-        let currentViewedDeckId = null;
+        let currentViewedDeckId = null; // Track current deck ID for updates
 
         const CHART_COLORS = [
             '#d946ef', '#dc2626', '#a78bfa', '#4f46e5', '#059669', '#737373', '#facc15'
@@ -527,7 +557,7 @@
             });
 
             if (view !== 'decks') {
-                showRitualEditor(false); // Reset editor when leaving
+                showRitualEditor(false); 
                 clearCharts();
             }
 
@@ -845,12 +875,12 @@
         
         async function validateDeck() {
             const listText = document.getElementById('deckList').value;
-            const resultsEl = document.getElementById('detail-analysis-results'); 
+            const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); 
             const btn = document.getElementById('validateDeckBtn');
             
             if (!listText) return showToast("Ritual list is empty.", "error");
 
-            // BUG FIX 2: Ensure we switch to detail view to see the results
+            // Ensure we switch to detail view to see results
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
             document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
@@ -893,9 +923,9 @@
                 allMatchedCards.forEach(cardData => {
                     const deckCard = parsedCards.find(c => c.name === cardData.name);
                     const quantity = deckCard ? deckCard.qty : 1;
-                    const primaryType = cardData.type_line.split('—')[0].split(' ')[0].trim();
+                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
                     typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
-                    const cmc = Math.floor(cardData.cmc);
+                    const cmc = Math.floor(cardData.cmc || 0);
                     cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity;
                 });
 
@@ -904,7 +934,8 @@
                 
                 if (allUnmatched.length > 0) {
                     output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`;
-                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.identifiers.name} (Typo?)</li>`);
+                    // FIXED: Access u.name directly (Scryfall returns the input object for not_found)
+                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`);
                     output += `</ul><p>Please fix these names in the editor.</p>`;
                     showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error");
                 } else {
@@ -931,12 +962,15 @@
         // --- NEW RITUAL VIEW CONTROL FUNCTIONS ---
 
         function viewRitualDetails(id) {
-            currentViewedDeckId = id; // Set current ID
+            currentViewedDeckId = id; 
             const d = window.myDecks.find(x => x.id == id);
+            
+            // FIXED: Safety check in case deck not found
+            if (!d) return showToast("Ritual not found in local cache.", "error");
+
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
             
-            // Switch view triggers validation automatically
             validateDeck(); 
         }
 
@@ -946,11 +980,11 @@
             clearCharts();
             currentViewedDeckId = null; 
             
-            // BUG FIX 1: Only clear data if specifically requested (e.g. "New Ritual")
             if (!keepData) {
                 document.getElementById('deckName').value = '';
                 document.getElementById('deckList').value = '';
-                document.getElementById('detail-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>';
+                const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results');
+                if(resultsEl) resultsEl.innerHTML = '<p style="font-size:13px; color:var(--subtext);">Metrics will appear here.</p>';
             }
         }
 
@@ -966,7 +1000,6 @@
 
             const { totalCount } = parseDeckList(list); 
             
-            // Upsert logic: If we are viewing an existing deck, update it. Otherwise insert.
             let error;
             if (currentViewedDeckId) {
                  const res = await sb.from('decks').update({
@@ -988,7 +1021,6 @@
         }
 
         async function loadDecks() {
-            // Only force editor view if we aren't currently deep in a detail view
             // showRitualEditor(true); 
             
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
@@ -1018,7 +1050,6 @@
             e.stopPropagation();
             if(!confirm("Delete ritual?")) return;
             
-            // BUG FIX 3: If deleting the currently viewed deck, go back to editor
             if (currentViewedDeckId == id) {
                 showRitualEditor(false);
             }
@@ -1030,4 +1061,3 @@
     </script>
 </body>
 </html>
-
