@@ -235,12 +235,12 @@
                 
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Cards</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Value</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Cost</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">P/L</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Current Value</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Total Cost</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">Profit/Loss</div></div>
                 </div>
                 <div class="card-box">
-                    <h3>Recent Acquisitions</h3>
+                    <h3>Recent Acquisitions (Last 5)</h3>
                     <div class="collection-grid" id="recent-grid" style="min-height:100px;">
                         <div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to 'Add Cards' to start!</div>
                     </div>
@@ -331,7 +331,7 @@
         let tempCardData = null; // Stores the current SELECTED version's details
         let allVersions = [];     // Stores all versions returned by search
         let searchTimer;
-        let cardsCache = []; 
+        let cardsCache = []; // Cache for instant delete/update
 
         // --- TOAST HELPER ---
         function showToast(message, type = 'info') {
@@ -461,6 +461,10 @@
                     c.layout !== 'token' && 
                     c.layout !== 'art_series'
                 );
+                
+                // Sort by release date descending (most recent first)
+                allVersions.sort((a, b) => new Date(b.released_at) - new Date(a.released_at));
+
 
                 if (allVersions.length === 0) {
                     status.innerText = "No playable versions found.";
@@ -479,7 +483,6 @@
                     select.appendChild(option);
                 });
                 
-                // Automatically select the first (default) card
                 select.selectedIndex = 0;
                 updateSelectedVersion();
 
@@ -497,9 +500,8 @@
             const v = allVersions[index];
             if (!v) return;
 
-            // Handle dual-sided cards
             const imageUrl = v.image_uris ? v.image_uris.normal : (v.card_faces && v.card_faces[0].image_uris ? v.card_faces[0].image_uris.normal : '');
-            const usdPrice = v.prices.usd || v.prices.usd_foil; // Default to normal, then foil
+            const usdPrice = v.prices.usd || v.prices.usd_foil || 0; // Default to 0 if price not found
 
             document.getElementById('set').value = v.set.toUpperCase();
             document.getElementById('num').value = v.collector_number;
@@ -516,7 +518,8 @@
                 set: v.set.toUpperCase(),
                 num: v.collector_number,
                 img: imageUrl,
-                market_price: usdPrice // Storing for future P/L calculations
+                // CRUCIAL: Storing the market price in USD for Dashboard calculations
+                market_price: parseFloat(usdPrice)
             };
         }
 
@@ -539,14 +542,17 @@
                 collector_number: tempCardData.num,
                 image_url: tempCardData.img,
                 buy_price: cost,
-                quantity: qty
+                quantity: qty,
+                // FIX: Insert the market price and update time
+                market_price_usd: tempCardData.market_price,
+                last_price_update: new Date().toISOString()
             });
 
             btn.innerText = "Save to Collection"; btn.disabled = false;
 
             if(!error) { 
                 showToast(`Added ${tempCardData.name}!`, "success");
-                // Clear inputs after successful add
+                
                 document.getElementById('search').value = "";
                 document.getElementById('cost').value = "";
                 document.getElementById('qty').value = "1"; 
@@ -565,7 +571,7 @@
         }
 
         async function loadData() {
-            const { data: cards, error } = await sb.from('cards').select('*');
+            const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             if(error) return console.error(error);
 
             cardsCache = cards; // Store the latest data
@@ -574,7 +580,8 @@
             cards.forEach(c => {
                 count += c.quantity;
                 totalCost += (Number(c.buy_price) * c.quantity);
-                totalVal += (Number(c.buy_price) * c.quantity); 
+                // FIX: Use market_price_usd for current total value calculation
+                totalVal += (Number(c.market_price_usd || 0) * c.quantity); 
             });
 
             document.getElementById('stat-count').innerText = count;
@@ -586,12 +593,13 @@
             gainEl.innerText = `$${gain.toFixed(2)}`;
             gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
 
+            // Recent Acquisitions is limited to the last 5 entries
             if(cards.length > 0) {
-                const recent = cards.slice(-5).reverse();
+                const recent = cards.slice(0, 5); // Cards are already ordered descending (most recent first)
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
                     <div class="grid-card">
                         <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
-                        <div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${c.buy_price}</span></div>
+                        <div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div>
                     </div>
                 `).join('');
             } else {
@@ -603,6 +611,7 @@
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
             
+            // Re-fetch data if cache is empty or stale, otherwise use cache
             const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
             
             if(cards.length === 0) {
@@ -620,7 +629,7 @@
                         </button>
                     </div>
                     <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
-                    <div class="overlay"><span>${c.quantity}x</span><span>$${c.buy_price}</span></div>
+                    <div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div>
                 </div>
             `).join('');
         }
