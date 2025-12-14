@@ -42,12 +42,26 @@
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
         .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: #000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
         .grid-card:hover { transform: translateY(-5px); }
-        .grid-card img { width: 100%; height: 100%; object-fit: cover; }
+        .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 8px; background: rgba(0,0,0,0.85); font-size: 11px; font-weight: bold; color: white; display:flex; justify-content:space-between; box-sizing: border-box; }
         
         /* DECK CHECK */
         .deck-area { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
         textarea { width: 100%; height: 300px; background: var(--bg); border: 1px solid var(--border); color: white; padding: 15px; font-family: monospace; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+
+        /* TOASTS & SKELETONS */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: var(--card); color: var(--text); padding: 12px 20px; border-radius: 8px; border-left: 4px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; min-width: 250px; animation: slideIn 0.3s ease-out forwards; font-size: 13px; font-weight: 500; }
+        .toast.success { border-left-color: var(--green); }
+        .toast.error { border-left-color: var(--red); }
+        .toast.hiding { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+
+        .skeleton { background: #334155; border-radius: 4px; position: relative; overflow: hidden; }
+        .skeleton::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent); animation: shimmer 1.5s infinite; transform: translateX(-100%); }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        .sk-card { aspect-ratio: 2.5/3.5; border-radius: 8px; }
 
         @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; } .sidebar { display: none; } .stat-grid { grid-template-columns: 1fr 1fr; } .deck-area { grid-template-columns: 1fr; } }
     </style>
@@ -148,40 +162,48 @@
         // --- 1. CONFIGURATION ---
         const SUPABASE_URL = "https://mdirqlntcxqkthbwubmj.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE"; 
-        
-        // FIXED: Renamed client to 'sb' to prevent naming collision with the library
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let session = null;
         let tempCardData = null;
         let searchTimer;
 
+        // --- TOAST HELPER ---
+        function showToast(message, type = 'info') {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${message}</span> <span style="cursor:pointer; opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('hiding'); toast.addEventListener('animationend', () => toast.remove()); }, 3000);
+        }
+
         // --- 2. AUTHENTICATION ---
         async function handleLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if(!email || !password) return alert("Please enter email and password");
+            if(!email || !password) return showToast("Please enter email and password", "error");
             
             const btn = document.querySelector('#auth-screen button');
             const msg = document.getElementById('auth-msg');
             btn.innerText = "Processing..."; btn.disabled = true;
 
-            // 1. Try Sign In
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
-                console.log("Sign in failed ("+error.message+"), trying sign up...");
-                // 2. If Sign In fails, Try Sign Up with FORCED REDIRECT for GitHub Pages
                 const signUp = await sb.auth.signUp({ 
                     email, 
                     password,
-                    options: {
-                        emailRedirectTo: 'https://wmmalwareresearch.github.io/mtg-tracker-client/index.html'
-                    }
+                    options: { emailRedirectTo: 'https://wmmalwareresearch.github.io/mtg-tracker-client/index.html' }
                 });
                 
                 if (signUp.error) {
-                    alert("Error: " + signUp.error.message);
+                    showToast(signUp.error.message, "error");
                     btn.innerText = "Sign In / Sign Up"; btn.disabled = false;
                 } else {
                     if(signUp.data.session) {
@@ -258,7 +280,7 @@
         }
 
         async function addCard() {
-            if(!tempCardData) return alert("Search for a card first");
+            if(!tempCardData) return showToast("Search for a card first", "error");
             const cost = document.getElementById('cost').value || 0;
             const qty = document.getElementById('qty').value || 1;
             const btn = document.querySelector('#view-add button');
@@ -278,14 +300,14 @@
             btn.innerText = "Save to Database"; btn.disabled = false;
 
             if(!error) { 
-                alert("Saved!"); 
+                showToast(`Added ${tempCardData.name}!`, "success");
                 document.getElementById('search').value = ""; 
                 document.getElementById('preview').style.display = 'none';
                 document.getElementById('preview-text').style.display = 'block';
                 document.getElementById('search-status').innerText = "";
                 tempCardData = null;
                 loadData(); 
-            } else { alert("Database Error: " + error.message); }
+            } else { showToast(error.message, "error"); }
         }
 
         async function loadData() {
@@ -293,7 +315,6 @@
             if(error) return console.error(error);
 
             let totalVal = 0, totalCost = 0, count = 0;
-            
             cards.forEach(c => {
                 count += c.quantity;
                 totalCost += (Number(c.buy_price) * c.quantity);
@@ -316,18 +337,20 @@
         }
 
         async function loadCollection() {
-            document.getElementById('collection-grid').innerHTML = "Loading...";
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
+            
             const { data } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             
             if(data.length === 0) {
-                document.getElementById('collection-grid').innerHTML = '<div style="color:var(--subtext);">No cards found.</div>';
+                grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">No cards found.</div>';
                 return;
             }
 
-            document.getElementById('collection-grid').innerHTML = data.map(c => `
+            grid.innerHTML = data.map(c => `
                 <div class="grid-card">
                     <div class="grid-del" style="position:absolute; top:5px; right:5px; background:rgba(220,38,38,0.9); padding:2px 6px; border-radius:4px; font-size:10px; z-index:10; cursor:pointer;" onclick="deleteCard('${c.id}')">✕</div>
-                    <img src="${c.image_url}" loading="lazy">
+                    <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
                     <div class="overlay"><span>${c.quantity}x</span><span>$${c.buy_price}</span></div>
                 </div>
             `).join('');
@@ -343,7 +366,7 @@
         async function saveDeck() {
             const name = document.getElementById('deckName').value;
             const list = document.getElementById('deckList').value;
-            if(!name) return alert("Name required");
+            if(!name) return showToast("Name required", "error");
             
             const { error } = await sb.from('decks').insert({
                 user_id: session.user.id,
@@ -351,8 +374,8 @@
                 card_list: list
             });
             
-            if(!error) { alert("Deck Saved"); loadDecks(); }
-            else { alert(error.message); }
+            if(!error) { showToast("Deck Saved", "success"); loadDecks(); }
+            else { showToast(error.message, "error"); }
         }
 
         async function loadDecks() {
