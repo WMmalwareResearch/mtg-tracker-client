@@ -235,29 +235,38 @@
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width:500px; margin:0 auto;">
+                    
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
                         <h2 style="margin:0;">Add Relic</h2>
-                        <button class="secondary" style="width:auto; font-size:12px; padding: 8px 12px;" onclick="openBulkModal()">📜 Bulk Import</button>
+                        <button class="secondary" style="width:auto; font-size:12px; padding: 8px 12px; height: auto;" onclick="openBulkModal()">
+                            📜 Bulk Import
+                        </button>
                     </div>
                     
                     <div class="input-group">
                         <span class="input-icon">🔍</span>
                         <input type="text" id="search" placeholder="Search Card Name..." oninput="debounceSearch()">
                     </div>
+                    
                     <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
+                    
                     <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
+                    
                     <div style="display:flex; gap:10px; margin-bottom: 15px;">
                         <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
                         <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
                         <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;">
                     </div>
+                    
                     <div class="input-group">
                         <span class="input-icon">💰</span>
                         <input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;">
                     </div>
+
                     <div style="font-size:12px; color:var(--subtext); margin-bottom:15px;">
                         Market Price: <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
+                    
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);">
                         <img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;">
                         <span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span>
@@ -883,3 +892,4 @@
     </script>
 </body>
 </html>
+
