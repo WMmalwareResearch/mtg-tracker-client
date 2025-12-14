@@ -346,7 +346,20 @@
             toast.className = `toast ${type}`;
             toast.innerHTML = `<span>${message}</span> <span style="cursor:pointer; opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
             container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('hiding'); toast.addEventListener('animationend', () => toast.remove()); }, 3000);
+            
+            // FIX: Set a double timeout to ensure the element is removed, 
+            // even if the animation fails or the event listener isn't triggered.
+            setTimeout(() => { 
+                toast.classList.add('hiding'); 
+                toast.addEventListener('animationend', () => toast.remove()); 
+            }, 3000); 
+
+            // Backup removal (in case animation event fails)
+            setTimeout(() => {
+                if(toast.parentElement) {
+                    toast.remove();
+                }
+            }, 3500);
         }
 
         // --- 2. AUTHENTICATION ---
@@ -582,7 +595,6 @@
                 count += c.quantity;
                 
                 // FIX: Only include the cost if the buy_price is NOT null and greater than zero.
-                // This prevents "free" cards (null) from calculating a positive P/L.
                 if (c.buy_price !== null && Number(c.buy_price) > 0) {
                     totalCost += Number(c.buy_price) * c.quantity;
                 }
@@ -617,6 +629,7 @@
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
             
+            // Use local cache for speed, or fetch if cache is empty
             const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
             
             if(cards.length === 0) {
