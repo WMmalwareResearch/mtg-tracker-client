@@ -25,11 +25,11 @@
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger Shadow */
             
             /* Chart Colors (Matching Grimoire theme) */
-            --chart-color-1: #d946ef; 
-            --chart-color-2: #dc2626; 
-            --chart-color-3: #a78bfa; 
-            --chart-color-4: #4f46e5; 
-            --chart-color-5: #059669; 
+            --chart-color-1: #d946ef; /* Fuchsia */
+            --chart-color-2: #dc2626; /* Crimson */
+            --chart-color-3: #a78bfa; /* Violet */
+            --chart-color-4: #4f46e5; /* Indigo */
+            --chart-color-5: #059669; /* Teal */
         }
 
         body { 
@@ -99,7 +99,7 @@
             padding-left: 12px;
         }
 
-        /* MAIN CONTENT - Applies base padding */
+        /* MAIN CONTENT */
         .main { 
             padding: 40px clamp(1rem, 2vw + 1rem, 5rem); 
             overflow-y: auto; 
@@ -385,7 +385,7 @@
                 <div class="collection-grid" id="collection-grid" style="margin-top:20px;">Loading...</div>
             </div>
 
-            <div id="view-decks">
+            <div id="view-decks" class="hidden">
                 <h2>Ritual Library</h2>
                 
                 <div id="deck-workspace">
@@ -415,9 +415,15 @@
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                                 <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
-                                <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">
-                                    ✍️ Edit Ritual
-                                </button>
+                                
+                                <div style="display:flex; gap:10px;">
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">
+                                        💾 Save
+                                    </button>
+                                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">
+                                        ✍️ Edit
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="deck-list-viewer" id="detail-decklist-viewer">
@@ -503,7 +509,6 @@
             let { data, error } = await sb.auth.signInWithPassword({ email, password });
             
             if (error) {
-                // If sign in fails, try to sign up
                 const signUp = await sb.auth.signUp({ 
                     email, password,
                     options: { emailRedirectTo: window.location.href }
@@ -514,8 +519,7 @@
                     btn.innerText = "Summon Session"; btn.disabled = false;
                 } else {
                     if(signUp.data.session) {
-                        // Immediate login on signup
-                        // No reload needed, onAuthStateChange will handle it
+                        // Signed up (and logged in)
                     } else {
                         msg.innerText = "✅ Pact Forged! Check your email.";
                         msg.style.color = "var(--green)";
@@ -523,18 +527,15 @@
                     }
                 }
             } else {
-                // SUCCESSFUL LOGIN
-                // FIX: Do NOT reload the page. Let onAuthStateChange handle the transition.
                 btn.innerText = "Summoning...";
             }
         }
 
         async function handleLogout() {
             await sb.auth.signOut();
-            window.location.reload(); // Reload is fine here to reset state
+            window.location.reload(); 
         }
 
-        // Listen for auth changes (Login, Logout, Session Refresh)
         sb.auth.onAuthStateChange((event, _session) => {
             session = _session;
             if (session) {
@@ -543,7 +544,6 @@
                 document.getElementById('user-email').innerText = session.user.email;
                 loadData();
             } else {
-                // If session is lost, show login screen
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
             }
@@ -1025,6 +1025,8 @@
         }
 
         async function loadDecks() {
+            showRitualEditor(); 
+            
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
             const listEl = document.getElementById('saved-decks-list');
             
@@ -1074,4 +1076,3 @@
     </script>
 </body>
 </html>
-
