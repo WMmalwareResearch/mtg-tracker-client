@@ -571,7 +571,7 @@
             btn.innerText = "Save to Collection"; btn.disabled = false;
 
             if(!error) { 
-                showToast(`Added ${tempCardData.name}!`, "success");
+                showToast(`✅ Added ${qty}x ${tempCardData.name} to Collection!`, "success"); // IMPROVED TOAST
                 
                 document.getElementById('search').value = "";
                 document.getElementById('cost').value = "";
@@ -822,16 +822,19 @@
             const list = document.getElementById('deckList').value;
             if(!name) return showToast("Name required", "error");
 
-            const { totalCount } = parseDeckList(list); // Get the card count
+            const { totalCount } = parseDeckList(list); 
             
             const { error } = await sb.from('decks').insert({
                 user_id: session.user.id,
                 name: name,
                 card_list: list,
-                card_count: totalCount // Save the new count
+                card_count: totalCount 
             });
             
-            if(!error) { showToast(`Deck '${name}' saved (${totalCount} cards).`, "success"); loadDecks(); }
+            if(!error) { 
+                showToast(`💾 Deck '${name}' saved successfully (${totalCount} cards)!`, "success"); // IMPROVED SAVE TOAST
+                loadDecks(); 
+            }
             else { showToast(error.message, "error"); }
         }
 
@@ -861,7 +864,7 @@
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckList').value = d.card_list;
             document.getElementById('deck-analysis-results').innerHTML = '<p style="font-size:13px; color:var(--subtext);">Run validation to see card counts and legality issues.</p>';
-            showToast(`Deck '${d.name}' loaded.`, "info");
+            // REMOVED: showToast(`Deck '${d.name}' loaded.`, "info");
         }
 
         async function deleteDeck(id, e) {
