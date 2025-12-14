@@ -644,7 +644,18 @@
             try {
                 for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); if (data.object === 'error') throw new Error(data.details); allMatchedCards = allMatchedCards.concat(data.data); if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found); }
                 const typeAgg = {}; const cmcAgg = {};
-                allMatchedCards.forEach(cardData => { const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; });
+                allMatchedCards.forEach(cardData => { 
+                    const deckCard = parsedCards.find(c => c.name === cardData.name); 
+                    const quantity = deckCard ? deckCard.qty : 1; 
+                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; 
+                    typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; 
+                    
+                    // EXCLUDE LANDS FROM CMC CURVE
+                    if (!cardData.type_line.toLowerCase().includes('land')) {
+                        const cmc = Math.floor(cardData.cmc || 0); 
+                        cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; 
+                    }
+                });
                 let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`; output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`;
                 if (allUnmatched.length > 0) { output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`; allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`); output += `</ul><p>Please fix these names in the editor.</p>`; showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error"); } else { output += `<p style="color:var(--green);">All unique relic names resolved!</p>`; showToast(`Ritual successfully resolved!`, "success"); }
                 resultsEl.innerHTML = output;
