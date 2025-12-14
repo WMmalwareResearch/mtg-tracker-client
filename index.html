@@ -159,8 +159,10 @@
             transition: transform 0.1s, opacity 0.2s; 
         }
         button:hover { opacity: 0.85; }
+        button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
+        .clear-btn:hover { opacity: 1; transform: none; }
         
         #validateDeckBtn { background: var(--green); margin-bottom: 10px; }
 
@@ -183,13 +185,13 @@
         /* 2. Ritual Detail Mode (Left: Decklist, Right: Charts) */
         .deck-area-detail {
             display: grid;
-            grid-template-columns: 1fr 400px; /* Wider analysis panel */
+            grid-template-columns: 1fr 400px; 
             gap: 20px;
         }
         .deck-list-viewer {
-            height: 70vh; /* Maximize viewer space */
+            height: 70vh; 
             overflow-y: auto;
-            white-space: pre-wrap; /* Preserve whitespace/newlines */
+            white-space: pre-wrap; 
             padding: 15px;
             font-size: 14px;
             line-height: 1.5;
@@ -228,6 +230,46 @@
         }
         .deck-item-preview:hover {
             border-color: var(--primary);
+        }
+        .deck-item-info {
+            font-size: 12px;
+            color: var(--subtext);
+            font-weight: 400;
+            margin-top: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* LOGIN SCREEN */
+        #auth-screen { 
+            background: radial-gradient(circle at center, #450a0a, #0f0a1c); 
+        }
+        .auth-box { 
+            background: rgba(255,255,255,0.05); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid var(--border); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6); 
+        }
+
+        /* MOBILE BOTTOM NAV */
+        .bottom-nav { display: none; } 
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .deck-area-edit, .deck-area-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) { 
+            .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
+            .sidebar { display: none; } 
+            .main { padding: 20px; } 
+            .bottom-nav { 
+                background: rgba(15, 10, 28, 0.9); 
+                border-top: 1px solid var(--border); 
+            }
+            .b-item.active { color: var(--primary); }
         }
     </style>
 </head>
@@ -506,7 +548,6 @@
                 if(el.getAttribute('onclick').includes(`'${id}'`)) el.classList.add('active');
             });
 
-            // If we are leaving the decks view, clear any loaded editor/details
             if (view !== 'decks') {
                 showRitualEditor(); 
                 clearCharts();
@@ -897,9 +938,9 @@
         }
         
         async function validateDeck() {
-            // NOTE: This function reads from the deckList textarea (Editor Mode)
+            // NOTE: This function reads from the deckList textarea
             const listText = document.getElementById('deckList').value;
-            const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); // Use detail area if available
+            const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); 
             const btn = document.getElementById('validateDeckBtn');
             
             if (!listText) {
@@ -907,16 +948,20 @@
                 return showToast("Ritual list is empty.", "error");
             }
 
-            // If running manually from editor, set the analysis context
+            // Set analysis context before the network call
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
-            btn.innerText = "Resolving Relics (0/0)...";
-            btn.disabled = true;
+            if(btn) {
+                btn.innerText = "Resolving Relics (0/0)...";
+                btn.disabled = true;
+            }
 
             const { totalCount, cards: parsedCards } = parseDeckList(listText);
             
             if (parsedCards.length === 0) {
-                btn.innerText = "✅ Validate & Resolve Ritual";
-                btn.disabled = false;
+                if(btn) {
+                    btn.innerText = "✅ Validate & Resolve Ritual";
+                    btn.disabled = false;
+                }
                 resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found. Ensure format is "QTY Card Name".</p>';
                 return showToast("No valid ritual lines found.", "error");
             }
@@ -936,7 +981,7 @@
                     const end = start + chunkSize;
                     const chunk = identifiers.slice(start, end);
                     
-                    btn.innerText = `Resolving Relics (${i + 1}/${totalChunks})...`;
+                    if(btn) btn.innerText = `Resolving Relics (${i + 1}/${totalChunks})...`;
 
                     const response = await fetch('https://api.scryfall.com/cards/collection', {
                         method: 'POST',
@@ -968,11 +1013,9 @@
                     const deckCard = parsedCards.find(c => c.name === cardData.name);
                     const quantity = deckCard ? deckCard.qty : 1;
                     
-                    // 1. Type Aggregation 
                     const primaryType = cardData.type_line.split('—')[0].split(' ')[0].trim();
                     typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
 
-                    // 2. CMC Aggregation
                     const cmc = Math.floor(cardData.cmc);
                     cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity;
                 });
@@ -1007,8 +1050,10 @@
                 resultsEl.innerHTML = `<p style="color:var(--red);">API Error: Could not resolve ritual list. ${error.message}</p>`;
                 showToast("Ritual resolution failed due to an API error.", "error");
             } finally {
-                btn.innerText = "✅ Validate & Resolve Ritual";
-                btn.disabled = false;
+                if(btn) {
+                    btn.innerText = "✅ Validate & Resolve Ritual";
+                    btn.disabled = false;
+                }
             }
         }
 
@@ -1031,7 +1076,6 @@
             document.getElementById('detail-mode').classList.remove('hidden');
 
             // 4. Trigger validation and chart generation
-            // This reads from the deckList textarea which we just populated
             validateDeck();
         }
 
@@ -1076,6 +1120,9 @@
         }
 
         async function loadDecks() {
+            // CRITICAL: Ensure we switch back to the editor view when loading the list of decks
+            showRitualEditor(); 
+            
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
             const listEl = document.getElementById('saved-decks-list');
             
@@ -1087,7 +1134,6 @@
             listEl.innerHTML = data.map(d => {
                 const countText = d.card_count ? `(${d.card_count} relics)` : '(count unknown)';
                 
-                // CRITICAL: Call viewRitualDetails on click
                 return `
                 <div class="deck-item-preview" onclick="viewRitualDetails('${d.id}')">
                     <div>
@@ -1102,12 +1148,6 @@
             }).join('');
             window.myDecks = data;
         }
-
-        // Replaced loadDeckIntoEditor with viewRitualDetails
-        /* function loadDeckIntoEditor(id) {
-            // ... OLD CODE REMOVED ...
-        }
-        */
 
         async function deleteDeck(id, e) {
             e.stopPropagation();
