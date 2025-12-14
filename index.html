@@ -95,7 +95,7 @@
         /* INPUTS */
         .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; }
         .input-icon { position: absolute; left: 12px; color: var(--subtext); font-size: 16px; pointer-events: none; }
-        input { 
+        input, select { 
             width: 100%; 
             padding: 14px 14px 14px 40px; /* Increased left padding for icon */
             border-radius: 8px; 
@@ -107,8 +107,17 @@
             font-family: 'Inter', sans-serif;
             margin: 0; /* Override margin-bottom for group usage */
         }
-        .card-box > input, .card-box > textarea { padding: 14px; padding-left: 14px; margin-bottom: 15px; } /* Reset padding for standalone inputs */
-        input:focus, textarea:focus { 
+        select {
+            padding-left: 14px; /* Default for select */
+            appearance: none; /* Hide default arrow */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+
+        .card-box > input, .card-box > textarea, .card-box > select { padding: 14px; padding-left: 14px; margin-bottom: 15px; } /* Reset padding for standalone inputs */
+        input:focus, select:focus, textarea:focus { 
             outline: none; 
             border-color: var(--primary); 
             box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); 
@@ -153,7 +162,7 @@
         .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); padding: 40px; border-radius: 20px; border: 1px solid var(--border); width: 320px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
 
         /* MOBILE BOTTOM NAV */
-        .bottom-nav { display: none; } /* Hidden on desktop */
+        .bottom-nav { display: none; } 
 
         /* RESPONSIVE */
         @media (max-width: 768px) { 
@@ -175,7 +184,7 @@
             }
             .b-item.active { color: var(--primary); }
             .b-icon { font-size: 20px; }
-            .input-group input { padding-left: 14px; } /* Icons not needed on cramped mobile */
+            .input-group input { padding-left: 14px; } 
             .input-icon { display: none; }
         }
 
@@ -249,15 +258,21 @@
                     
                     <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
                     
-                    <div style="display:flex; gap:10px;">
-                        <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%;">
-                        <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%;">
-                        <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%;">
+                    <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
+                    
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                        <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
+                        <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
+                        <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;">
                     </div>
                     
                     <div class="input-group">
                         <span class="input-icon">💰</span>
                         <input type="number" id="cost" placeholder="Buy Price ($)" step="0.01" style="padding-left: 40px;">
+                    </div>
+
+                    <div style="font-size:12px; color:var(--subtext); margin-bottom:15px;">
+                        Market Price: <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
                     
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);">
@@ -281,7 +296,7 @@
                 <div class="deck-area">
                     <div class="card-box">
                         <div style="display:flex; align-items:center; margin-bottom:10px;">
-                            <input id="deckName" placeholder="Deck Name (e.g. Commander 2025)" style="margin-bottom: 0; flex-grow: 1;">
+                            <input id="deckName" placeholder="Deck Name (e.g. Commander 2025)" style="margin-bottom: 0; flex-grow: 1; padding-left:14px;">
                             <button class="secondary clear-btn" onclick="clearDeckEditor()">
                                 🗑️
                             </button>
@@ -313,9 +328,10 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let session = null;
-        let tempCardData = null;
+        let tempCardData = null; // Stores the current SELECTED version's details
+        let allVersions = [];     // Stores all versions returned by search
         let searchTimer;
-        let cardsCache = []; // NEW: Cache for instant delete/update
+        let cardsCache = []; 
 
         // --- TOAST HELPER ---
         function showToast(message, type = 'info') {
@@ -411,36 +427,109 @@
         async function fetchCardMeta() {
             const name = document.getElementById('search').value;
             const status = document.getElementById('search-status');
-            if(name.length < 3) { status.innerText = ""; return; }
-            status.innerText = "Searching Scryfall...";
+            const select = document.getElementById('versionSelect');
             
+            status.innerText = "";
+            select.innerHTML = '<option>Searching...</option>';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('preview-text').style.display = 'block';
+            document.getElementById('set').value = '';
+            document.getElementById('num').value = '';
+            document.getElementById('marketPrice').innerText = '--';
+            allVersions = [];
+            tempCardData = null;
+
+            if(name.length < 3) return;
+            
+            status.innerText = "Searching Scryfall...";
+
             try {
-                const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+                // Use the search endpoint and group by name to get all versions
+                const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&unique=prints`);
                 const data = await res.json();
                 
-                if(data.object !== 'error') {
-                    status.innerText = "Found: " + data.name;
-                    document.getElementById('set').value = data.set.toUpperCase();
-                    document.getElementById('num').value = data.collector_number;
-                    const img = data.image_uris ? data.image_uris.normal : (data.card_faces ? data.card_faces[0].image_uris.normal : "");
-                    
-                    document.getElementById('preview').src = img;
-                    document.getElementById('preview').style.display = 'block';
-                    document.getElementById('preview-text').style.display = 'none';
-                    
-                    tempCardData = { name: data.name, set: data.set.toUpperCase(), num: data.collector_number, img: img };
-                } else {
+                if (data.object === 'error' || !data.data || data.data.length === 0) {
                     status.innerText = "Card not found.";
+                    select.innerHTML = '<option>No versions found</option>';
+                    return;
                 }
-            } catch(e) { status.innerText = "Error fetching data."; }
+
+                // Filter out non-English versions and tokens/art cards for simplicity
+                allVersions = data.data.filter(c => 
+                    c.lang === 'en' && 
+                    c.collector_number && 
+                    c.layout !== 'token' && 
+                    c.layout !== 'art_series'
+                );
+
+                if (allVersions.length === 0) {
+                    status.innerText = "No playable versions found.";
+                    select.innerHTML = '<option>No versions found</option>';
+                    return;
+                }
+
+                status.innerText = `Found ${allVersions.length} versions of ${allVersions[0].name}`;
+                
+                select.innerHTML = '';
+                allVersions.forEach((v, index) => {
+                    const price = v.prices.usd || v.prices.usd_foil || 'N/A';
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = `${v.set_name} (${v.set.toUpperCase()} #${v.collector_number}) - $${price}`;
+                    select.appendChild(option);
+                });
+                
+                // Automatically select the first (default) card
+                select.selectedIndex = 0;
+                updateSelectedVersion();
+
+            } catch(e) { 
+                status.innerText = "Error connecting to Scryfall."; 
+                console.error(e);
+            }
+        }
+        
+        function updateSelectedVersion() {
+            const select = document.getElementById('versionSelect');
+            if (select.value === "") return;
+
+            const index = parseInt(select.value);
+            const v = allVersions[index];
+            if (!v) return;
+
+            // Handle dual-sided cards
+            const imageUrl = v.image_uris ? v.image_uris.normal : (v.card_faces && v.card_faces[0].image_uris ? v.card_faces[0].image_uris.normal : '');
+            const usdPrice = v.prices.usd || v.prices.usd_foil; // Default to normal, then foil
+
+            document.getElementById('set').value = v.set.toUpperCase();
+            document.getElementById('num').value = v.collector_number;
+            document.getElementById('marketPrice').innerText = usdPrice ? `$${parseFloat(usdPrice).toFixed(2)}` : 'N/A';
+            
+            const preview = document.getElementById('preview');
+            preview.src = imageUrl;
+            preview.style.display = 'block';
+            document.getElementById('preview-text').style.display = 'none';
+
+            // Store the final metadata for insertion
+            tempCardData = {
+                name: v.name,
+                set: v.set.toUpperCase(),
+                num: v.collector_number,
+                img: imageUrl,
+                market_price: usdPrice // Storing for future P/L calculations
+            };
         }
 
+
         async function addCard() {
-            if(!tempCardData) return showToast("Search for a card first", "error");
+            if(!tempCardData) return showToast("Search and select a card version first", "error");
+            
             const cost = document.getElementById('cost').value || 0;
             const qty = document.getElementById('qty').value || 1;
             const btn = document.querySelector('#view-add button');
             
+            if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error");
+
             btn.innerText = "Saving..."; btn.disabled = true;
 
             const { error } = await sb.from('cards').insert({
@@ -457,10 +546,19 @@
 
             if(!error) { 
                 showToast(`Added ${tempCardData.name}!`, "success");
-                document.getElementById('search').value = ""; 
+                // Clear inputs after successful add
+                document.getElementById('search').value = "";
+                document.getElementById('cost').value = "";
+                document.getElementById('qty').value = "1"; 
+                document.getElementById('versionSelect').innerHTML = '';
+
                 document.getElementById('preview').style.display = 'none';
                 document.getElementById('preview-text').style.display = 'block';
                 document.getElementById('search-status').innerText = "";
+                document.getElementById('set').value = '';
+                document.getElementById('num').value = '';
+                document.getElementById('marketPrice').innerText = '--';
+
                 tempCardData = null;
                 loadData(); 
             } else { showToast(error.message, "error"); }
@@ -469,7 +567,7 @@
         async function loadData() {
             const { data: cards, error } = await sb.from('cards').select('*');
             if(error) return console.error(error);
-            
+
             cardsCache = cards; // Store the latest data
 
             let totalVal = 0, totalCost = 0, count = 0;
@@ -493,7 +591,7 @@
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
                     <div class="grid-card">
                         <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
-                        <div class="overlay"><span>${c.name}</span><span>$${c.buy_price}</span></div>
+                        <div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${c.buy_price}</span></div>
                     </div>
                 `).join('');
             } else {
@@ -505,7 +603,6 @@
             const grid = document.getElementById('collection-grid');
             grid.innerHTML = Array(10).fill('<div class="skeleton sk-card"></div>').join('');
             
-            // Use the cache if available, otherwise fetch
             const cards = cardsCache.length > 0 ? cardsCache : (await sb.from('cards').select('*')).data;
             
             if(cards.length === 0) {
@@ -513,7 +610,7 @@
                 return;
             }
 
-            cardsCache = cards; // Update cache if fetched
+            cardsCache = cards; 
 
             grid.innerHTML = cards.map(c => `
                 <div class="grid-card" id="card-${c.id}">
@@ -532,26 +629,22 @@
             e.stopPropagation();
             if(!confirm("Are you sure you want to delete this card?")) return;
             
-            // 1. INSTANT UI UPDATE
             const cardEl = document.getElementById(`card-${id}`);
             if(cardEl) cardEl.style.display = 'none';
 
-            // 2. Remove from local cache
             const initialLength = cardsCache.length;
             cardsCache = cardsCache.filter(c => c.id !== Number(id));
             if(cardsCache.length < initialLength) showToast("Card deleted locally. Syncing...", "info");
 
-            // 3. DATABASE CALL (Slow)
             const { error } = await sb.from('cards').delete().eq('id', id);
 
             if(error) {
                 showToast(`Error deleting card: ${error.message}`, "error");
-                if(cardEl) cardEl.style.display = 'block'; // Revert if failed
-                cardsCache = await sb.from('cards').select('*'); // Force refresh cache
+                if(cardEl) cardEl.style.display = 'block'; 
+                cardsCache = (await sb.from('cards').select('*')).data; 
             } else {
                 showToast("Card successfully removed.", "success");
             }
-            // Always reload stats after delete attempt
             loadData(); 
         }
 
