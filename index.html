@@ -22,6 +22,7 @@
             --border: rgba(167, 139, 250, 0.2); 
             --green: #d946ef; 
             --red: #dc2626; 
+            --yellow: #facc15;
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             
             /* Chart Colors */
@@ -108,7 +109,15 @@
         .deck-item-preview:hover { border-color: var(--primary); }
         .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* PROPHECY MODAL (New) */
+        /* THE LINK (OWNERSHIP STYLES) */
+        .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
+        .is-owned { color: var(--green); border-left: 2px solid var(--green); background: rgba(217, 70, 239, 0.05); }
+        .is-partial { color: var(--yellow); border-left: 2px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
+        .is-missing { color: var(--red); border-left: 2px solid var(--red); opacity: 0.8; }
+        .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
+
+        /* PROPHECY MODAL */
         #prophecy-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 10, 28, 0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .prophecy-content { width: 90%; max-width: 1000px; text-align: center; }
         .prophecy-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 30px 0; min-height: 200px; }
@@ -145,10 +154,7 @@
         <div class="prophecy-content">
             <h2 style="color:var(--primary); text-shadow: 0 0 10px var(--primary); margin-bottom: 10px;">🔮 The Prophecy</h2>
             <p style="color:var(--subtext); margin-bottom: 20px;">Divining a starting hand from the ether...</p>
-            
-            <div class="prophecy-hand" id="prophecy-hand-container">
-                </div>
-
+            <div class="prophecy-hand" id="prophecy-hand-container"></div>
             <div style="display: flex; gap: 20px; justify-content: center;">
                 <button onclick="drawProphecy()" style="width: auto; padding: 12px 30px; background: var(--primary);">🔄 Mulligan</button>
                 <button onclick="closeProphecy()" class="secondary" style="width: auto; padding: 12px 30px;">Close Vision</button>
@@ -197,7 +203,6 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
                     <h2 style="margin:0;">Dashboard</h2>
                 </div>
-                
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Relics</div></div>
                     <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Current Value</div></div>
@@ -251,7 +256,6 @@
 
             <div id="view-decks" class="hidden">
                 <h2>Ritual Library</h2>
-                
                 <div id="deck-workspace">
                     <div id="editor-mode" class="deck-area-edit">
                         <div class="card-box">
@@ -272,7 +276,13 @@
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
+                                <div style="flex-grow:1;">
+                                    <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
+                                    <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">
+                                        OWNERSHIP: <span id="detail-owned-percent">0%</span>
+                                        <div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
+                                    </div>
+                                </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="openProphecy()">🔮 Prophecy</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
@@ -364,10 +374,8 @@
         async function handlePasswordReset() {
             const email = document.getElementById('email').value;
             if(!email) return showToast("Enter your email address.", "error");
-            
             const btn = document.getElementById('auth-btn');
             btn.innerText = "Casting..."; btn.disabled = true;
-
             const { data, error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
             btn.disabled = false;
             if (error) {
@@ -437,8 +445,6 @@
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('app').classList.add('hidden');
                 session = null;
-            } else if (event === 'PASSWORD_RECOVERY') {
-                showToast("Recovery successful. Please change your password.", "success");
             }
         });
 
@@ -474,7 +480,6 @@
             const name = document.getElementById('search').value;
             const status = document.getElementById('search-status');
             const select = document.getElementById('versionSelect');
-            
             status.innerText = ""; select.innerHTML = '<option>Searching...</option>';
             document.getElementById('preview').style.display = 'none';
             document.getElementById('preview-text').style.display = 'block';
@@ -488,13 +493,10 @@
             try {
                 const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&unique=prints`);
                 const data = await res.json();
-                if (data.object === 'error' || !data.data || data.data.length === 0) {
-                    status.innerText = "Relic not found."; select.innerHTML = '<option>No versions found</option>'; return;
-                }
+                if (data.object === 'error' || !data.data || data.data.length === 0) { status.innerText = "Relic not found."; select.innerHTML = '<option>No versions found</option>'; return; }
                 allVersions = data.data.filter(c => c.lang === 'en' && c.collector_number && c.layout !== 'token' && c.layout !== 'art_series');
                 allVersions.sort((a, b) => new Date(b.released_at) - new Date(a.released_at));
                 if (allVersions.length === 0) { status.innerText = "No usable Relic versions found."; select.innerHTML = '<option>No versions found</option>'; return; }
-
                 status.innerText = `Found ${allVersions.length} versions.`;
                 select.innerHTML = '';
                 allVersions.forEach((v, index) => {
@@ -504,8 +506,7 @@
                     option.text = `${v.set_name} (${v.set.toUpperCase()} #${v.collector_number}) - $${price}`;
                     select.appendChild(option);
                 });
-                select.selectedIndex = 0;
-                updateSelectedVersion();
+                select.selectedIndex = 0; updateSelectedVersion();
             } catch(e) { status.innerText = "Error connecting to Scryfall."; console.error(e); }
         }
         
@@ -517,8 +518,7 @@
             if (!v) return;
             const imageUrl = v.image_uris ? v.image_uris.normal : (v.card_faces && v.card_faces[0].image_uris ? v.card_faces[0].image_uris.normal : '');
             const usdPrice = v.prices.usd || v.prices.usd_foil || 0;
-            document.getElementById('set').value = v.set.toUpperCase();
-            document.getElementById('num').value = v.collector_number;
+            document.getElementById('set').value = v.set.toUpperCase(); document.getElementById('num').value = v.collector_number;
             document.getElementById('marketPrice').innerText = usdPrice ? `$${parseFloat(usdPrice).toFixed(2)}` : 'N/A';
             const preview = document.getElementById('preview');
             preview.src = imageUrl; preview.style.display = 'block';
@@ -548,13 +548,9 @@
             cardsCache = cards; 
             let totalVal = 0, totalCost = 0, count = 0;
             cards.forEach(c => { count += c.quantity; if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; totalVal += (Number(c.market_price_usd || 0) * c.quantity); });
-            document.getElementById('stat-count').innerText = count;
-            document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2);
-            document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
+            document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
             const gain = totalVal - totalCost;
-            const gainEl = document.getElementById('stat-gain');
-            gainEl.innerText = `$${gain.toFixed(2)}`;
-            gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
+            const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
             if(cards.length > 0) {
                 const recent = cards.slice(0, 5); 
                 document.getElementById('recent-grid').innerHTML = recent.map(c => `
@@ -570,11 +566,7 @@
             if(cards.length === 0) { grid.innerHTML = '<div style="color:var(--subtext); grid-column:1/-1; text-align:center;">No cards found.</div>'; return; }
             cardsCache = cards; 
             grid.innerHTML = cards.map(c => `
-                <div class="grid-card" id="card-${c.id}">
-                    <div class="overlay" style="top:5px; height:auto; background:none; align-items:flex-start;"><button style="background:var(--red); padding:4px 8px; border-radius:4px; font-size:10px; width:auto; transform:none;" onclick="deleteCard('${c.id}', event)">🗑️ Sacrifice</button></div>
-                    <img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1">
-                    <div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div>
-                </div>
+                <div class="grid-card" id="card-${c.id}"><div class="overlay" style="top:5px; height:auto; background:none; align-items:flex-start;"><button style="background:var(--red); padding:4px 8px; border-radius:4px; font-size:10px; width:auto; transform:none;" onclick="deleteCard('${c.id}', event)">🗑️ Sacrifice</button></div><img src="${c.image_url}" loading="lazy" onload="this.style.opacity=1"><div class="overlay"><span>${c.quantity}x</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div>
             `).join('');
         }
 
@@ -588,24 +580,71 @@
             loadData(); 
         }
 
-        // --- 5. DECK LOGIC & CHARTS ---
+        // --- 5. DECK LOGIC (LOCAL ANALYTICS & THE LINK) ---
+        // NEW: analyzeOwnership compares deck list vs cardsCache locally
+        function analyzeOwnership(deckListText) {
+            const vaultMap = {};
+            cardsCache.forEach(c => {
+                const key = c.name.toLowerCase().trim();
+                vaultMap[key] = (vaultMap[key] || 0) + c.quantity;
+            });
+
+            const lines = deckListText.split('\n');
+            let html = '';
+            let totalCards = 0;
+            let totalOwned = 0;
+            const regex = /^(\d+)\s+(.+)/;
+
+            lines.forEach(line => {
+                const match = line.trim().match(regex);
+                if (match) {
+                    const qtyNeeded = parseInt(match[1]);
+                    const name = match[2].trim();
+                    const key = name.toLowerCase().replace(/[^a-z0-9]/g, ''); // Normalize
+                    
+                    // Simple fuzzy match on map keys (approximate)
+                    let qtyOwned = 0;
+                    // Try exact match first, then fuzzy
+                    for (let vKey in vaultMap) {
+                        const vKeyClean = vKey.replace(/[^a-z0-9]/g, '');
+                        if (vKeyClean === key || vKeyClean.includes(key) || key.includes(vKeyClean)) {
+                            qtyOwned += vaultMap[vKey];
+                        }
+                    }
+
+                    totalCards += qtyNeeded;
+                    const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
+                    totalOwned += ownedForThisLine;
+
+                    let statusClass = 'is-missing';
+                    if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
+                    else if (qtyOwned > 0) statusClass = 'is-partial';
+
+                    html += `<div class="deck-line ${statusClass}">
+                        <strong>${qtyNeeded}</strong> ${name} 
+                        <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span>
+                    </div>`;
+                } else if (line.trim().length > 0) {
+                    html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`;
+                }
+            });
+
+            const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0;
+            document.getElementById('detail-decklist-viewer').innerHTML = html;
+            document.getElementById('detail-owned-percent').innerText = `${percent}%`;
+            document.getElementById('detail-owned-bar').style.width = `${percent}%`;
+            
+            // Color bar based on completeness
+            const bar = document.getElementById('detail-owned-bar');
+            if(percent === 100) bar.style.backgroundColor = 'var(--green)';
+            else if(percent > 50) bar.style.backgroundColor = 'var(--primary)';
+            else bar.style.backgroundColor = 'var(--red)';
+        }
+
         let typeChartInstance = null; let manaCurveInstance = null;
         function clearCharts() { if (typeChartInstance) { typeChartInstance.destroy(); typeChartInstance = null; } if (manaCurveInstance) { manaCurveInstance.destroy(); manaCurveInstance = null; } document.getElementById('deck-charts').classList.add('hidden'); }
-        function renderTypeChart(typeData) {
-            if (typeChartInstance) typeChartInstance.destroy();
-            const ctx = document.getElementById('typeChart').getContext('2d');
-            typeChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(typeData), datasets: [{ data: Object.values(typeData), backgroundColor: CHART_COLORS, borderColor: 'rgba(0, 0, 0, 0.4)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, title: { display: true, text: 'Card Type Breakdown', color: 'white' } } } });
-        }
-        function renderManaCurve(cmcData) {
-            if (manaCurveInstance) manaCurveInstance.destroy();
-            const ctx = document.getElementById('manaCurve').getContext('2d');
-            const maxCmc = Math.max(...Object.keys(cmcData).map(Number));
-            const labels = []; const data = [];
-            for (let i = 0; i <= Math.min(maxCmc, 6); i++) { labels.push(i.toString()); data.push(cmcData[i] || 0); }
-            let cmcSevenPlus = 0; for (let i = 7; i <= maxCmc; i++) { cmcSevenPlus += (cmcData[i] || 0); }
-            if (maxCmc >= 7 || maxCmc === 0) { labels.push('7+'); data.push(cmcSevenPlus); }
-            manaCurveInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Card Count', data: data, backgroundColor: '#a78bfa', borderColor: 'rgba(167, 139, 250, 0.2)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, title: { display: true, text: 'Mana Value (CMC) Curve', color: 'white' } }, scales: { x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#a1a1aa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } } } } });
-        }
+        function renderTypeChart(typeData) { if (typeChartInstance) typeChartInstance.destroy(); const ctx = document.getElementById('typeChart').getContext('2d'); typeChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(typeData), datasets: [{ data: Object.values(typeData), backgroundColor: CHART_COLORS, borderColor: 'rgba(0, 0, 0, 0.4)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, title: { display: true, text: 'Card Type Breakdown', color: 'white' } } } }); }
+        function renderManaCurve(cmcData) { if (manaCurveInstance) manaCurveInstance.destroy(); const ctx = document.getElementById('manaCurve').getContext('2d'); const maxCmc = Math.max(...Object.keys(cmcData).map(Number)); const labels = []; const data = []; for (let i = 0; i <= Math.min(maxCmc, 6); i++) { labels.push(i.toString()); data.push(cmcData[i] || 0); } let cmcSevenPlus = 0; for (let i = 7; i <= maxCmc; i++) { cmcSevenPlus += (cmcData[i] || 0); } if (maxCmc >= 7 || maxCmc === 0) { labels.push('7+'); data.push(cmcSevenPlus); } manaCurveInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Card Count', data: data, backgroundColor: '#a78bfa', borderColor: 'rgba(167, 139, 250, 0.2)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, title: { display: true, text: 'Mana Value (CMC) Curve', color: 'white' } }, scales: { x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#a1a1aa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } } } } }); }
 
         function parseDeckList(deckListText) {
             const lines = deckListText.split('\n'); let total = 0; const uniqueCardNames = new Map(); const regex = /^(\d+)\s+(.+)/; 
@@ -615,12 +654,20 @@
         
         async function validateDeck() {
             const listText = document.getElementById('deckList').value;
-            const resultsEl = document.getElementById('detail-analysis-results') || document.getElementById('deck-analysis-results'); 
+            const resultsEl = document.getElementById('detail-analysis-results'); 
             const btn = document.getElementById('validateDeckBtn');
             if (!listText) return showToast("Ritual list is empty.", "error");
-            document.getElementById('editor-mode').classList.add('hidden'); document.getElementById('detail-mode').classList.remove('hidden'); document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual"; document.getElementById('detail-decklist-viewer').innerText = listText;
+
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
+            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
+            
+            // RUN THE LINK (Ownership Analysis)
+            analyzeOwnership(listText);
+
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
             if(btn) { btn.innerText = "Resolving..."; btn.disabled = true; }
+
             const { totalCount, cards: parsedCards } = parseDeckList(listText);
             if (parsedCards.length === 0) { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found.</p>'; return showToast("No valid ritual lines found.", "error"); }
             const identifiers = parsedCards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let allMatchedCards = []; let allUnmatched = [];
@@ -635,71 +682,25 @@
             } catch (error) { resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`; showToast("Validation Error.", "error"); } finally { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } }
         }
 
-        // --- 6. PROPHECY LOGIC (NEW) ---
-        function openProphecy() {
-            document.getElementById('prophecy-modal').classList.remove('hidden');
-            drawProphecy();
-        }
-        
-        function closeProphecy() {
-            document.getElementById('prophecy-modal').classList.add('hidden');
-        }
-
+        // --- 6. PROPHECY LOGIC ---
+        function openProphecy() { document.getElementById('prophecy-modal').classList.remove('hidden'); drawProphecy(); }
+        function closeProphecy() { document.getElementById('prophecy-modal').classList.add('hidden'); }
         async function drawProphecy() {
-            const container = document.getElementById('prophecy-hand-container');
-            container.innerHTML = '<p style="color:var(--subtext);">Shuffling the ether...</p>';
-            
-            // 1. Expand Deck
-            const listText = document.getElementById('deckList').value;
-            const { cards } = parseDeckList(listText);
-            let fullDeck = [];
-            cards.forEach(c => {
-                for(let i=0; i<c.qty; i++) fullDeck.push(c.name);
-            });
-
-            if(fullDeck.length < 7) {
-                container.innerHTML = '<p style="color:var(--red);">Deck is too small for a prophecy.</p>';
-                return;
-            }
-
-            // 2. Shuffle (Fisher-Yates)
-            for (let i = fullDeck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]];
-            }
-
-            // 3. Take Top 7
-            const handNames = fullDeck.slice(0, 7);
-            const identifiers = handNames.map(name => ({ name }));
-
-            // 4. Fetch Images
+            const container = document.getElementById('prophecy-hand-container'); container.innerHTML = '<p style="color:var(--subtext);">Shuffling the ether...</p>';
+            const listText = document.getElementById('deckList').value; const { cards } = parseDeckList(listText); let fullDeck = [];
+            cards.forEach(c => { for(let i=0; i<c.qty; i++) fullDeck.push(c.name); });
+            if(fullDeck.length < 7) { container.innerHTML = '<p style="color:var(--red);">Deck is too small for a prophecy.</p>'; return; }
+            for (let i = fullDeck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [fullDeck[i], fullDeck[j]] = [fullDeck[j], fullDeck[i]]; }
+            const handNames = fullDeck.slice(0, 7); const identifiers = handNames.map(name => ({ name }));
             try {
-                const response = await fetch('https://api.scryfall.com/cards/collection', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ identifiers })
-                });
-                const data = await response.json();
-                
-                container.innerHTML = '';
-                // Map the results back to the hand order (important if duplicates exist)
-                // Note: Scryfall bulk endpoint returns unique cards. We need to match them back to our hand array.
-                
+                const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers }) });
+                const data = await response.json(); container.innerHTML = '';
                 handNames.forEach((handCardName, index) => {
-                    const cardData = data.data.find(c => c.name === handCardName) || data.data.find(c => c.name.includes(handCardName)); // Fuzzy fallback
-                    
-                    if (cardData) {
-                        const imgUrl = cardData.image_uris ? cardData.image_uris.normal : (cardData.card_faces ? cardData.card_faces[0].image_uris.normal : '');
-                        const delay = index * 0.1; // Stagger animation
-                        container.innerHTML += `<div class="prophecy-card" style="animation-delay: ${delay}s"><img src="${imgUrl}" style="width:100%; border-radius:10px;"></div>`;
-                    } else {
-                        container.innerHTML += `<div class="prophecy-card" style="background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; color:white; font-size:10px;">${handCardName}</div>`;
-                    }
+                    const cardData = data.data.find(c => c.name === handCardName) || data.data.find(c => c.name.includes(handCardName)); 
+                    if (cardData) { const imgUrl = cardData.image_uris ? cardData.image_uris.normal : (cardData.card_faces ? cardData.card_faces[0].image_uris.normal : ''); const delay = index * 0.1; container.innerHTML += `<div class="prophecy-card" style="animation-delay: ${delay}s"><img src="${imgUrl}" style="width:100%; border-radius:10px;"></div>`; } 
+                    else { container.innerHTML += `<div class="prophecy-card" style="background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; color:white; font-size:10px;">${handCardName}</div>`; }
                 });
-
-            } catch(e) {
-                container.innerHTML = '<p style="color:var(--red);">The vision is clouded (API Error).</p>';
-            }
+            } catch(e) { container.innerHTML = '<p style="color:var(--red);">The vision is clouded (API Error).</p>'; }
         }
 
         // --- NEW RITUAL VIEW CONTROL FUNCTIONS ---
