@@ -1,486 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <base target="_top">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Grimoire: The ultimate MTG collection manager and finance tracker.">
-    <meta name="theme-color" content="#6366f1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Grimoire</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3062/3062634.png">
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grimoire | Cloud Edition</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔮</text></svg>">
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME VARIABLES --- */
-        :root {
-            --primary: #6366f1; /* Indigo */
-            --bg: #f1f5f9;      /* Slate 100 */
-            --sidebar: #ffffff;
-            --card: #ffffff;
-            --text: #0f172a;    /* Slate 900 */
-            --subtext: #64748b; /* Slate 500 */
-            --border: #e2e8f0;
-            --green: #10b981;
-            --red: #ef4444;
-            --ad-bg: #e2e8f0;   
-            --input-bg: #ffffff;
-            --hover: #f8fafc;
-        }
-
-        [data-theme="dark"] {
-            --primary: #818cf8;
-            --bg: #0f172a;      /* Slate 900 */
-            --sidebar: #1e293b; /* Slate 800 */
-            --card: #1e293b;
-            --text: #f8fafc;    /* Slate 50 */
-            --subtext: #94a3b8;
-            --border: #334155;
-            --ad-bg: #334155;
-            --input-bg: #334155;
-            --hover: #334155;
-        }
-
-        /* --- LAYOUT GRID --- */
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--text); height: 100vh; display: grid; grid-template-columns: 240px 1fr; overflow: hidden; overscroll-behavior: none; }
+        /* --- THEME --- */
+        :root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --subtext: #94a3b8; --border: #334155; --green: #10b981; --red: #ef4444; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; }
         
-        /* SIDEBAR */
-        .sidebar { background: var(--sidebar); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; z-index: 20; }
-        .logo { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--primary); margin-bottom: 40px; letter-spacing: -0.5px; }
-        .nav-links { display: flex; flex-direction: column; gap: 5px; }
-        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--subtext); font-weight: 600; font-size: 14px; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover { background: var(--bg); color: var(--text); }
-        .nav-item.active { background: #e0e7ff; color: var(--primary); }
-        [data-theme="dark"] .nav-item.active { background: rgba(99, 102, 241, 0.2); }
-
-        /* MAIN CONTENT AREA */
-        .main-content { overflow-y: auto; padding: 0 40px 40px 40px; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; }
-        
-        /* AD ZONES */
-        .ad-banner-top { width: 100%; height: 90px; background: var(--ad-bg); margin: 20px 0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--subtext); font-size: 12px; font-weight: bold; border: 1px dashed var(--border); }
-        .ad-sidebar { width: 100%; height: 250px; background: var(--ad-bg); border-radius: 8px; margin-top: 20px; display: flex; align-items: center; justify-content: center; color: var(--subtext); font-size: 12px; font-weight: bold; border: 1px dashed var(--border); }
-
-        /* HEADER */
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; padding: 20px 0; gap: 15px; }
-        .theme-btn { background: none; border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; color: var(--text); transition: 0.2s; }
-        .theme-btn:hover { background: var(--hover); }
-
-        /* VIEW CONTAINER */
-        .view-container { max-width: 1200px; margin: 0 auto; width: 100%; padding-bottom:80px; }
-        .view { display: none; animation: fadeUp 0.3s ease; }
-        .view.active { display: block; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- COMPONENT STYLES --- */
-        .card-box { background: var(--card); padding: 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 5px; color: var(--text); }
-        h2 { font-size: 14px; font-weight: 500; color: var(--subtext); margin: 0 0 20px 0; }
-        h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-top: 0; margin-bottom: 15px; }
-        h4 { margin: 5px 0; font-size: 12px; color: var(--subtext); font-weight: 700; text-transform: uppercase; }
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-
-        /* INPUTS & BUTTONS */
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--subtext); letter-spacing: 0.5px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); border-radius: 6px; margin-bottom: 10px; box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 16px; /* Prevents iOS zoom */ }
-        input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
-        
-        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-secondary { padding: 8px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; color: var(--text); font-weight: 500; font-size: 13px; transition: 0.2s; }
-        .btn-secondary:hover { background: var(--hover); }
-        .btn-danger { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.1); color: var(--red); border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
-        
-        /* FOOTER */
-        .footer-legal { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; color: var(--subtext); font-size: 11px; }
-        .footer-legal a { color: var(--subtext); text-decoration: none; margin: 0 10px; cursor: pointer;}
-        .footer-legal a:hover { color: var(--primary); }
-
-        /* RESPONSIVE & MOBILE PWA ADJUSTMENTS */
-        @media (max-width: 768px) {
-            body { grid-template-columns: 1fr; display: block; overflow-y: auto; }
-            .sidebar { 
-                position: fixed; bottom: 0; left: 0; width: 100%; height: auto; border-top: 1px solid var(--border); border-right: none; padding: 10px; flex-direction: row; justify-content: space-around; background: var(--card); z-index: 100;
-                box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
-            }
-            .sidebar > div:last-child { display: none; } /* Hide Sidebar Ads on Mobile */
-            .logo { display: none; }
-            .nav-links { flex-direction: row; width: 100%; justify-content: space-around; }
-            .nav-item { flex-direction: column; font-size: 10px; gap: 4px; padding: 8px; text-align: center; }
-            
-            .main-content { padding: 15px; padding-bottom: 90px; } /* Space for bottom nav */
-            .grid-2 { grid-template-columns: 1fr; }
-            .top-bar { padding: 10px 0; }
-            .ad-banner-top { height: 50px; font-size: 10px; margin: 10px 0; }
-        }
-
-        /* --- FUNCTIONAL STYLES --- */
-        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--hover); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
-        .stat-num { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .stat-label { font-size: 10px; font-weight: 700; color: var(--subtext); text-transform: uppercase; }
-        .chart-container { height: 250px; width: 100%; position: relative; }
-        
-        .top-card-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
-        .grid-card { position: relative; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; background: #000; aspect-ratio: 2.5/3.5; }
-        .grid-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .grid-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0)); padding: 5px; color: white; transform: translateY(100%); transition: transform 0.2s; display: flex; flex-direction: column; }
-        .grid-card:hover .grid-overlay { transform: translateY(0); }
-        .grid-price { font-weight: 700; color: #4ade80; font-size: 12px; }
-        .grid-del { position: absolute; top: 2px; right: 2px; background: rgba(220, 38, 38, 0.9); color: white; border: none; border-radius: 4px; padding: 2px 6px; cursor: pointer; display: none; font-size: 10px; z-index:10;}
-        .grid-card:hover .grid-del { display: block; }
-
+        /* --- LOGIN SCREEN --- */
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 1000; display: flex; justify-content: center; align-items: center; flex-direction: column; }
+        .auth-box { background: var(--card); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 300px; text-align: center; }
+        input { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: white; box-sizing: border-box;}
+        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
         .hidden { display: none !important; }
-        #importStatus { color: var(--primary); font-weight: bold; font-size: 12px; margin-top: 5px; }
-        #suggestions { position: absolute; background: var(--card); width: 100%; border: 1px solid var(--border); z-index: 99; max-height: 200px; overflow-y: auto; display: none; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); margin-top: 2px; }
-        .s-item { padding: 10px 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--border); color: var(--text); }
-        .s-item:hover { background: var(--hover); color: var(--primary); }
+
+        /* --- APP LAYOUT --- */
+        .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
+        .sidebar { background: var(--card); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; }
+        .logo { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 12px; cursor: pointer; color: var(--subtext); font-weight: 500; border-radius: 6px; transition: 0.2s; margin-bottom: 5px; }
+        .nav-item:hover, .nav-item.active { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .main { padding: 30px; overflow-y: auto; }
         
-        /* HUB STYLES */
-        .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
-        .hub-btn { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .hub-btn:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2); }
-        .hub-icon { font-size: 28px; margin-bottom: 10px; display: block; }
-        .hub-title { font-weight: 700; font-size: 16px; color: var(--text); }
-        .hub-desc { font-size: 11px; color: var(--subtext); margin-top: 5px; }
+        /* --- COMPONENTS --- */
+        .card-box { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: 800; color: var(--primary); }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 700; }
         
-        .progress-container { background: var(--hover); border-radius: 10px; height: 20px; width: 100%; margin: 15px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #10b981, #059669); width: 0%; transition: width 1s ease-in-out; }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
+        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.2s; }
+        .grid-card:hover { transform: translateY(-5px); }
+        .grid-card img { width: 100%; height: 100%; object-fit: cover; }
+        .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: rgba(0,0,0,0.8); font-size: 12px; font-weight: bold; color: white; }
+        
+        /* DECK CHECK */
+        .deck-area { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        textarea { width: 100%; height: 300px; background: var(--bg); border: 1px solid var(--border); color: white; padding: 10px; font-family: monospace; border-radius: 8px; box-sizing: border-box; }
+
+        @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; } .sidebar { display: none; } }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div>
-            <div class="logo"><span>🔮</span> GRIMOIRE</div>
-            <div class="nav-links">
-                <div class="nav-item active" onclick="nav('home', this)"><span>🏠</span><span>Home</span></div>
-                <div class="nav-item" onclick="nav('add', this)"><span>➕</span><span>Add</span></div>
-                <div class="nav-item" onclick="nav('collection', this)"><span>📚</span><span>List</span></div>
-                <div class="nav-item" onclick="nav('analytics', this)"><span>📊</span><span>Stats</span></div>
-                <div class="nav-item" onclick="nav('deckcheck', this)"><span>📋</span><span>Decks</span></div>
-            </div>
-        </div>
-        <div>
-            <div class="ad-sidebar">AD SPACE</div>
-            <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; text-align: center;">v3.5 PWA</div>
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h1 style="margin:0 0 20px 0;">🔮 Grimoire</h1>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="handleLogin()">Sign In / Sign Up</button>
+            <p id="auth-msg" style="font-size:12px; color:var(--subtext); margin-top:15px;"></p>
         </div>
     </div>
 
-    <div class="main-content">
-        
-        <div class="top-bar">
-            <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Dark Mode">🌙</button>
-            <button class="btn-secondary" onclick="showSetup()">⚙️ Settings</button>
+    <div id="app" class="app-container hidden">
+        <div class="sidebar">
+            <div class="logo"><span>🔮</span> Grimoire</div>
+            <div class="nav-item active" onclick="nav('home')">Home</div>
+            <div class="nav-item" onclick="nav('add')">Add Cards</div>
+            <div class="nav-item" onclick="nav('collection')">Collection</div>
+            <div class="nav-item" onclick="nav('decks')">Decks</div>
+            <div style="flex-grow:1;"></div>
+            <button onclick="handleLogout()" style="background:var(--border);">Log Out</button>
         </div>
 
-        <div class="ad-banner-top">AD SPACE</div>
-
-        <div class="view-container">
-
-            <div id="view-home" class="view active">
-                <div class="card-box" style="text-align:center; padding: 40px 20px;">
-                    <h1 style="margin:0; font-size:48px;">🔮</h1>
-                    <h2 style="margin:10px 0 5px 0; color:var(--text); font-size:24px;">Grimoire</h2>
-                    <p style="color:var(--subtext); font-size:14px; margin-bottom:30px;">Your Mobile Collection Manager.</p>
-                    <div class="hub-grid">
-                        <div class="hub-btn" onclick="nav('add')"><span class="hub-icon">➕</span><div class="hub-title">Add Asset</div></div>
-                        <div class="hub-btn" onclick="nav('collection')"><span class="hub-icon">📚</span><div class="hub-title">Collection</div></div>
-                        <div class="hub-btn" onclick="nav('deckcheck')"><span class="hub-icon">📋</span><div class="hub-title">Deck Library</div></div>
-                        <div class="hub-btn" onclick="nav('analytics')"><span class="hub-icon">📊</span><div class="hub-title">Analytics</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-add" class="view">
-                <h1>Add Asset</h1>
-                <div class="grid-2">
-                    <div class="card-box">
-                        <form id="addForm" onsubmit="event.preventDefault(); submitForm(this)">
-                            <div class="input-group" style="position:relative;">
-                                <label>Card Name</label>
-                                <input type="text" id="search" placeholder="Search..." autocomplete="off">
-                                <div id="suggestions"></div>
-                            </div>
-                            <div id="verGrp" style="display:none; margin-bottom:15px;"><label>Version</label><select id="versionSelect" onchange="updateUI()"></select></div>
-                            <div style="display:flex; gap:10px; margin-bottom:15px;">
-                                <input id="setCode" readonly placeholder="SET" style="background:var(--hover); color:var(--subtext);">
-                                <input id="colNum" readonly placeholder="#" style="background:var(--hover); color:var(--subtext);">
-                            </div>
-                            <div class="grid-2">
-                                <div><label style="font-size:9px;">Cost</label><input type="number" id="boughtPriceInput" step="0.01" placeholder="0.00"></div>
-                                <div><label style="font-size:9px;">Qty</label><input type="number" id="quantityInput" value="1" oninput="calculateTotalValue()"></div>
-                            </div>
-                            <div style="display:flex; gap:20px; margin-bottom:20px; align-items: center;">
-                                <label style="display:flex; align-items:center; gap:5px;"><input type="checkbox" id="foil-on" onchange="calculateTotalValue()"> Foil</label>
-                                <div style="font-size:12px;">Market: <span id="bigPrice" style="font-weight:bold; color:var(--green);">--</span></div>
-                            </div>
-                            <div style="display:none;"><select id="currencySelect" onchange="updateUI()"><option value="CAD" selected>CAD</option></select><input id="locationInput" value="Unsorted"></div>
-                            <button class="btn-primary" id="subBtn">Add</button>
-                            <input type="hidden" id="cardNameInput"><input type="hidden" id="cardPriceInput">
-                        </form>
-                    </div>
-                    <div class="card-box" style="text-align:center; display:flex; align-items:center; justify-content:center; background:var(--bg); border-style:dashed;">
-                        <img id="cardPreview" style="max-width: 100%; border-radius: 10px; display:none;">
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-collection" class="view">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h1 style="margin:0;">Collection</h1>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-secondary" onclick="document.getElementById('csvInput').click()">Import</button>
-                        <button class="btn-secondary" onclick="exportCSV()">Export</button>
-                        <input type="file" id="csvInput" style="display:none;" onchange="handleImport()">
-                    </div>
-                </div>
-                <div id="importStatus"></div>
-                <div class="card-box">
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="collectionSearch" placeholder="Search..." oninput="filterCollection()" style="flex:1;">
-                        <button class="btn-secondary" onclick="updatePrices(this)">🔄</button>
-                    </div>
-                    <div id="collectionList" style="margin-top:20px;">Loading...</div>
-                </div>
-            </div>
-
-            <div id="view-analytics" class="view">
-                <h1>Analytics</h1>
+        <div class="main">
+            <div id="view-home">
+                <h2 style="margin-top:0;">Dashboard</h2>
                 <div class="stat-grid">
-                    <div class="stat-card"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Cards</div></div>
-                    <div class="stat-card"><div class="stat-num" id="stat-value" style="color:var(--primary);">$0</div><div class="stat-label">Value</div></div>
-                    <div class="stat-card"><div class="stat-num" id="stat-cost" style="color:var(--subtext);">$0</div><div class="stat-label">Cost</div></div>
-                    <div class="stat-card"><div class="stat-num" id="stat-gain">$0</div><div class="stat-label">P/L</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Cards</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Value</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Cost</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-gain">$0</div><div class="stat-lbl">P/L</div></div>
                 </div>
-                <div class="grid-dashboard">
-                    <div class="card-box"><h3>History</h3><div class="chart-container"><canvas id="historyChart"></canvas></div></div>
-                    <div class="card-box"><h3>Movers</h3><div id="moversList">Loading...</div></div>
-                    <div class="card-box"><h3>Colors</h3><div class="chart-container"><canvas id="colorChart"></canvas></div></div>
+                <div class="card-box">
+                    <h3>Recent Adds</h3>
+                    <div class="collection-grid" id="recent-grid">Loading...</div>
                 </div>
             </div>
 
-            <div id="view-deckcheck" class="view">
-                <h1>Deck Library</h1>
-                <div class="grid-2">
+            <div id="view-add" class="hidden">
+                <div class="card-box" style="max-width:500px; margin:0 auto;">
+                    <h2>Add Asset</h2>
+                    <input type="text" id="search" placeholder="Card Name (e.g. Sol Ring)..." onchange="fetchCardMeta()">
+                    <div style="display:flex; gap:10px;">
+                        <input id="set" placeholder="Set Code" readonly style="background:var(--bg); opacity:0.5;">
+                        <input id="num" placeholder="#" readonly style="background:var(--bg); opacity:0.5;">
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
+                        <input type="number" id="qty" placeholder="Qty" value="1">
+                    </div>
+                    <img id="preview" style="width:100%; border-radius:8px; margin-bottom:10px; display:none;">
+                    <button onclick="addCard()">Add to Collection</button>
+                </div>
+            </div>
+
+            <div id="view-collection" class="hidden">
+                <h2>My Collection</h2>
+                <div class="collection-grid" id="collection-grid">Loading...</div>
+            </div>
+
+            <div id="view-decks" class="hidden">
+                <h2>Deck Library</h2>
+                <div class="deck-area">
                     <div class="card-box">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <input id="deckName" placeholder="Deck Name" style="width:60%; margin:0;">
-                            <button class="btn-primary" style="width:35%; padding:8px;" onclick="saveDeck()">💾 Save</button>
-                        </div>
-                        <textarea id="deckInput" style="width:100%; height:200px; border-radius:6px; border:1px solid var(--border); background:var(--bg); color:var(--text); padding:10px; font-family:monospace;" placeholder="1 Sol Ring..."></textarea>
-                        <br><br>
-                        <button class="btn-primary" onclick="runDeckCheck(this)">Validate</button>
+                        <input id="deckName" placeholder="Deck Name">
+                        <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
+                        <button onclick="saveDeck()" style="margin-top:10px;">Save Deck</button>
                     </div>
-                    <div>
-                        <div class="card-box">
-                            <h3>📂 Decks</h3>
-                            <div id="deckLibrary" style="max-height:150px; overflow-y:auto; border:1px solid var(--border); border-radius:6px;">
-                                <div style="padding:10px; color:var(--subtext); font-size:12px;">Loading...</div>
-                            </div>
-                        </div>
-                        <div id="deckResults"></div>
+                    <div class="card-box">
+                        <h3>Saved Decks</h3>
+                        <div id="saved-decks-list"></div>
                     </div>
                 </div>
             </div>
-
-        </div> <div class="footer-legal">
-            &copy; 2025 Grimoire.<br>
-            <a href="javascript:void(0)" onclick="document.getElementById('legalModal').classList.remove('hidden')">Privacy Policy</a> | 
-            <a href="javascript:void(0)" onclick="document.getElementById('legalModal').classList.remove('hidden')">Terms</a>
-        </div>
-
-    </div> <div id="legalModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;">
-        <div style="background:var(--card); padding:30px; border-radius:12px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; border: 1px solid var(--border);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0;">Legal & Privacy</h2>
-                <button onclick="document.getElementById('legalModal').classList.add('hidden')" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--text);">✖️</button>
-            </div>
-            <div style="font-size:13px; color:var(--text); line-height:1.6;">
-                <p><strong>BYOB Data:</strong> All data is stored in your Google Sheets.</p>
-                <p><strong>Disclaimer:</strong> Not financial advice. Unofficial Fan Content ©Wizards.</p>
-            </div>
-            <br><button class="btn-primary" onclick="document.getElementById('legalModal').classList.add('hidden')">Acknowledge</button>
-        </div>
-    </div>
-
-    <div id="setupModal" class="hidden" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; justify-content:center; align-items:center; z-index:9999;">
-        <div style="background:var(--card); padding:30px; border-radius:12px; width:90%; max-width:400px; border: 1px solid var(--border);">
-            <h2>Configuration</h2>
-            <label>API Endpoint</label>
-            <input id="apiUrlInput" placeholder="https://script.google.com/...">
-            <button class="btn-primary" onclick="saveApiUrl()">Save Connection</button>
-            <br><br>
-            <button class="btn-danger" style="width:100%;" onclick="runMaintenance()">Run Database Maintenance</button>
-            <br><br>
-            <button class="btn-secondary" style="width:100%;" onclick="document.getElementById('setupModal').classList.add('hidden')">Close</button>
         </div>
     </div>
 
     <script>
-        // PWA REGISTRATION
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
-
-        const APP_VERSION = "v3.5 PWA";
-        let API_ENDPOINT = "", rawCollectionData = [], currentCardData = null, debounceTimer, viewMode = 'list', charts = { color: null, rarity: null, history: null, sets: null };
-
-        window.onload = function() { loadTheme(); checkConnection(); };
-
-        function nav(viewId, btn) {
-            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-            if(btn) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); btn.classList.add('active'); }
-            if (viewId === 'home') document.querySelectorAll('.nav-item')[0].classList.add('active'); 
-            
-            if (viewId === 'analytics') loadAnalytics();
-            if (viewId === 'collection') loadCollection();
-            if (viewId === 'deckcheck') loadDeckLibrary();
-        }
-
-        // THEME
-        function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); localStorage.setItem('mtgManager_Theme', isDark ? 'light' : 'dark'); }
-        function loadTheme() { if(localStorage.getItem('mtgManager_Theme') === 'dark') document.body.setAttribute('data-theme', 'dark'); }
-
-        // API
-        function checkConnection() { const storedUrl = localStorage.getItem('mtg_api_url'); if (!storedUrl) document.getElementById('setupModal').classList.remove('hidden'); else { API_ENDPOINT = storedUrl; init(); } }
-        function showSetup() { document.getElementById('setupModal').classList.remove('hidden'); document.getElementById('apiUrlInput').value = localStorage.getItem('mtg_api_url') || ""; }
-        function saveApiUrl() { const input = document.getElementById('apiUrlInput').value.trim(); if (!input.includes('script.google.com')) { alert("Invalid URL."); return; } localStorage.setItem('mtg_api_url', input); API_ENDPOINT = input; document.getElementById('setupModal').classList.add('hidden'); init(); }
-        async function callAPI(action, data = {}) { if (!API_ENDPOINT) return { success: false }; try { const response = await fetch(`${API_ENDPOINT}?action=${action}`, { method: 'POST', mode: 'cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ ...data, action: action }) }); if (!response.ok) throw new Error(response.status); return await response.json(); } catch (error) { console.error(error); return { success: false, error: error.message }; } }
-        function init() { calculateTotalValue(); loadAnalytics(); } 
-
-        // MAINTENANCE
-        async function runMaintenance() { if (!confirm("Sort & Clean Database?")) return; const res = await callAPI('performMaintenance'); if (res.success) { alert(`Cleaned ${res.data.count} rows!`); loadCollection(); } else { alert("Failed: " + res.error); } }
-
-        // --- ADD CARD LOGIC ---
-        const search = document.getElementById('search'); const suggs = document.getElementById('suggestions');
-        search.addEventListener('input', function(e) {
-            const q = e.target.value; clearTimeout(debounceTimer);
-            if (q.length < 3) { suggs.style.display = 'none'; return; }
-            debounceTimer = setTimeout(() => {
-                fetch('https://api.scryfall.com/cards/autocomplete?q=' + encodeURIComponent(q)).then(r => r.json()).then(j => {
-                    if (j.data) { suggs.innerHTML = ''; j.data.forEach(n => { const d = document.createElement('div'); d.className = 's-item'; d.innerText = n; d.onclick = () => selectCard(n); suggs.appendChild(d); }); suggs.style.display = 'block'; }
-                });
-            }, 300);
-        });
-        async function selectCard(name) { search.value = name; suggs.style.display = 'none'; document.getElementById('bigPrice').innerText = 'Loading...'; document.getElementById('verGrp').style.display = 'block'; document.getElementById('versionSelect').innerHTML = '<option>Loading...</option>'; const res = await callAPI('getCardVersionsEncoded', { name: name }); if (res.success) versionsRx(res.data); }
-        function versionsRx(j) { const vers = JSON.parse(j); const sel = document.getElementById('versionSelect'); sel.innerHTML = ''; if (!vers.length) { sel.innerHTML = '<option>No versions</option>'; updateUI(); return; } let best = 0, low = Infinity; vers.forEach((v, i) => { const o = document.createElement('option'); o.value = JSON.stringify(v); o.text = `${v.setName || v.set} (${v.set}) #${v.code} (${v.year})`; sel.add(o); if (v.prices.USD.normal < low) { low = v.prices.USD.normal; best = i; } }); sel.selectedIndex = best; updateUI(); }
-        function updateUI() { 
-            const sel = document.getElementById('versionSelect'); if (sel.value) currentCardData = JSON.parse(sel.value); 
-            document.getElementById('setCode').value = currentCardData.set; document.getElementById('colNum').value = currentCardData.code; 
-            const img = document.getElementById('cardPreview'); 
-            if (currentCardData.image) { img.src = currentCardData.image; img.style.display = 'block'; document.getElementById('previewText').style.display='none'; } 
-            calculateTotalValue(); 
-        }
-        function calculateTotalValue() {
-            const qty = parseInt(document.getElementById('quantityInput').value) || 1; const foil = document.getElementById('foil-on').checked; const cur = document.getElementById('currencySelect').value; let p = 0, sym = "$";
-            if (currentCardData && currentCardData.prices) { if (cur === 'EUR') { p = foil ? currentCardData.prices.EUR.foil : currentCardData.prices.EUR.normal; sym = "€"; } else if (cur === 'CAD') { p = foil ? currentCardData.prices.CAD.foil : currentCardData.prices.CAD.normal; sym = "C$"; } else { p = foil ? currentCardData.prices.USD.foil : currentCardData.prices.USD.normal; } }
-            document.getElementById('cardPriceInput').value = p; document.getElementById('bigPrice').innerText = sym + (p || 0).toFixed(2);
-        }
-        async function submitForm(f) {
-            document.getElementById('subBtn').disabled = true; const loc = "Unsorted";
-            const fd = { setCode: document.getElementById('setCode').value, colNum: document.getElementById('colNum').value, quantity: document.getElementById('quantityInput').value, isFoil: document.getElementById('foil-on').checked, cardLocation: loc, cardName: document.getElementById('search').value, 
-            cardPrice: document.getElementById('cardPriceInput').value, boughtPrice: document.getElementById('boughtPriceInput').value };
-            const res = await callAPI('processForm', fd); document.getElementById('subBtn').disabled = false;
-            if (res.success) { 
-                alert("Asset Added!"); 
-                f.reset(); document.getElementById('search').value=''; document.getElementById('cardPreview').style.display='none'; document.getElementById('previewText').style.display='block'; currentCardData=null; 
-            }
-        }
-
-        // --- IMPORT/EXPORT ---
-        function handleImport() {
-            const fi = document.getElementById('csvInput'), st = document.getElementById('importStatus'); if (!fi.files.length) return; st.style.display = 'block'; st.innerText = "Parsing...";
-            Papa.parse(fi.files[0], { header: true, skipEmptyLines: true, complete: async function(res) {
-                const cards = res.data.map(r => ({ name: r.Name || r.name, set: r.Set || r.set, code: r.Code || r.code, qty: parseInt(r.Qty || r.quantity || 1), foil: r.Foil || r.foil })).filter(c => c.name);
-                const chunks = []; for (let i = 0; i < cards.length; i += 10) chunks.push(cards.slice(i, i + 10));
-                let count = 0; for (let i = 0; i < chunks.length; i++) { st.innerText = `Batch ${i + 1}/${chunks.length}...`; await callAPI('processBatch', { cards: chunks[i], location: "Import" }); count += chunks[i].length; }
-                st.innerText = `Done! ${count} cards.`; loadCollection(); setTimeout(() => st.style.display = 'none', 4000);
-            }});
-        }
-        function exportCSV() { if (!rawCollectionData.length) return; const csv = "data:text/csv;charset=utf-8," + ["Set,Code,Name,Finish,Qty,Price,Loc"].join(",") + "\n" + rawCollectionData.map(c => [c.SetCode, c.Code, `"${c.Name.replace(/"/g, '""')}"`, c.Finish, c.Quantity, c.TotalValue, `"${c.Location}"`].join(",")).join("\n"); const l = document.createElement("a"); l.href = encodeURI(csv); l.download = "mtg_export.csv"; l.click(); }
-
-        // --- COLLECTION ---
-        async function loadCollection() {
-            document.getElementById('collectionList').innerText = 'Loading...'; const res = await callAPI('getCollectionData');
-            if (res.success) { rawCollectionData = res.data; filterCollection(); }
-        }
-        function filterCollection() {
-            const q = document.getElementById('collectionSearch').value.toLowerCase();
-            const list = rawCollectionData.filter(c => (c.Name.toLowerCase().includes(q) || c.SetCode.toLowerCase().includes(q) || (c.Location || "").toLowerCase().includes(q)));
-            const div = document.getElementById('collectionList'); div.innerHTML = '';
-            div.className = 'collection-grid'; 
-            list.forEach(c => div.innerHTML += `<div class="grid-card"><button class="grid-del" onclick="del('${c.SetCode.replace(/'/g, "\\'")}', '${c.Code.replace(/'/g, "\\'")}', '${c.Finish === 'Foil'}')">×</button><img src="${c.ImageURL}" loading="lazy"><div class="grid-overlay"><div class="grid-price">$${c.TotalValue}</div><div class="grid-meta"><span>${c.Finish === 'Foil' ? '✨' : ''} x${c.Quantity}</span><span>${c.Location.substring(0, 8)}...</span></div></div></div>`);
-        }
-        async function del(s, c, f) { if (confirm("Delete Asset?")) { const r = await callAPI('deleteCardRow', { s: s, c: c, f: f === 'true' }); if (r.success) loadCollection(); } }
-        async function updatePrices(btn) { btn.disabled = true; btn.innerText = "..."; const r = await callAPI('refreshCollectionPrices'); btn.disabled = false; btn.innerText = "🔄 Prices"; if (r.success) { alert(`Updated ${r.data.updatedCount}`); loadCollection(); } }
-
-        // --- ANALYTICS ---
-        async function loadAnalytics() { const r = await callAPI('getAnalyticsData'); if (r.success) renderAnalytics(r.data); }
-        function renderAnalytics(d) {
-            if (!d) return;
-            document.getElementById('stat-count').innerText = d.totalCards;
-            document.getElementById('stat-value').innerText = "$" + d.totalValue;
-            document.getElementById('stat-cost').innerText = "$" + d.totalCost;
-            
-            const gain = parseFloat(d.totalValue) - parseFloat(d.totalCost);
-            const gainPct = (parseFloat(d.totalCost) > 0) ? ((gain / parseFloat(d.totalCost)) * 100).toFixed(1) : 0;
-            const gainEl = document.getElementById('stat-gain');
-            gainEl.innerText = `${gain >= 0 ? '+' : ''}$${gain.toFixed(2)} (${gainPct}%)`;
-            gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
-
-            document.getElementById('moversList').innerHTML = d.biggestMovers.map(c => `<div class="top-card-row"><div>${c.name}</div><div style="color:${c.change >= 0 ? 'var(--green)' : 'var(--red)'}">${c.change >= 0 ? '+' : ''}${c.change.toFixed(2)}</div></div>`).join('');
-            
-            if (charts.history) charts.history.destroy(); charts.history = new Chart(document.getElementById('historyChart').getContext('2d'), { type: 'line', data: { labels: d.history.map(h => new Date(h.date).toLocaleDateString()), datasets: [{ label: 'Value', data: d.history.map(h => h.value), borderColor: '#6366f1', fill: true }] }, options: { responsive: true, maintainAspectRatio: false } });
-            if (charts.color) charts.color.destroy(); charts.color = new Chart(document.getElementById('colorChart').getContext('2d'), { type: 'doughnut', data: { labels: ['W', 'U', 'B', 'R', 'G', 'M', 'C'], datasets: [{ data: [d.colors.W, d.colors.U, d.colors.B, d.colors.R, d.colors.G, d.colors.Multi, d.colors.Colorless], backgroundColor: ['#f0f2c9', '#b3ceea', '#aeb2b7', '#eaa6a5', '#b6d7a8', '#dcc689', '#d7d7d7'] }] }, options: { responsive: true, maintainAspectRatio: false } });
-        }
-
-        // --- DECK LIBRARY & ANALYTICS ---
-        async function saveDeck() {
-            const name = document.getElementById('deckName').value; const list = document.getElementById('deckInput').value; if(!name || !list) { alert("Enter name & decklist."); return; }
-            const btn = event.target; btn.innerText = "Saving..."; btn.disabled = true; const res = await callAPI('saveDeck', { name: name, list: list }); btn.innerText = "💾 Save"; btn.disabled = false;
-            if(res.success) { alert("Deck Saved!"); loadDeckLibrary(); }
-        }
-        async function loadDeckLibrary() {
-            const div = document.getElementById('deckLibrary'); const res = await callAPI('getDecks');
-            if(res.success) {
-                if(res.data.length === 0) { div.innerHTML = '<div style="padding:10px; color:var(--subtext);">No saved decks.</div>'; return; }
-                div.innerHTML = res.data.map(d => `<div style="padding:8px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span style="font-weight:600; font-size:13px; cursor:pointer;" onclick="loadDeckIntoEditor('${d.name.replace(/'/g, "\\'")}')">${d.name}</span><button onclick="deleteDeck('${d.name.replace(/'/g, "\\'")}')" style="background:none; border:none; cursor:pointer; font-size:12px;">🗑️</button></div>`).join('');
-                window.savedDecks = res.data;
-            }
-        }
-        function loadDeckIntoEditor(name) { const deck = window.savedDecks.find(d => d.name === name); if(deck) { document.getElementById('deckName').value = deck.name; document.getElementById('deckInput').value = deck.list; } }
-        async function deleteDeck(name) { if(!confirm(`Delete "${name}"?`)) return; const res = await callAPI('deleteDeck', { name: name }); if(res.success) loadDeckLibrary(); }
+        // --- 1. CONFIGURATION ---
+        // PASTE YOUR KEYS HERE FROM SUPABASE SETTINGS
+        const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; 
+        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"; 
         
-        async function runDeckCheck(btn) {
-            const t = document.getElementById('deckInput').value; if (!t) return; if(btn) btn.disabled = true; 
-            document.getElementById('deckResults').innerHTML = '<div style="text-align:center; padding:20px;">🔮 Analyzing Mana Curve...</div>';
-            const r = await callAPI('checkDeckList', { deckText: t }); if(btn) btn.disabled = false;
-            if (r.success) {
-                const res = r.data; const d = document.getElementById('deckResults');
-                const p = Math.round((res.found.length / (res.found.length + res.missing.length)) * 100);
-                
-                let html = `<div style="margin-bottom:20px;"><h3>Deck Status: ${p}% Owned</h3><div class="progress-container"><div class="progress-bar" style="width: ${p}%"></div></div></div>`;
-                html += `<div class="grid-2" style="margin-bottom:20px;"><div class="card-box" style="padding:10px;"><h4 style="margin:5px 0; font-size:12px; color:var(--subtext);">MANA CURVE</h4><div style="height:150px;"><canvas id="deckManaChart"></canvas></div></div><div class="card-box" style="padding:10px;"><h4 style="margin:5px 0; font-size:12px; color:var(--subtext);">TYPE BREAKDOWN</h4><div style="height:150px;"><canvas id="deckTypeChart"></canvas></div></div></div>`;
-                html += `<div class="grid-2"><div><h4 style="color:var(--red);">Missing (${res.missing.length})</h4><div class="collection-grid">` + res.missing.map(m => `<div class="grid-card" style="filter:grayscale(1); opacity:0.8;" title="${m.name}"><div style="position:absolute; top:5px; left:5px; background:var(--red); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Need ${m.req}</div><img src="${m.image}" loading="lazy"></div>`).join('') + `</div></div>`;
-                html += `<div><h4 style="color:var(--green);">Owned (${res.found.length})</h4><div class="collection-grid">` + res.found.map(m => `<div class="grid-card" title="${m.name}"><div style="position:absolute; top:5px; left:5px; background:var(--green); color:white; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">Have ${m.have}</div><img src="${m.image}" loading="lazy"></div>`).join('') + `</div></div></div>`;
-                d.innerHTML = html;
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let session = null;
+        let tempCardData = null;
 
-                if(res.stats) {
-                    new Chart(document.getElementById('deckManaChart'), { type: 'bar', data: { labels: ['0','1','2','3','4','5','6','7+'], datasets: [{ label: 'Count', data: res.stats.cmc, backgroundColor: '#6366f1', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{stepSize:1}}} } });
-                    new Chart(document.getElementById('deckTypeChart'), { type: 'doughnut', data: { labels: Object.keys(res.stats.types), datasets: [{ data: Object.values(res.stats.types), backgroundColor: ['#f0f2c9','#ef4444','#3b82f6','#f97316','#94a3b8','#a855f7','#eab308'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{position:'right', labels:{boxWidth:10, font:{size:10}}}} } });
+        // --- 2. AUTHENTICATION ---
+        async function handleLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            // Try sign in
+            let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                // If fail, try sign up
+                let signUp = await supabase.auth.signUp({ email, password });
+                if (signUp.error) {
+                    document.getElementById('auth-msg').innerText = signUp.error.message;
+                } else {
+                    document.getElementById('auth-msg').innerText = "Account created! Check your email to confirm.";
                 }
             }
+        }
+
+        async function handleLogout() {
+            await supabase.auth.signOut();
+            window.location.reload();
+        }
+
+        supabase.auth.onAuthStateChange((event, _session) => {
+            session = _session;
+            if (session) {
+                document.getElementById('auth-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                loadData();
+            }
+        });
+
+        // --- 3. NAVIGATION ---
+        function nav(view) {
+            document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
+            document.getElementById('view-' + view).classList.remove('hidden');
+            if(view === 'collection') loadCollection();
+            if(view === 'decks') loadDecks();
+        }
+
+        // --- 4. DATA LOGIC ---
+        
+        // Add Card Helper (Scryfall)
+        async function fetchCardMeta() {
+            const name = document.getElementById('search').value;
+            if(name.length < 3) return;
+            const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+            const data = await res.json();
+            if(data.object !== 'error') {
+                document.getElementById('set').value = data.set.toUpperCase();
+                document.getElementById('num').value = data.collector_number;
+                const img = data.image_uris ? data.image_uris.normal : "";
+                document.getElementById('preview').src = img;
+                document.getElementById('preview').style.display = 'block';
+                tempCardData = { name: data.name, set: data.set.toUpperCase(), num: data.collector_number, img: img };
+            }
+        }
+
+        // INSERT (Cards)
+        async function addCard() {
+            if(!tempCardData) return alert("Search for a card first");
+            const cost = document.getElementById('cost').value || 0;
+            const qty = document.getElementById('qty').value || 1;
+            
+            const { error } = await supabase.from('cards').insert({
+                user_id: session.user.id,
+                name: tempCardData.name,
+                set_code: tempCardData.set,
+                collector_number: tempCardData.num,
+                image_url: tempCardData.img,
+                buy_price: cost,
+                quantity: qty
+            });
+
+            if(!error) { 
+                alert("Saved!"); 
+                document.getElementById('search').value = ""; 
+                document.getElementById('preview').style.display = 'none';
+                loadData();
+            } else { alert(error.message); }
+        }
+
+        // READ (Dashboard)
+        async function loadData() {
+            const { data: cards } = await supabase.from('cards').select('*');
+            let totalVal = 0, totalCost = 0, count = 0;
+            
+            // Note: In a real app, we'd fetch live prices. For MVP, we use buy_price as proxy or static
+            // Let's assume Market Price = Buy Price for now to show data flow
+            cards.forEach(c => {
+                count += c.quantity;
+                totalCost += (c.buy_price * c.quantity);
+                totalVal += (c.buy_price * c.quantity); // Placeholder logic
+            });
+
+            document.getElementById('stat-count').innerText = count;
+            document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2);
+            document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2);
+            
+            // Recent Grid
+            const recent = cards.slice(-5).reverse();
+            document.getElementById('recent-grid').innerHTML = recent.map(c => `
+                <div class="grid-card">
+                    <img src="${c.image_url}">
+                    <div class="overlay">${c.name}</div>
+                </div>
+            `).join('');
+        }
+
+        // READ (Collection)
+        async function loadCollection() {
+            const { data } = await supabase.from('cards').select('*').order('created_at', { ascending: false });
+            document.getElementById('collection-grid').innerHTML = data.map(c => `
+                <div class="grid-card">
+                    <img src="${c.image_url}" loading="lazy">
+                    <div class="overlay">${c.quantity}x $${c.buy_price}</div>
+                </div>
+            `).join('');
+        }
+
+        // DECK LOGIC
+        async function saveDeck() {
+            const name = document.getElementById('deckName').value;
+            const list = document.getElementById('deckList').value;
+            if(!name) return alert("Name required");
+            
+            const { error } = await supabase.from('decks').insert({
+                user_id: session.user.id,
+                name: name,
+                card_list: list
+            });
+            
+            if(!error) { alert("Deck Saved"); loadDecks(); }
+        }
+
+        async function loadDecks() {
+            const { data } = await supabase.from('decks').select('*').order('updated_at', { ascending: false });
+            document.getElementById('saved-decks-list').innerHTML = data.map(d => `
+                <div style="padding:10px; border-bottom:1px solid var(--border); cursor:pointer;" onclick="loadDeckIntoEditor('${d.id}')">
+                    <strong>${d.name}</strong>
+                </div>
+            `).join('');
+            window.myDecks = data;
+        }
+
+        function loadDeckIntoEditor(id) {
+            const d = window.myDecks.find(x => x.id == id);
+            document.getElementById('deckName').value = d.name;
+            document.getElementById('deckList').value = d.card_list;
         }
     </script>
 </body>
