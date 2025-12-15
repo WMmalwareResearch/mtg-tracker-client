@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.0.1</title>
+    <title>The Grimoire | v3.1.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -71,7 +71,7 @@
         .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
-        /* LIST VIEW */
+        /* LIST VIEW (V3.1.0 HOVER FIX) */
         .vault-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .vault-table th { text-align: left; padding: 12px; color: var(--subtext); border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; font-size: 11px; }
         .vault-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
@@ -80,6 +80,10 @@
         .view-toggle { display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid var(--border); }
         .view-btn { padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: var(--subtext); font-weight: 600; }
         .view-btn.active { background: var(--primary); color: white; }
+        
+        /* HOVER PREVIEW */
+        #hover-preview { position: fixed; pointer-events: none; z-index: 9999; width: 220px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 2px solid var(--primary); display: none; transform: translateY(-50%); animation: fadeIn 0.1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-40%); } to { opacity: 1; transform: translateY(-50%); } }
 
         /* DECK WORKSPACE */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
@@ -203,7 +207,7 @@
 </head>
 <body>
 
-    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+    <img id="hover-preview"> <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div id="bulk-modal" class="modal-overlay hidden">
         <div class="modal-content card-box">
@@ -286,7 +290,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.0.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.1.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -388,9 +392,7 @@
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
-                                    
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="printProxies()">🖨️ Print</button>
-                                    
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="exportDeck()">📤 Export</button>
@@ -590,6 +592,19 @@
             filterVault();
         }
 
+        // V3.1.0 HOVER PREVIEW
+        function showPreview(url, e) {
+            const el = document.getElementById('hover-preview');
+            if(!url) return;
+            el.src = url;
+            el.style.display = 'block';
+            el.style.left = (e.clientX + 20) + 'px';
+            el.style.top = e.clientY + 'px';
+        }
+        function hidePreview() {
+            document.getElementById('hover-preview').style.display = 'none';
+        }
+
         function filterVault(){
             const t=document.getElementById('vaultSearch').value.toLowerCase(); const s=document.getElementById('vaultSort').value;
             let f=cardsCache.filter(c=>c.quantity>0 && c.name.toLowerCase().includes(t));
@@ -600,9 +615,9 @@
             if (vaultViewMode === 'list') {
                 let html = `<table class="vault-table"><thead><tr><th>Img</th><th>Name</th><th>Set</th><th>Qty</th><th>Price</th><th>Tags</th><th>Edit</th></tr></thead><tbody>`;
                 html += f.map(c => `
-                    <tr>
+                    <tr onmouseenter="showPreview('${getCardImage(c)}', event)" onmouseleave="hidePreview()">
                         <td><img src="${getCardImage(c)}" class="list-img" loading="lazy" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></td>
-                        <td style="font-weight:600;">${c.name}</td>
+                        <td style="font-weight:600; cursor:pointer;" onclick="openCodex('${c.set_code}', '${c.collector_number}')">${c.name}</td>
                         <td style="color:var(--subtext);">${c.set_code} #${c.collector_number}</td>
                         <td>${c.quantity}</td>
                         <td style="color:var(--green);">$${Number(c.market_price_usd).toFixed(2)}</td>
@@ -681,7 +696,6 @@
             currentDeckCache.forEach(c => {
                 for(let i=0; i<c.quantity; i++) {
                     const imgUrl = getCardImage(c);
-                    // No crossorigin, added loading=eager, added fallback alt text
                     if(imgUrl) {
                         html += `<div class="card-wrapper"><img class="card-img" src="${imgUrl}" loading="eager" alt="${c.name}" onerror="this.style.display='none'; this.parentElement.innerText='${c.name}'"></div>`;
                     } else {
