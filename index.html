@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.5.0</title>
+    <title>The Grimoire | v2.6.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -71,38 +71,33 @@
         .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
-        /* DECK WORKSPACE (V2.5.0 UPDATE) */
+        /* DECK WORKSPACE */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         .deck-card { 
             background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; 
-            height: 300px; /* Taller for artwork */
-            display: flex; flex-direction: column; justify-content: flex-end; /* Text at bottom */
+            height: 300px; display: flex; flex-direction: column; justify-content: flex-end; 
             position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s;
             background-size: cover; background-position: center;
         }
         .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow); }
-        
-        /* Dark gradient overlay for text readability */
         .deck-card::after {
             content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(to top, rgba(15, 10, 28, 1) 0%, rgba(15, 10, 28, 0.6) 40%, rgba(15, 10, 28, 0) 100%);
             z-index: 1;
         }
-        
         .deck-card-content { position: relative; z-index: 2; padding: 20px; }
         .deck-card h4 { margin: 0; color: white; font-size: 18px; text-shadow: 0 2px 4px black; margin-bottom: 5px; }
         .deck-card-meta { color: var(--subtext); font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
         .format-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-
         .new-deck-card { border: 1px dashed var(--subtext); display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--subtext); background: none; }
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
-        .new-deck-card::after { display: none; } /* No gradient on new card */
-
+        .new-deck-card::after { display: none; }
+        
         .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* VISUAL DECK GRID */
+        /* VISUAL DECK GRID (V2.6.0) */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -111,7 +106,11 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
-        
+        /* Set Cover Button */
+        .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--yellow); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 20; font-size: 12px; }
+        .visual-card:hover .cover-btn { opacity: 1; }
+        .cover-btn:hover { background: var(--yellow); color: black; }
+
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
         #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
         .deck-item-preview { background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; position: relative; }
@@ -131,15 +130,13 @@
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
         .bf-field { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; }
-        .bf-hand-area { height: 200px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
+        .bf-hand-area { height: 220px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
         .bf-card { width: 120px; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; position: relative; }
         .bf-card img { width: 100%; border-radius: 8px; }
         .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 15px var(--primary); }
         .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
         .bf-zone-btn { width: 100px; height: 140px; border: 1px dashed var(--subtext); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--subtext); cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
         .bf-zone-btn:hover { border-color: var(--primary); color: white; background: rgba(255,255,255,0.05); }
-        
-        /* BATTLEFIELD ROWS */
         .bf-row { flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; padding: 20px; border-bottom: 1px dashed rgba(255,255,255,0.1); overflow-y: auto; transition: background 0.2s; }
         .bf-row:last-child { border-bottom: none; background: rgba(0,0,0,0.2); }
         .bf-row-label { width: 100%; font-size: 10px; color: var(--subtext); text-transform: uppercase; margin-bottom: 5px; opacity: 0.5; pointer-events: none; }
@@ -259,7 +256,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.5.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.6.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -543,10 +540,9 @@
         function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-tags').value = (card.tags || []).join(', '); document.getElementById('edit-modal').classList.remove('hidden'); }
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
 
-        // --- DECK LOGIC (V2.5.0 UPDATE) ---
+        // --- DECK LOGIC (V2.6.0 UPDATE) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
         
-        // DECK LIBRARY RENDER (V2.5.0)
         async function loadDecks() { 
             document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden');
             const { data } = await sb.from('decks').select('*').order('updated_at', { ascending: false }); 
@@ -580,9 +576,17 @@
             const term = document.getElementById('deckSearch').value.toLowerCase();
             const cards = document.querySelectorAll('.deck-card');
             cards.forEach(c => {
+                if(c.classList.contains('new-deck-card')) return;
                 const text = c.innerText.toLowerCase();
                 c.style.display = text.includes(term) ? 'flex' : 'none';
             });
+        }
+
+        // V2.6.0 SET COVER FEATURE
+        async function setDeckCover(url) {
+            if(!currentViewedDeckId) return showToast("Save deck first.", "error");
+            await sb.from('decks').update({ cover_url: url }).eq('id', currentViewedDeckId);
+            showToast("Cover art updated!", "success");
         }
 
         async function saveDeck() { 
@@ -593,9 +597,9 @@
             if(!name) return showToast("Name required", "error"); 
             const { totalCount, cards } = parseDeckList(list); 
             
-            // GET COVER IMAGE FROM FIRST CARD
+            // GET COVER IMAGE FROM FIRST CARD (ONLY IF NEW DECK)
             let coverUrl = '';
-            if(cards.length > 0) {
+            if(!currentViewedDeckId && cards.length > 0) {
                 try {
                     const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cards[0].name)}`);
                     const data = await res.json();
@@ -605,7 +609,7 @@
 
             let error; 
             if (currentViewedDeckId) { 
-                const res = await sb.from('decks').update({ name, card_list: list, card_count: totalCount, format, cover_url: coverUrl }).eq('id', currentViewedDeckId); 
+                const res = await sb.from('decks').update({ name, card_list: list, card_count: totalCount, format }).eq('id', currentViewedDeckId); 
                 error = res.error; 
             } else { 
                 const res = await sb.from('decks').insert({ user_id: session.user.id, name, card_list: list, card_count: totalCount, format, cover_url: coverUrl }); 
