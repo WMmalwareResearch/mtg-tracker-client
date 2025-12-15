@@ -4,13 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f0a1c">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>The Grimoire | v3.1.0</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://svgshare.com/i/10gq.svg">
+    <title>The Grimoire | v3.2.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -27,7 +21,7 @@
             --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
         }
 
-        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #450a0a, #0f0a1c); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem); overflow: hidden; /* Prevent body scroll for app feel */ }
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #450a0a, #0f0a1c); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem); overflow: hidden; }
         * { box-sizing: border-box; }
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(167, 139, 250, 0.3); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: rgba(167, 139, 250, 0.5); }
@@ -55,7 +49,7 @@
         button.secondary { background: rgba(255,255,255,0.1); }
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
         
-        /* DASHBOARD */
+        /* DASHBOARD & AVATAR */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
@@ -65,6 +59,16 @@
         .asset-info { display: flex; align-items: center; gap: 15px; }
         .asset-img { width: 40px; height: 56px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
         .asset-val { font-weight: 700; color: var(--green); }
+        
+        /* USER PROFILE (V3.2.0) */
+        .user-profile-section { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .avatar-circle { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background: #2d153c; }
+        .user-meta { display: flex; flex-direction: column; overflow: hidden; }
+        .user-name { font-weight: 700; color: white; font-size: 14px; }
+        .user-email-txt { font-size: 11px; color: var(--subtext); overflow: hidden; text-overflow: ellipsis; }
+        .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; margin-top: 15px; }
+        .avatar-option { width: 100%; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
+        .avatar-option:hover { transform: scale(1.05); border-color: var(--primary); }
 
         /* GRIDS & CARDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
@@ -115,7 +119,6 @@
         .deck-area-edit { display: block; } 
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        
         .editor-header { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
         .editor-split { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; height: 60vh; }
         .editor-column { display: flex; flex-direction: column; }
@@ -166,7 +169,6 @@
         .bf-row-label { width: 100%; font-size: 10px; color: var(--subtext); text-transform: uppercase; margin-bottom: 5px; opacity: 0.5; pointer-events: none; }
         .tap-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; color: white; text-shadow: 0 0 10px black; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .bf-tapped .tap-icon { opacity: 1; }
-        
         .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #0f0a1c; z-index: 20; box-shadow: 0 2px 5px black; }
         .token-card { background: #1e1e1e; border: 2px dashed var(--subtext); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; text-align: center; font-size: 12px; }
 
@@ -177,18 +179,6 @@
         .prophecy-card { width: 140px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.3s; cursor: pointer; animation: deal 0.5s ease-out forwards; opacity: 0; }
         .prophecy-card:hover { transform: scale(1.1) translateY(-10px); z-index: 10; }
         @keyframes deal { from { transform: translateY(50px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-        
-        /* CODEX */
-        .codex-layout { display: flex; gap: 30px; text-align: left; }
-        .codex-img { width: 300px; border-radius: 15px; box-shadow: 0 0 30px rgba(167, 139, 250, 0.2); }
-        .codex-info { flex: 1; }
-        .codex-title { font-size: 24px; font-weight: 700; color: white; margin-bottom: 5px; }
-        .codex-type { font-size: 14px; color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .codex-text { font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap; margin-bottom: 20px; font-style: italic; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border-left: 3px solid var(--primary); }
-        .legality-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
-        .legality-badge { font-size: 11px; padding: 5px 10px; border-radius: 4px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; }
-        .is-legal { border-left: 3px solid var(--green); color: var(--green); }
-        .not-legal { border-left: 3px solid var(--red); color: var(--subtext); opacity: 0.6; }
         
         /* AUTH SCREEN */
         #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
@@ -213,6 +203,15 @@
 <body>
 
     <img id="hover-preview"> <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+    <div id="avatar-modal" class="modal-overlay hidden">
+        <div class="modal-content card-box">
+            <h2 style="color:var(--primary);">Choose Your Avatar</h2>
+            <p style="color:var(--subtext);">Select a relic from your Vault to represent you.</p>
+            <div id="avatar-grid" class="avatar-grid"></div>
+            <button onclick="document.getElementById('avatar-modal').classList.add('hidden')" class="secondary" style="margin-top:20px; width:auto;">Cancel</button>
+        </div>
+    </div>
 
     <div id="bulk-modal" class="modal-overlay hidden">
         <div class="modal-content card-box">
@@ -287,15 +286,23 @@
     <div id="app" class="app-container hidden">
         <div class="sidebar">
             <div class="logo"><span>🩸</span> The Grimoire</div>
+            <div class="user-profile-section">
+                <img id="sidebar-avatar" class="avatar-circle" src="https://svgshare.com/i/10gq.svg">
+                <div class="user-meta">
+                    <div id="sidebar-username" class="user-name">Wizard</div>
+                    <div id="user-email" class="user-email-txt">Loading...</div>
+                </div>
+            </div>
+            
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
             <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
             <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
+            <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.1.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.2.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -313,6 +320,24 @@
                 <div class="dashboard-split">
                     <div class="card-box"><h3>🏆 Top 5 High-Value Assets</h3><div id="top-assets-list"><div style="color:var(--subtext); padding:20px; text-align:center;">No relics found.</div></div></div>
                     <div class="card-box"><h3>Recent Acquisitions</h3><div class="collection-grid" id="recent-grid"></div></div>
+                </div>
+            </div>
+
+            <div id="view-settings" class="hidden">
+                <div class="card-box" style="max-width: 500px; margin: 0 auto;">
+                    <h2>🧙‍♂️ Wizard Identity</h2>
+                    <div style="text-align:center; margin-bottom:20px;">
+                        <img id="settings-avatar" class="avatar-circle" style="width:100px; height:100px; margin-bottom:15px;" src="https://svgshare.com/i/10gq.svg">
+                        <br>
+                        <button onclick="openAvatarModal()" class="secondary" style="width:auto;">Change Avatar from Vault</button>
+                    </div>
+                    
+                    <div class="input-group"><span class="input-icon">👤</span><input type="text" id="settings-username" placeholder="Display Name (e.g. Jace Beleren)"></div>
+                    <button onclick="saveProfile()" style="margin-bottom:30px; background:var(--green);">💾 Save Identity</button>
+                    
+                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔐 Security</h3>
+                    <div class="input-group"><span class="input-icon">🔑</span><input type="password" id="new-password" placeholder="New Password"></div>
+                    <button onclick="updatePassword()">Update Password</button>
                 </div>
             </div>
 
@@ -340,7 +365,6 @@
                     <div style="display:flex; gap:10px;"><button id="btn-appraise" class="secondary" style="width:auto; padding:8px 16px; font-size:12px; background:var(--green); color:white; border:none;" onclick="appraiseCollection()">🔄 Appraise Vault</button><button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadCollection()">Refresh</button></div>
                 </div>
                 <div id="appraisal-status" style="margin-bottom:15px; font-size:12px; color:var(--subtext);" class="hidden"></div>
-                
                 <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
                     <div class="input-group" style="flex:1; margin-bottom:0;"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search Vault (Names or Tags)..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;"></div>
                     <select id="vaultSort" onchange="filterVault(); savePrefs();" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;"><option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option></select>
@@ -349,7 +373,6 @@
                         <div id="view-list-btn" class="view-btn" onclick="toggleVaultView('list')">List</div>
                     </div>
                 </div>
-                
                 <div id="collection-grid" class="collection-grid">Loading...</div>
             </div>
 
@@ -455,37 +478,61 @@
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
         const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
 
-        // PREFERENCES
-        function savePrefs() {
-            localStorage.setItem('grimoire_view', vaultViewMode);
-            localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value);
-            localStorage.setItem('grimoire_price', document.getElementById('priceSource').value);
-        }
-        function loadPrefs() {
-            if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort');
-            if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price');
-            toggleVaultView(vaultViewMode);
-        }
+        function savePrefs() { localStorage.setItem('grimoire_view', vaultViewMode); localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); localStorage.setItem('grimoire_price', document.getElementById('priceSource').value); }
+        function loadPrefs() { if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price'); toggleVaultView(vaultViewMode); }
+        function showToast(m,t='info'){ let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000); }
+        function getCardImage(c) { if(!c) return ''; if(c.image_url) return c.image_url; if(c.image_uris && c.image_uris.normal) return c.image_uris.normal; if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) return c.card_faces[0].image_uris.normal; return ''; }
 
-        function showToast(m,t='info'){
-            let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)}
-            const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000);
-        }
-
-        function getCardImage(c) {
-            if(!c) return '';
-            if(c.image_url) return c.image_url;
-            if(c.image_uris && c.image_uris.normal) return c.image_uris.normal;
-            if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) return c.card_faces[0].image_uris.normal;
-            return ''; 
-        }
-
-        // --- AUTH ---
+        // --- AUTH & PROFILE V3.2.0 ---
         function toggleResetMode(){ isResetMode=!isResetMode; const g=document.getElementById('password').parentElement; if(isResetMode){g.classList.add('hidden');document.getElementById('auth-btn').innerText="Send Recovery";document.getElementById('forgot-link').innerText="Back";}else{g.classList.remove('hidden');document.getElementById('auth-btn').innerText="Summon Session";document.getElementById('forgot-link').innerText="Forgot Password?";}}
         async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){if(error.message.includes("Invalid login credentials")){showToast("Invalid credentials. Attempting creation...","info");const sup=await sb.auth.signUp({email:e,password:p});if(sup.error){showToast(sup.error.message,"error");}else{if(sup.data.session)finalizeLogin(sup.data.session);else showToast("Account created! Check email.","success");}}else{showToast(error.message,"error");}}else{finalizeLogin(data.session);}}}
-        function finalizeLogin(s){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;loadData()}
+        function finalizeLogin(s){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;loadData(); loadPrefs(); loadProfile(); }
         async function handleLogout(){await sb.auth.signOut();window.location.reload()}
-        sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData(); loadPrefs();}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
+        
+        // PROFILE LOGIC
+        async function loadProfile() {
+            const { data, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+            if (data) {
+                if(data.username) {
+                    document.getElementById('sidebar-username').innerText = data.username;
+                    document.getElementById('settings-username').value = data.username;
+                }
+                if(data.avatar_url) {
+                    document.getElementById('sidebar-avatar').src = data.avatar_url;
+                    document.getElementById('settings-avatar').src = data.avatar_url;
+                }
+            } else {
+                // First time setup - upsert default
+                await sb.from('profiles').upsert({ id: session.user.id, username: 'Wizard', avatar_url: 'https://svgshare.com/i/10gq.svg' });
+            }
+        }
+        async function saveProfile() {
+            const username = document.getElementById('settings-username').value;
+            const avatar = document.getElementById('settings-avatar').src;
+            const { error } = await sb.from('profiles').upsert({ id: session.user.id, username, avatar_url: avatar, updated_at: new Date() });
+            if(error) showToast("Error saving profile", "error");
+            else { showToast("Identity Updated!", "success"); loadProfile(); }
+        }
+        async function updatePassword() {
+            const p = document.getElementById('new-password').value;
+            if(!p) return showToast("Enter a password", "error");
+            const { error } = await sb.auth.updateUser({ password: p });
+            if(error) showToast(error.message, "error");
+            else { showToast("Password updated!", "success"); document.getElementById('new-password').value = ""; }
+        }
+        function openAvatarModal() {
+            document.getElementById('avatar-modal').classList.remove('hidden');
+            const grid = document.getElementById('avatar-grid');
+            grid.innerHTML = cardsCache.filter(c=>c.image_url).slice(0, 50).map(c => 
+                `<img src="${getCardImage(c)}" class="avatar-option" onclick="setAvatar('${getCardImage(c)}')">`
+            ).join('');
+        }
+        function setAvatar(url) {
+            document.getElementById('settings-avatar').src = url;
+            document.getElementById('avatar-modal').classList.add('hidden');
+        }
+
+        sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData(); loadPrefs(); loadProfile();}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
 
         // --- NAV & SEARCH ---
         function nav(v,i){
