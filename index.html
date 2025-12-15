@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.15 (Stable Base + UX)</title>
+    <title>The Grimoire | v4.0.16 (Mobile UI Fix)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -56,13 +56,46 @@
 
         /* --- LAYOUT & NAV FIX V3.4.4 --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
-        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex !important; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
-        .bottom-nav { display: none !important; }
+        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
+        .bottom-nav { display: none; } /* Default: Hidden on Desktop */
 
+        /* V4.0.16: Mobile Overrides */
         @media (max-width: 768px) { 
-            .app-container { grid-template-columns: 1fr !important; padding-bottom: 80px; } 
-            .sidebar { display: none !important; } 
-            .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+            .app-container { 
+                grid-template-columns: 1fr; 
+                padding-bottom: 80px; 
+            } 
+            .sidebar { 
+                display: none; 
+            } 
+            .bottom-nav { 
+                display: flex; 
+                position: fixed; 
+                bottom: 0; 
+                left: 0; 
+                width: 100%; 
+                background: rgba(15, 10, 28, 0.95); 
+                border-top: 1px solid var(--border); 
+                padding: 10px 0; 
+                justify-content: space-around; 
+                z-index: 20; 
+                backdrop-filter: blur(10px); 
+            }
+            .main {
+                padding: 20px 15px; /* Reduced padding on mobile */
+            }
+            /* Stack Dashboard Grids */
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr); /* 2 columns for stats */
+            }
+            .dashboard-split {
+                grid-template-columns: 1fr; /* Single column stack */
+            }
+            /* Expand Add Card and Settings modals */
+            #view-add .card-box, #view-settings .card-box {
+                max-width: 100%;
+                margin: 0;
+            }
         }
 
         .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
@@ -390,7 +423,7 @@
                 </div>
                 <span id="forgot-link" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleResetMode()">Forgot Password?</span>
             </div>
-            </div>
+        </div>
     </div>
 
     <div id="app" class="app-container hidden">
@@ -1028,7 +1061,7 @@
         }
 
         async function logDailyValue(totalVal) {
-            // V4.0.11 FIX: Robust logic to check only by user_id and then find today's date in memory.
+            // V4.0.10 FIX (The last known stable logic): Fetch all entries, then check in memory.
             const todayISO = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD (e.g., '2025-12-15')
             const numericValue = parseFloat(totalVal.toFixed(2));
             const VALUE_COLUMN = 'portfolio_value'; // Standard/Correct Column Name
@@ -1046,9 +1079,8 @@
             
             // 2. Check if a row for today already exists in the fetched data.
             const existsToday = allDates.some(entry => {
-                // Ensure the fetched value is treated as a string for comparison
-                const fetchedDate = String(entry.date);
-                return fetchedDate === todayISO;
+                // Safely compare fetched date string with calculated date string
+                return String(entry.date) === todayISO;
             });
 
             // 3. Conditional INSERT or UPDATE
@@ -1158,6 +1190,7 @@
             logDailyValue(totalVal);
             loadPriceHistory().then(renderPriceHistoryChart);
         }
+
         async function appraiseCollection(){ 
             if(cardsCache.length===0) return showToast("Collection is empty. Add cards first.", "info"); 
             const btn=document.getElementById('btn-appraise'); 
@@ -1174,10 +1207,11 @@
             try { 
                 for(let i=0; i<totalChunks; i++){ 
                     status.innerText = `Processing Batch ${i+1}/${totalChunks}...`;
+                    const chunk = ids.slice(i*75,(i+1)*75); 
                     const res=await fetch('https://api.scryfall.com/cards/collection',{
                         method:'POST',
                         headers:{'Content-Type':'application/json'},
-                        body:JSON.stringify({identifiers:ids.slice(i*75,(i+1)*75)})
+                        body:JSON.stringify({identifiers:chunk})
                     }); 
                     const d=await res.json(); 
                     if(d.data) { 
@@ -2064,7 +2098,9 @@
             if (!currentDeckCache.length) return showToast("Resolve decklist first!", "error");
             document.getElementById('view-decks').classList.add('hidden');
             document.getElementById('view-battlefield').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.add('hidden');
+            document.querySelector('.sidebar').classList.remove('hidden'); // Ensure sidebar logic is fixed for desktop
+            document.querySelector('.sidebar').style.display = window.innerWidth <= 768 ? 'none' : 'flex';
+
             gameState = {
                 lib: [],
                 hand: [],
@@ -2175,7 +2211,7 @@
         function exitBattlefield() {
             document.getElementById('view-battlefield').classList.add('hidden');
             document.getElementById('view-decks').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.remove('hidden');
+            document.querySelector('.sidebar').style.display = window.innerWidth <= 768 ? 'none' : 'flex';
         }
 
         document.addEventListener('keydown', (e) => {
