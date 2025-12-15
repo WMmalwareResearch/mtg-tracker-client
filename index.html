@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.3.1</title>
+    <title>The Grimoire | v2.4.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -108,16 +108,26 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
-        /* BATTLEFIELD */
+        /* BATTLEFIELD (V2.4.0 SPLIT) */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
-        .bf-field { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; }
-        .bf-hand-area { height: 200px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
-        .bf-card { width: 120px; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; position: relative; }
-        .bf-card img { width: 100%; border-radius: 8px; }
-        .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 15px var(--primary); }
-        .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
+        /* Two Rows */
+        .bf-row { flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; padding: 20px; border-bottom: 1px dashed rgba(255,255,255,0.1); overflow-y: auto; transition: background 0.2s; }
+        .bf-row:last-child { border-bottom: none; background: rgba(0,0,0,0.2); } /* Lands Row darker */
+        .bf-row-label { width: 100%; font-size: 10px; color: var(--subtext); text-transform: uppercase; margin-bottom: 5px; opacity: 0.5; pointer-events: none; }
+        
+        .bf-hand-area { height: 220px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; z-index: 10; position: relative; box-shadow: 0 -5px 20px rgba(0,0,0,0.5); }
+        .bf-card { width: 120px; border-radius: 8px; cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; position: relative; flex-shrink: 0; }
+        .bf-card img { width: 100%; border-radius: 8px; pointer-events: none; }
+        .bf-card:hover { transform: translateY(-20px) scale(1.1); z-index: 100; box-shadow: 0 0 15px var(--primary); }
+        
+        /* TAPPED STATE & ICON */
+        .bf-tapped { transform: rotate(90deg) translateX(10px); opacity: 0.7; filter: brightness(0.8); }
+        .bf-tapped:hover { transform: rotate(90deg) translateX(10px) scale(1.1); }
+        .tap-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; color: white; text-shadow: 0 0 10px black; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .bf-tapped .tap-icon { opacity: 1; }
+
         .bf-zone-btn { width: 100px; height: 140px; border: 1px dashed var(--subtext); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--subtext); cursor: pointer; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
         .bf-zone-btn:hover { border-color: var(--primary); color: white; background: rgba(255,255,255,0.05); }
 
@@ -234,7 +244,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.3.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.4.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -338,7 +348,16 @@
                     <div class="bf-stat"><span style="color:var(--subtext);">Turn:</span> <span id="bf-turn">1</span> <button style="width:auto; padding:2px 8px; font-size:10px;" onclick="nextTurn()">Next</button></div>
                     <div class="bf-stat"><button style="width:auto; padding:5px 15px; background:var(--red);" onclick="initBattlefield()">Reset Game</button></div>
                 </div>
-                <div class="bf-main"><div id="bf-battlefield" class="bf-field"></div></div>
+                
+                <div class="bf-main">
+                    <div id="bf-frontline" class="bf-row">
+                        <div class="bf-row-label">Combat / Spells</div>
+                    </div>
+                    <div id="bf-backline" class="bf-row">
+                        <div class="bf-row-label">Lands / Mana</div>
+                    </div>
+                </div>
+
                 <div class="bf-hand-area">
                     <div class="bf-zone-btn" onclick="drawCard()"><div>📚 Library</div><div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div></div>
                     <div class="bf-zone-btn" style="border-color:var(--red);"><div>💀 Graveyard</div><div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div></div>
@@ -649,10 +668,23 @@
         function renderManaCurve(cmcData) { if (manaCurveInstance) manaCurveInstance.destroy(); const ctx = document.getElementById('manaCurve').getContext('2d'); const maxCmc = Math.max(...Object.keys(cmcData).map(Number)); const labels = []; const data = []; for (let i = 0; i <= Math.min(maxCmc, 6); i++) { labels.push(i.toString()); data.push(cmcData[i] || 0); } let cmcSevenPlus = 0; for (let i = 7; i <= maxCmc; i++) { cmcSevenPlus += (cmcData[i] || 0); } if (maxCmc >= 7 || maxCmc === 0) { labels.push('7+'); data.push(cmcSevenPlus); } manaCurveInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Card Count', data: data, backgroundColor: '#a78bfa', borderColor: 'rgba(167, 139, 250, 0.2)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, title: { display: true, text: 'Mana Value (CMC) Curve', color: 'white' } }, scales: { x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#a1a1aa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } } } } }); }
         function renderColorChart(colors) { if (colorChartInstance) colorChartInstance.destroy(); const ctx = document.getElementById('colorChart').getContext('2d'); const colorLabels = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless']; const colorData = [colors['W']||0, colors['U']||0, colors['B']||0, colors['R']||0, colors['G']||0, colors['C']||0]; const bgColors = ['#f0f2c0', '#b3ceea', '#a69f9d', '#ea9f82', '#c4d3ca', '#d8d8d8']; colorChartInstance = new Chart(ctx, { type: 'polarArea', data: { labels: colorLabels, datasets: [{ data: colorData, backgroundColor: bgColors, borderColor: 'rgba(0,0,0,0.5)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, title: { display: true, text: 'Mana Symbol Breakdown', color: 'white' } }, scales: { r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } } } } }); }
 
-        // --- BATTLEFIELD ---
+        // --- BATTLEFIELD (V2.4.0 SPLIT ROW LOGIC) ---
         let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
         function initBattlefield(){ if(!currentDeckCache.length) return showToast("Resolve deck first!","error"); document.getElementById('view-decks').classList.add('hidden'); document.getElementById('view-battlefield').classList.remove('hidden'); document.querySelector('.sidebar').classList.add('hidden'); gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1}; currentDeckCache.forEach(c=>{ for(let i=0;i<c.quantity;i++) gameState.lib.push({uid:Math.random().toString(36), ...c, tapped:false}); }); for(let i=gameState.lib.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; } for(let i=0;i<7;i++) gameState.hand.push(gameState.lib.pop()); renderBF(); }
-        function renderBF(){ document.getElementById('bf-life').innerText=gameState.life; document.getElementById('bf-turn').innerText=gameState.turn; document.getElementById('bf-lib-count').innerText=gameState.lib.length; document.getElementById('bf-grave-count').innerText=gameState.grave.length; document.getElementById('bf-exile-count').innerText=gameState.exile.length; document.getElementById('bf-hand').innerHTML=gameState.hand.map(c=>`<div class="bf-card" onclick="playCard('${c.uid}')"><img src="${getCardImage(c)}"></div>`).join(''); document.getElementById('bf-battlefield').innerHTML=gameState.field.map(c=>`<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)"><img src="${getCardImage(c)}"></div>`).join(''); }
+        function renderBF(){ 
+            document.getElementById('bf-life').innerText=gameState.life; document.getElementById('bf-turn').innerText=gameState.turn; 
+            document.getElementById('bf-lib-count').innerText=gameState.lib.length; document.getElementById('bf-grave-count').innerText=gameState.grave.length; document.getElementById('bf-exile-count').innerText=gameState.exile.length; 
+            document.getElementById('bf-hand').innerHTML=gameState.hand.map(c=>`<div class="bf-card" onclick="playCard('${c.uid}')"><img src="${getCardImage(c)}"></div>`).join(''); 
+            
+            // Split Field Rendering
+            const front = gameState.field.filter(c => !c.type_line.includes('Land'));
+            const back = gameState.field.filter(c => c.type_line.includes('Land'));
+            
+            const cardHTML = (c) => `<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)"><div class="tap-icon">⤵</div><img src="${getCardImage(c)}"></div>`;
+            
+            document.getElementById('bf-frontline').innerHTML = '<div class="bf-row-label">Combat / Spells</div>' + front.map(cardHTML).join('');
+            document.getElementById('bf-backline').innerHTML = '<div class="bf-row-label">Lands / Mana</div>' + back.map(cardHTML).join('');
+        }
         function drawCard(){ if(gameState.lib.length) gameState.hand.push(gameState.lib.pop()); renderBF(); }
         function playCard(uid){ const i=gameState.hand.findIndex(c=>c.uid===uid); if(i>-1) gameState.field.push(gameState.hand.splice(i,1)[0]); renderBF(); }
         function tapCard(uid){ const c=gameState.field.find(c=>c.uid===uid); if(c) c.tapped=!c.tapped; renderBF(); }
