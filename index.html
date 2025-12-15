@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v8.2 (Final Polish)</title>
+    <title>The Grimoire | v9.0 (The Advisor)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -521,7 +521,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v8.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.0</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -797,7 +797,17 @@
                             <div style="margin-bottom:15px;">
                                 <button onclick="openLandCalculator()" class="secondary" style="width:100%; border:1px dashed var(--primary); color:var(--primary);">🏔️ The Geomancer (Mana Calc)</button>
                             </div>
-                            <div id="detail-analysis-results" style="font-size:13px; color:var(--subtext);">Metrics will appear here.</div>
+                            
+                            <div id="deck-advisor" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
+                                <h4 style="margin: 0 0 15px 0; color: var(--primary);">🧙‍♂️ The Advisor</h4>
+                                <div id="advisor-grid" style="display: grid; gap: 10px;">
+                                    </div>
+                                <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; font-style: italic;">
+                                    *Categories estimated based on card text analysis.
+                                </div>
+                            </div>
+
+                            <div id="detail-analysis-results" style="font-size:13px; color:var(--subtext); margin-top: 15px;">Metrics will appear here.</div>
                             <div id="deck-charts" class="hidden"><div style="position:relative;"><canvas id="colorChart"></canvas></div><div style="position:relative;"><canvas id="typeChart"></canvas></div><div style="position:relative;"><canvas id="manaCurve"></canvas></div></div>
                         </div>
                     </div>
@@ -2345,7 +2355,95 @@
                 renderTypeChart(typeAgg);
                 renderManaCurve(cmcAgg);
                 renderColorChart(window.currentDeckStats);
+                
+                // V9.0: Run Advisor Analysis
+                analyzeDeckStructure(currentDeckCache);
             }
+        }
+        
+        // V9.0: Heuristic Analysis Engine
+        function analyzeDeckStructure(deckList) {
+            // 1. Define Categories & Targets (Commander Standard)
+            const stats = {
+                lands: { count: 0, target: 36, label: "Lands" },
+                ramp: { count: 0, target: 10, label: "Ramp" },
+                draw: { count: 0, target: 10, label: "Card Draw" },
+                removal: { count: 0, target: 10, label: "Target Removal" },
+                wipes: { count: 0, target: 3, label: "Board Wipes" }
+            };
+
+            // 2. Iterate and Classify
+            deckList.forEach(c => {
+                const text = (c.oracle_text || "").toLowerCase();
+                const type = (c.type_line || "").toLowerCase();
+                const qty = c.quantity || 1;
+
+                // A. Lands
+                if (type.includes("land")) {
+                    stats.lands.count += qty;
+                    return; // Don't double count lands as ramp usually
+                }
+
+                // B. Ramp (Add mana, search for land)
+                if (text.includes("add ") && (text.includes("{") || text.includes("mana"))) {
+                    stats.ramp.count += qty;
+                } else if (text.includes("search your library") && text.includes("land") && text.includes("battlefield")) {
+                    stats.ramp.count += qty;
+                }
+
+                // C. Draw
+                if (text.includes("draw a card") || text.includes("draw cards") || text.includes("draw x cards")) {
+                    stats.draw.count += qty;
+                }
+
+                // D. Removal (Destroy/Exile target)
+                if ((text.includes("destroy") || text.includes("exile")) && text.includes("target")) {
+                    stats.removal.count += qty;
+                }
+
+                // E. Wipes (Destroy/Exile all)
+                if ((text.includes("destroy") || text.includes("exile")) && text.includes(" all ")) {
+                    stats.wipes.count += qty;
+                }
+            });
+
+            renderAdvisor(stats);
+        }
+
+        function renderAdvisor(stats) {
+            const grid = document.getElementById('advisor-grid');
+            if (!grid) return;
+
+            let html = '';
+            
+            for (const [key, data] of Object.entries(stats)) {
+                const pct = Math.min(100, (data.count / data.target) * 100);
+                
+                // Color Logic: 
+                // Green if close to target (within +/- 20%)
+                // Yellow if somewhat off
+                // Red if very low
+                let color = 'var(--red)';
+                const ratio = data.count / data.target;
+                if (ratio >= 0.8 && ratio <= 1.2) color = 'var(--green)';
+                else if (ratio >= 0.5) color = 'var(--yellow)';
+                
+                // For lands, being way over is also bad/yellow
+                if (key === 'lands' && ratio > 1.3) color = 'var(--yellow)';
+
+                html += `
+                <div style="margin-bottom: 5px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px;">
+                        <span style="color: var(--subtext);">${data.label}</span>
+                        <span style="font-weight: 700; color: white;">${data.count} <span style="opacity:0.5; font-weight:400;">/ ${data.target}</span></span>
+                    </div>
+                    <div class="progress-bg" style="height: 6px; margin: 0; background: rgba(255,255,255,0.1);">
+                        <div class="progress-fill" style="width: ${pct}%; background: ${color};"></div>
+                    </div>
+                </div>`;
+            }
+
+            grid.innerHTML = html;
         }
         
         function toggleDeckView() {
