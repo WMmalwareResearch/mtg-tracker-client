@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.3 (Auth/Dynamic Fix)</title>
+    <title>The Grimoire | v4.0.4 (Image Caching + All Fixes)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -383,7 +383,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.3</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.4</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -636,16 +636,36 @@
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
         }
-        function showToast(m,t='info'){ 
-            let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} 
-            const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000); 
-        }
         function getCardImage(c) { 
             if(!c) return ''; 
-            if(c.image_url) return c.image_url; 
-            if(c.image_uris && c.image_uris.normal) return c.image_uris.normal; 
-            if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) return c.card_faces[0].image_uris.normal; 
-            return ''; 
+            
+            // V4.0.4: Check Local Cache First (improves performance significantly)
+            // Use set_code/num from the object passed, ensuring fallbacks
+            const setCode = c.set_code || c.set;
+            const num = c.collector_number || c.num;
+
+            if (!setCode || !num) {
+                // If we don't have enough data to form a unique key, just return the raw URL
+                 return c.image_url || (c.image_uris && c.image_uris.normal) || (c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) || '';
+            }
+
+            const cacheKey = `img_cache_${setCode}_${num}`;
+            const cachedUrl = localStorage.getItem(cacheKey);
+            if (cachedUrl) {
+                return cachedUrl;
+            }
+
+            let imageUrl = '';
+            if(c.image_url) imageUrl = c.image_url; 
+            else if(c.image_uris && c.image_uris.normal) imageUrl = c.image_uris.normal; 
+            else if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) imageUrl = c.card_faces[0].image_uris.normal; 
+            
+            // Only cache valid URLs
+            if (imageUrl) {
+                localStorage.setItem(cacheKey, imageUrl);
+            }
+            
+            return imageUrl; 
         }
 
         // --- V3.5.0 BUG REPORT ---
@@ -663,7 +683,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v4.0.3',
+                app_version: 'v4.0.4',
                 browser_info: navigator.userAgent
             };
 
@@ -846,7 +866,25 @@
         function closeBulkModal() { document.getElementById('bulk-modal').classList.add('hidden'); document.getElementById('bulkList').value = ''; document.getElementById('bulk-status').innerText = ''; }
         async function processBulkImport() { const text = document.getElementById('bulkList').value; const statusEl = document.getElementById('bulk-status'); if(!text.trim()) return showToast("Please paste a list first.", "error"); const { cards } = parseDeckList(text); if(cards.length === 0) return showToast("No valid cards found.", "error"); statusEl.innerText = `Resolving ${cards.length} relics via Scryfall...`; const identifiers = cards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let finalInserts = []; try { for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); data.data.forEach(scryCard => { const originalInput = cards.find(c => c.name.toLowerCase() === scryCard.name.toLowerCase()) || cards.find(c => scryCard.name.toLowerCase().includes(c.name.toLowerCase())); if(originalInput) { const img = getCardImage(scryCard); const price = scryCard.prices.usd || scryCard.prices.usd_foil || 0; finalInserts.push({ user_id: session.user.id, name: scryCard.name, set_code: scryCard.set.toUpperCase(), collector_number: scryCard.collector_number, image_url: img, buy_price: null, quantity: originalInput.qty, market_price_usd: parseFloat(price), last_price_update: new Date().toISOString() }); } }); } if(finalInserts.length > 0) { statusEl.innerText = `Binding ${finalInserts.length} relics to Vault...`; const { error } = await sb.from('cards').insert(finalInserts); if(error) throw error; showToast(`✅ Successfully bound ${finalInserts.length} relics!`, "success"); closeBulkModal(); loadData(); } else { statusEl.innerText = "Could could not identify any relics."; } } catch(e) { statusEl.innerText = "Error: " + e.message; } }
 
-        async function loadData() { const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false }); if(error) return console.error(error); cardsCache = cards; let totalVal = 0, totalCost = 0, count = 0, oracleCost = 0; cards.forEach(c => { if (c.quantity > 0) { count += c.quantity; if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; totalVal += (Number(c.market_price_usd || 0) * c.quantity); } else { oracleCost += Number(c.market_price_usd || 0); } }); document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2); document.getElementById('stat-oracle').innerText = "$" + oracleCost.toFixed(2); const gain = totalVal - totalCost; const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)'; 
+        async function loadData() { const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false }); if(error) return console.error(error); cardsCache = cards; 
+
+            // V4.0.4: Ensure card keys are normalized for caching logic
+            cardsCache.forEach(c => { 
+                c.set = c.set_code || c.set;
+                c.num = c.collector_number || c.num;
+            });
+        
+            let totalVal = 0, totalCost = 0, count = 0, oracleCost = 0; 
+            cards.forEach(c => { if (c.quantity > 0) { count += c.quantity; if (c.buy_price !== null && Number(c.buy_price) > 0) totalCost += Number(c.buy_price) * c.quantity; totalVal += (Number(c.market_price_usd || 0) * c.quantity); } else { oracleCost += Number(c.market_price_usd || 0); } }); 
+            
+            document.getElementById('stat-count').innerText = count; 
+            document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); 
+            document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2); 
+            document.getElementById('stat-oracle').innerText = "$" + oracleCost.toFixed(2); 
+            const gain = totalVal - totalCost; 
+            const gainEl = document.getElementById('stat-gain'); 
+            gainEl.innerText = `$${gain.toFixed(2)}`; 
+            gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)'; 
             
             document.querySelectorAll('.stat-val').forEach(el => el.classList.remove('skeleton'));
             document.getElementById('top-assets-list').innerHTML = '';
