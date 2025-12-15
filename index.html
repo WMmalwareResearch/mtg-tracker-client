@@ -322,7 +322,13 @@
             <div class="input-group"><input type="email" id="email" placeholder="Sacrificial Email" style="padding-left: 14px;"></div>
             <div class="input-group"><input type="password" id="password" placeholder="Runic Key" style="padding-left: 14px;"></div>
             <button onclick="handleAuthAction()" id="auth-btn">Summon Session</button>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; font-size:12px;"><span id="auth-msg" style="color:var(--subtext); text-align: left; max-width: 60%;">First time? A pact will be forged upon login.</span><span id="forgot-link" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleResetMode()">Forgot Password?</span></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; font-size:12px;">
+    <div style="text-align: left; max-width: 60%;">
+        <span id="auth-msg" style="color:var(--subtext); display:block;">First time? A pact will be forged upon login.</span>
+        <a href="privacy.html" target="_blank" style="color:var(--subtext); opacity: 0.6; text-decoration: underline; margin-top: 4px; display: inline-block;">Privacy Policy</a>
+    </div>
+    <span id="forgot-link" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleResetMode()">Forgot Password?</span>
+</div>
         </div>
     </div>
 
@@ -1379,3 +1385,4 @@
     </script>
 </body>
 </html>
+
