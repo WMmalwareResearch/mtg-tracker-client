@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.8.2</title>
+    <title>The Grimoire | v2.8.3</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -92,10 +92,6 @@
         .new-deck-card { border: 1px dashed var(--subtext); display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--subtext); background: none; }
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
         .new-deck-card::after { display: none; }
-        
-        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
         /* EDITOR UI */
         .editor-header { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
@@ -205,6 +201,17 @@
         </div>
     </div>
 
+    <div id="delete-modal" class="modal-overlay hidden">
+        <div class="modal-content card-box" style="max-width: 400px; border-color: var(--red);">
+            <h2 style="color:var(--red);">Sacrifice Ritual?</h2>
+            <p style="color:var(--subtext); margin-bottom:20px;">Are you sure you want to destroy <b id="delete-target-name" style="color:white;">this deck</b>?<br>This action cannot be undone.</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="confirmDelete()" style="background:var(--red);">🔥 Destroy</button>
+                <button onclick="closeDeleteModal()" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <div id="edit-modal" class="modal-overlay hidden">
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);" id="edit-card-name">Edit Relic</h2>
@@ -265,7 +272,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.3</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -555,6 +562,32 @@
             const f=cardsCache.filter(c=>c.quantity===0);
             document.getElementById('oracle-grid').innerHTML=f.map(c=>`<div class="grid-card" style="border-color:var(--blue);"><div class="overlay"><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`).join('');
         }
+        
+        // V2.8.3 DELETE LOGIC
+        let pendingDeleteId = null;
+        function askDeleteDeck(id, e) {
+            e.stopPropagation();
+            const deck = window.myDecks.find(d => d.id == id);
+            if(!deck) return;
+            pendingDeleteId = id;
+            document.getElementById('delete-target-name').innerText = deck.name;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            pendingDeleteId = null;
+        }
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
+            const btn = document.querySelector('#delete-modal button');
+            const originalText = btn.innerText;
+            btn.innerText = "Burning...";
+            if (currentViewedDeckId == pendingDeleteId) { showRitualEditor(false); }
+            await sb.from('decks').delete().eq('id', pendingDeleteId);
+            showToast("Ritual sacrificed to the void.", "success");
+            loadDecks(); closeDeleteModal(); btn.innerText = originalText;
+        }
+
         async function deleteCard(id, e) { e.stopPropagation(); if(!confirm("Are you sure you want to sacrifice this relic?")) return; const cardEl = document.getElementById(`card-${id}`); if(cardEl) cardEl.style.display = 'none'; cardsCache = cardsCache.filter(c => c.id !== Number(id)); const { error } = await sb.from('cards').delete().eq('id', id); if(error) { showToast(`Error: ${error.message}`, "error"); if(cardEl) cardEl.style.display = 'block'; } else { showToast("Relic sacrificed.", "success"); } loadData(); filterVault(); loadOracle(); }
         function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-tags').value = (card.tags || []).join(', '); document.getElementById('edit-modal').classList.remove('hidden'); }
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
@@ -579,7 +612,7 @@
                         <div class="deck-card-content">
                             <div style="display:flex; justify-content:space-between; align-items:start;">
                                 <h4>${d.name}</h4>
-                                <span style="color:var(--red); font-size:16px; padding:5px; margin:-5px -5px 0 0; cursor:pointer;" onclick="deleteDeck('${d.id}', event)">✕</span>
+                                <span style="color:var(--red); font-size:16px; padding:5px; margin:-5px -5px 0 0; cursor:pointer;" onclick="askDeleteDeck('${d.id}', event)">✕</span>
                             </div>
                             <div class="deck-card-meta">
                                 <span>${d.card_count || 0} Relics</span>
