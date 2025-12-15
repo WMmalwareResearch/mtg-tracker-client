@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v5.0 (Structured Data Baseline)</title>
+    <title>The Grimoire | v5.6 (Deck UI Cleanup & Final Baseline)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -472,7 +472,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v5.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v5.6</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -496,7 +496,8 @@
                         <div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div>
                     </div></div>
                 </div>
-            </div>
+                
+                </div>
 
             <div id="view-settings" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
@@ -626,35 +627,34 @@
                     
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
-                            <div style="display:flex; gap:10px;">
-    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
-    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
-
-    <div class="input-group" style="width: auto; margin: 0; position: relative;">
-        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width: 100%; padding: 8px 14px; padding-left: 40px; font-size: 12px; height: 35px; background: rgba(255, 255, 255, 0.1); color: white;">
-            <option value="">⚙️ Tools & Export</option>
-            <option value="edit">✍️ Edit Decklist</option>
-            <option value="view_toggle">👁️ Toggle Visual/Text View</option>
-            <option disabled>––––––––––––––––––––––</option>
-            <option value="copy_missing">📋 Copy Missing Cards</option>
-            <option value="buy">🛒 Buy Missing Cards (TCGPlayer)</option>
-            <option value="print">🖨️ Print Proxies</option>
-            <option disabled>––––––––––––––––––––––</option>
-            <option value="export_arena">🎮 Export MTG Arena</option>
-            <option value="export_text">📤 Export Text List</option>
-        </select>
-        <span class="input-icon" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px;">⚙️</span>
-    </div>
-</div>
-                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                <div style="flex-grow:1; display:flex; gap: 20px; align-items: flex-start;">
+                                    <img id="detail-commander-img" style="width: 70px; height: 98px; border-radius: 6px; box-shadow: var(--shadow); display: none;">
+                                    <div>
+                                        <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
+                                        <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
+                                        <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div>
+                                    </div>
+                                </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="printProxies()">🖨️ Print</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:#4f46e5; color:white;" onclick="exportArena()">🎮 Arena Export</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="exportDeck()">📤 Text Export</button>
+
+                                    <div class="input-group" style="width: auto; margin: 0; position: relative;">
+                                        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width: 100%; padding: 8px 14px; padding-left: 40px; font-size: 12px; height: 35px; background: rgba(255, 255, 255, 0.1); color: white;">
+                                            <option value="">⚙️ Tools & Export</option>
+                                            <option value="edit">✍️ Edit Decklist</option>
+                                            <option value="view_toggle">👁️ Toggle Visual/Text View</option>
+                                            <option disabled>––––––––––––––––––––––</option>
+                                            <option value="copy_missing">📋 Copy Missing Cards</option>
+                                            <option value="buy">🛒 Buy Missing Cards (TCGPlayer)</option>
+                                            <option value="print">🖨️ Print Proxies</option>
+                                            <option disabled>––––––––––––––––––––––</option>
+                                            <option value="export_arena">🎮 Export MTG Arena</option>
+                                            <option value="export_text">📤 Export Text List</option>
+                                        </select>
+                                        <span class="input-icon" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px;">⚙️</span>
+                                    </div>
                                 </div>
                             </div>
                             <div id="detail-visual-grid" class="hidden visual-grid-container"></div>
@@ -717,9 +717,10 @@
         const EMAILJS_TEMPLATE_ID = 'template_xtth5gu'; // PASTE YOUR TEMPLATE ID HERE
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf'; // PASTE YOUR PUBLIC KEY HERE
 
+        let vaultLookup = {}; // V5.1: Global for ownership lookup
+        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null; // V5.1: Removed priceChartInstance
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false;
         let currentDeckCache=[], currentDeckCoverUrl='';
-        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
@@ -811,7 +812,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v5.0',
+                app_version: 'v5.6',
                 browser_info: navigator.userAgent
             };
 
@@ -1129,88 +1130,13 @@
         }
 
         async function logDailyValue(totalVal) {
-            // V4.0.10 FIX (The last known stable logic): Fetch all entries, then check in memory.
-            const todayISO = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD (e.g., '2025-12-15')
-            const numericValue = parseFloat(totalVal.toFixed(2));
-            const VALUE_COLUMN = 'portfolio_value'; // Standard/Correct Column Name
-
-            // 1. Fetch all entries for this user.
-            const { data: allDates, error: selectError } = await sb
-                .from('price_history')
-                .select('date')
-                .eq('user_id', session.user.id);
-
-            if (selectError) {
-                console.error("Supabase Select Error in logDailyValue (Select):", selectError.message);
-                return;
-            }
-            
-            // 2. Check if a row for today already exists in the fetched data.
-            const existsToday = allDates.some(entry => {
-                // Safely compare fetched date string with calculated date string
-                return String(entry.date) === todayISO;
-            });
-
-            // 3. Conditional INSERT or UPDATE
-            if (!existsToday) {
-                // INSERT block (Only runs if NO entry found for today)
-                const { error: insertError } = await sb.from('price_history').insert({
-                    user_id: session.user.id,
-                    date: todayISO,
-                    [VALUE_COLUMN]: numericValue
-                });
-
-                if (insertError) {
-                    console.error("Supabase Insert Error in logDailyValue (Insert):", insertError.message);
-                } else {
-                    console.log(`[LOG] Successfully INSERTED daily value: $${numericValue}`);
-                }
-            } else {
-                // UPDATE block (Runs if an entry is found for today)
-                const { error: updateError } = await sb.from('price_history').update({
-                    [VALUE_COLUMN]: numericValue 
-                })
-                .eq('user_id', session.user.id)
-                .eq('date', todayISO);
-                
-                if (updateError) {
-                    console.error("Supabase Update Error in logDailyValue (Update):", updateError.message);
-                } else {
-                     console.log(`[LOG] Successfully UPDATED existing daily value for ${todayISO}: $${numericValue}`); 
-                }
-            }
+            // This function is kept to avoid breaking older functions that called it, but is empty due to V5.1 stabilization.
+            console.log("[LOG] Skipping daily value logging (Removed for stabilization).");
         }
 
         async function loadPriceHistory() {
-            const { data, error } = await sb
-                .from('price_history')
-                .select('date, portfolio_value')
-                .eq('user_id', session.user.id)
-                .order('date', { ascending: true })
-                .limit(7); // Limit to last 7 days
-
-            if (error) {
-                // Fallback attempt for legacy/mistyped columns (for robustness)
-                if (error.message.includes('portfolio_value') && error.message.includes('does not exist')) {
-                    console.warn("Retrying Price History Load with non-standard column name 'portfolio_vale' as fallback.");
-                    const { data: customData, error: customError } = await sb
-                        .from('price_history')
-                        .select('date, portfolio_vale')
-                        .eq('user_id', session.user.id)
-                        .order('date', { ascending: true })
-                        .limit(7);
-                    
-                    if (customError) {
-                        console.error("Error loading price history with custom name:", customError.message);
-                        return [];
-                    }
-                    return customData.map(d => ({ date: d.date, portfolio_value: d.portfolio_vale }));
-                }
-
-                console.error("Error loading price history:", error);
-                return [];
-            }
-            return data;
+            // This function is kept but returns an empty array to avoid breaking the Chart component if it was not fully removed.
+            return [];
         }
 
         async function loadData() { 
@@ -1218,10 +1144,16 @@
             if(error) return console.error(error); 
             cardsCache = cards; 
 
-            // V4.0.4: Ensure card keys are normalized for caching logic
+            // V5.1: Reset lookup map and populate it for faster ownership checking
+            vaultLookup = {};
             cardsCache.forEach(c => { 
                 c.set = c.set_code || c.set;
                 c.num = c.collector_number || c.num;
+                // Use a standard unique identifier: card name + set code + collector number
+                const key = `${c.name.toLowerCase().trim()}_${c.set}_${c.num}`;
+                
+                // Track total quantity owned for each unique card printing
+                vaultLookup[key] = (vaultLookup[key] || 0) + c.quantity;
             });
         
             let totalVal = 0, totalCost = 0, count = 0, oracleCost = 0; 
@@ -1253,6 +1185,9 @@
             } else { 
                 document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable cards found.</div>'; 
             } 
+            
+            // logDailyValue(totalVal); // REMOVED V5.1
+            // loadPriceHistory().then(renderPriceHistoryChart); // REMOVED V5.1
         }
 
         async function appraiseCollection(){ 
@@ -1353,6 +1288,39 @@
                 cards: Array.from(u.values())
             };
         }
+        
+        // V5.6: New handler for the consolidated tools dropdown
+        function handleDeckTool(action) {
+            // Reset the dropdown immediately after selection
+            document.getElementById('tools-dropdown').value = '';
+
+            switch (action) {
+                case 'edit':
+                    showRitualEditor(true);
+                    break;
+                case 'view_toggle':
+                    toggleDeckView();
+                    break;
+                case 'copy_missing':
+                    copyMissing();
+                    break;
+                case 'buy':
+                    buyDeck();
+                    break;
+                case 'print':
+                    printProxies();
+                    break;
+                case 'export_arena':
+                    exportArena();
+                    break;
+                case 'export_text':
+                    exportDeck();
+                    break;
+                default:
+                    return;
+            }
+        }
+
 
         async function loadDecks() {
             document.getElementById('deck-workspace').classList.add('hidden');
@@ -1430,7 +1398,7 @@
             const arenaExportText = lines.join('\n');
 
             navigator.clipboard.writeText(arenaExportText).then(() => {
-                showToast("📋 Decklist exported (MTG Arena format) to clipboard!", "success");
+                showToast("🎮 Decklist exported (MTG Arena format) to clipboard!", "success");
             });
         }
 
@@ -1537,6 +1505,7 @@
             }
         }
 
+        // V5.1: Updated to load structured list if present
         function viewRitualDetails(id) {
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
@@ -1554,7 +1523,7 @@
             document.getElementById('deckFormat').value = d.format || 'Casual';
             currentDeckCoverUrl = d.cover_url;
             
-            // V5.0: If structured data exists in the fetched deck, use it for validation/rendering
+            // V5.1: Use structured list data if it exists, otherwise clear cache and run validation
             if (d.structured_list && d.structured_list.length > 0) {
                  window.currentDeckStructuredList = d.structured_list;
             } else {
@@ -1579,45 +1548,81 @@
             }
         }
 
+        // V5.1: Ownership Analysis updated to use structured data
         function analyzeOwnership(t) { 
-            const vaultMap = {};
-            cardsCache.forEach(c => {
-                const key = c.name.toLowerCase().trim();
-                vaultMap[key] = (vaultMap[key] || 0) + c.quantity;
-            });
-            const basics = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes', 'snow-covered plains', 'snow-covered island', 'snow-covered swamp', 'snow-covered mountain', 'snow-covered forest'];
+            // V5.1: Use the global vaultLookup map populated in loadData()
+            
             const lines = t.split('\n');
             let html = '';
             let totalCards = 0;
             let totalOwned = 0;
             const regex = /^(\d+)\s+(.+)/;
-            lines.forEach(line => {
-                const match = line.trim().match(regex);
-                if (match) {
-                    const qtyNeeded = parseInt(match[1]);
-                    const name = match[2].trim();
-                    const key = name.toLowerCase();
-                    let qtyOwned = 0;
-                    if (basics.includes(key)) {
+            
+            // --- V5.1: Check if structured data exists (meaning it was recently validated/saved) ---
+            if (window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
+                const structuredHtml = window.currentDeckStructuredList.map(c => {
+                    const qtyNeeded = c.qty;
+                    // V5.1: Create the lookup key based on structured card data
+                    const lookupKey = `${c.name.toLowerCase().trim()}_${c.set}_${c.num}`;
+                    let qtyOwned = vaultLookup[lookupKey] || 0;
+                    
+                    // Simple basic land check (assuming basic lands are always owned)
+                    const isBasicLand = ['plains', 'island', 'swamp', 'mountain', 'forest'].some(name => c.name.toLowerCase().includes(name));
+
+                    if (isBasicLand) {
                         qtyOwned = qtyNeeded;
-                    } else {
-                        for (let vKey in vaultMap) {
-                            if (vKey === key || vKey.includes(key) || key.includes(vKey)) {
-                                qtyOwned += vaultMap[vKey];
-                            }
-                        }
                     }
-                    totalCards += qtyNeeded;
+
                     const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
+                    totalCards += qtyNeeded;
                     totalOwned += ownedForThisLine;
+                    
                     let statusClass = 'is-missing';
                     if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
                     else if (qtyOwned > 0) statusClass = 'is-partial';
-                    html += `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${name}"><strong>${qtyNeeded}</strong> ${name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
-                } else if (line.trim().length > 0) {
-                    html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`;
-                }
-            });
+                    
+                    return `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${c.name}"><strong>${qtyNeeded}</strong> ${c.name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
+                }).join('');
+                
+                html = structuredHtml;
+                
+            } else {
+                // --- Fallback to simple name matching (pre-V5.0 logic) if no structured data is available ---
+                const vaultMapFallback = {};
+                cardsCache.forEach(c => { vaultMapFallback[c.name.toLowerCase().trim()] = (vaultMapFallback[c.name.toLowerCase().trim()] || 0) + c.quantity; });
+                
+                lines.forEach(line => {
+                    const match = line.trim().match(regex);
+                    if (match) {
+                        const qtyNeeded = parseInt(match[1]);
+                        const name = match[2].trim();
+                        const key = name.toLowerCase();
+                        let qtyOwned = 0;
+                        
+                        // Simple Basic Land Check (fallback mode)
+                        const isBasicLand = ['plains', 'island', 'swamp', 'mountain', 'forest'].some(n => key.includes(n));
+                        
+                        if (isBasicLand) {
+                           qtyOwned = qtyNeeded; // Assume owned if basic land in fallback mode
+                        } else {
+                           qtyOwned = vaultMapFallback[key] || 0;
+                        }
+
+                        const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
+                        totalCards += qtyNeeded;
+                        totalOwned += ownedForThisLine;
+                        
+                        let statusClass = 'is-missing';
+                        if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
+                        else if (qtyOwned > 0) statusClass = 'is-partial';
+                        
+                        html += `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${name}"><strong>${qtyNeeded}</strong> ${name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
+                    } else if (line.trim().length > 0) {
+                        html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`;
+                    }
+                });
+            }
+
             const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0;
             const viewer = document.getElementById('detail-decklist-viewer');
             viewer.innerHTML = html;
@@ -1630,7 +1635,7 @@
             else bar.style.backgroundColor = 'var(--red)';
         }
 
-        // V5.0: DECK VALIDATION FUNCTION UPDATED (includes structured list creation)
+        // V5.0 + V5.5: DECK VALIDATION FUNCTION UPDATED (includes structured list creation & image display)
         async function validateDeck() {
             const name = document.getElementById('deckName').value;
             const commander = document.getElementById('deckCommander').value; 
@@ -1651,7 +1656,20 @@
             document.getElementById('detail-commander').innerText = commander.trim() ? `👑 Commander: ${commander}` : ''; 
             document.getElementById('detail-decklist-viewer').classList.remove('hidden');
             document.getElementById('detail-visual-grid').classList.add('hidden');
+            
+            // Analyze Ownership will run again later using the structured list if found, but run once now for quick UI update.
             analyzeOwnership(listText);
+            
+            // If the structured list already exists, skip API calls and just run stats/render
+            if (window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
+                 allMatchedCards = window.currentDeckStructuredList;
+                 // Rebuild stats and render everything without hitting Scryfall again
+                 processDeckData(allMatchedCards, commander, format, resultsEl);
+                 if (btn) { btn.innerText = "✅ Validation Skipped"; btn.disabled = false; }
+                 return;
+            }
+
+            // --- API RESOLUTION START ---
             resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing decklist...</p>`;
             if (btn) {
                 btn.innerText = "Resolving...";
@@ -1684,11 +1702,6 @@
             const totalChunks = Math.ceil(identifiers.length / chunkSize);
             let allMatchedCards = [];
             let allUnmatched = [];
-            let legalityErrors = []; 
-            let identityErrors = []; 
-            let commanderCardData = null; 
-            let commanderColors = []; 
-            let structuredDeck = []; // V5.0: This will hold our final JSONB array
 
             try {
                 for (let i = 0; i < totalChunks; i++) {
@@ -1703,187 +1716,12 @@
                         })
                     });
                     const data = await response.json();
-                    // V4.0.17 FIX: Only throw error if it's a genuine failure and not just a warning
                     if (data.object === 'error' && !data.data) throw new Error(data.details);
                     allMatchedCards = allMatchedCards.concat(data.data);
                     if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
                 }
-
-                // --- COMMANDER AND LEGALITY CHECKS ---
-                const formatKey = format.toLowerCase().replace(/[^a-z]/g, '');
-
-                if (commander.trim()) {
-                    commanderCardData = allMatchedCards.find(c => c.name.toLowerCase() === commander.toLowerCase());
-                    if (commanderCardData) {
-                        commanderColors = commanderCardData.color_identity || []; 
-                        allMatchedCards = allMatchedCards.filter(c => c.name.toLowerCase() !== commander.toLowerCase());
-                    } 
-                }
                 
-           // V5.5: Commander Card Image Display - BEGIN CHUNK
-                // Reset Commander Image Display
-                document.getElementById('detail-commander-img').style.display = 'none';
-
-                // 1. Commander Legality Check
-                if (commanderCardData) {
-                    // V5.5: Display Commander Image
-                    document.getElementById('detail-commander-img').src = getCardImage(commanderCardData);
-                    document.getElementById('detail-commander-img').style.display = 'block';
-
-                    const legalityStatus = commanderCardData.legalities?.[formatKey];
-                    const isLegalCommander = format === 'Commander' ? legalityStatus === 'commander' : true; 
-                    
-                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal' || (format === 'Commander' && !isLegalCommander)) {
-                        legalityErrors.push({
-                            name: commanderCardData.name + (format === 'Commander' ? " (Commander)" : ""),
-                            status: legalityStatus || 'Not Legal',
-                            format: format,
-                            qty: 1
-                        });
-                    }
-                }
-// V5.5: Commander Card Image Display - END CHUNK
-                
-                // 2. Deck Card Legality and Color Identity Check
-                allMatchedCards.forEach(cardData => {
-                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
-                    if (!deckCard) return;
-
-                    // Standard Legality Check
-                    const legalityStatus = cardData.legalities?.[formatKey];
-                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal') {
-                        legalityErrors.push({
-                            name: cardData.name,
-                            status: legalityStatus,
-                            format: format,
-                            qty: deckCard.qty
-                        });
-                    }
-                    
-                    // Color Identity Check (Only for Commander format and if commander is defined)
-                    if (format === 'Commander' && commanderColors.length > 0) {
-                        const cardIdentity = cardData.color_identity || [];
-                        const isOutsideIdentity = cardIdentity.some(color => !commanderColors.includes(color));
-
-                        if (isOutsideIdentity) {
-                            identityErrors.push({
-                                name: cardData.name,
-                                qty: deckCard.qty,
-                                colors: cardIdentity.join(' ')
-                            });
-                        }
-                    }
-                });
-
-
-                // --- STATS GENERATION & STRUCTURED LIST BUILD ---
-                const typeAgg = {};
-                const cmcAgg = {};
-                let totalDeckPrice = 0;
-                window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-                currentDeckCache = [];
-                
-                const cardsForStats = commanderCardData ? [commanderCardData, ...allMatchedCards] : allMatchedCards;
-
-                cardsForStats.forEach(cardData => {
-                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase()) || (cardData.name.toLowerCase() === commander.toLowerCase() ? {qty: 1, name: cardData.name} : null);
-                    if (!deckCard) return; 
-
-                    const quantity = deckCard.qty;
-                    currentDeckCache.push({ ...cardData, quantity: quantity });
-                    
-                    // V5.0: Build Structured List Entry
-                    structuredDeck.push({
-                        name: cardData.name,
-                        qty: quantity,
-                        set: cardData.set,
-                        num: cardData.collector_number,
-                        img: getCardImage(cardData),
-                        type: cardData.type_line,
-                        cmc: cardData.cmc || 0,
-                        identity: cardData.color_identity || [],
-                        price: parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0)
-                    });
-                    
-                    // --- STATS AGGREGATION (for Charts) ---
-                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
-                    typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
-                    if (!cardData.type_line.toLowerCase().includes('land')) {
-                        const cmc = Math.floor(cardData.cmc || 0);
-                        cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity;
-                    }
-                    const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0);
-                    totalDeckPrice += (price * quantity);
-                    if (cardData.mana_cost) {
-                        const cost = cardData.mana_cost;
-                        window.currentDeckStats['W'] += (cost.match(/{W}/g) || []).length * quantity;
-                        window.currentDeckStats['U'] += (cost.match(/{U}/g) || []).length * quantity;
-                        window.currentDeckStats['B'] += (cost.match(/{B}/g) || []).length * quantity;
-                        window.currentDeckStats['R'] += (cost.match(/{R}/g) || []).length * quantity;
-                        window.currentDeckStats['G'] += (cost.match(/{G}/g) || []).length * quantity;
-                        window.currentDeckStats['C'] += (cost.match(/{C}/g) || []).length * quantity;
-                    }
-                });
-
-                document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
-
-                // V5.0: Store structured data in the global variable for later saving
-                window.currentDeckStructuredList = structuredDeck;
-
-                // --- RENDER RESULTS ---
-                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Cards: ${totalCount + (commander.trim() ? 1 : 0)}</p>`;
-                output += `<p>Format Selected: <strong>${format}</strong>`;
-                // ... (Legality/Identity rendering remains the same)
-                if (format === 'Commander' && commanderColors.length > 0) {
-                    const colorPips = commanderColors.map(c => {
-                        const colorClass = `pip-${c.toLowerCase()}`;
-                        return `<span class="mana-pip ${colorClass}"></span>`;
-                    }).join('');
-                    output += `<br><span style="font-size:12px; color:var(--subtext);">Identity: ${colorPips}</span>`;
-                }
-                output += `</p>`;
-
-
-                if (legalityErrors.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${legalityErrors.length} Cards Illegal in ${format}:</p><ul>`;
-                    legalityErrors.forEach(e => {
-                        const status = e.status === 'banned' ? 'BANNED' : (e.status === 'not_legal' ? 'Not Legal' : 'Illegal Slot');
-                        output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (<strong style="color:var(--red);">${status}</strong>)</li>`;
-                    });
-                    output += `</ul>`;
-                    showToast(`Decklist is illegal in ${format}.`, "error");
-                }
-                
-                if (identityErrors.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">🚫 ${identityErrors.length} Cards Outside Color Identity:</p><ul>`;
-                    identityErrors.forEach(e => {
-                        output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (Colors: ${e.colors})</li>`;
-                    });
-                    output += `</ul>`;
-                    showToast(`Decklist violates Commander Color Identity.`, "error");
-                }
-
-
-                if (allUnmatched.length > 0) {
-                    output += `<p style="color:var(--yellow); font-weight: 600;">⚠️ ${allUnmatched.length} Card Names Unmatched (Typo?):</p><ul>`;
-                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'}</li>`);
-                    output += `</ul>`;
-                    if (legalityErrors.length === 0 && identityErrors.length === 0) showToast(`Validation complete with ${allUnmatched.length} unmatched names.`, "info");
-                }
-
-                if (legalityErrors.length === 0 && identityErrors.length === 0 && allUnmatched.length === 0) {
-                    output += `<p style="color:var(--green);">All cards resolved and legal in ${format}!</p>`;
-                    showToast(`Decklist successfully resolved!`, "success");
-                }
-
-                resultsEl.innerHTML = output;
-
-                if (allUnmatched.length === 0) {
-                    document.getElementById('deck-charts').classList.remove('hidden');
-                    renderTypeChart(typeAgg);
-                    renderManaCurve(cmcAgg);
-                    renderColorChart(window.currentDeckStats);
-                }
+                processDeckData(allMatchedCards, commander, format, resultsEl, parsedCards, allUnmatched);
 
             } catch (error) {
                 resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`;
@@ -1893,6 +1731,186 @@
                     btn.innerText = "✅ Validate & Resolve Decklist";
                     btn.disabled = false;
                 }
+            }
+        }
+        
+        // V5.0 CORE FUNCTION: Separated logic to run after API call or after loading structured list
+        function processDeckData(matchedCards, commander, format, resultsEl, parsedCards = [], allUnmatched = []) {
+            
+            let legalityErrors = []; 
+            let identityErrors = []; 
+            let commanderCardData = null; 
+            let commanderColors = []; 
+            let structuredDeck = []; 
+            
+            // --- COMMANDER AND LEGALITY CHECKS ---
+            const formatKey = format.toLowerCase().replace(/[^a-z]/g, '');
+            document.getElementById('detail-commander-img').style.display = 'none';
+
+            // Find Commander Data
+            if (commander.trim()) {
+                commanderCardData = matchedCards.find(c => c.name.toLowerCase() === commander.toLowerCase());
+                if (commanderCardData) {
+                    commanderColors = commanderCardData.color_identity || []; 
+                    // V5.5: Display Commander Image
+                    document.getElementById('detail-commander-img').src = getCardImage(commanderCardData);
+                    document.getElementById('detail-commander-img').style.display = 'block';
+                    
+                    matchedCards = matchedCards.filter(c => c.name.toLowerCase() !== commander.toLowerCase());
+                } 
+            }
+            
+            // 1. Commander Legality Check
+            if (commanderCardData) {
+                const legalityStatus = commanderCardData.legalities?.[formatKey];
+                const isLegalCommander = format === 'Commander' ? legalityStatus === 'commander' : true; 
+                
+                if (legalityStatus === 'banned' || legalityStatus === 'not_legal' || (format === 'Commander' && !isLegalCommander)) {
+                    legalityErrors.push({
+                        name: commanderCardData.name + (format === 'Commander' ? " (Commander)" : ""),
+                        status: legalityStatus || 'Not Legal',
+                        format: format,
+                        qty: 1
+                    });
+                }
+            }
+            
+            // 2. Deck Card Legality and Color Identity Check & STRUCTURED LIST BUILD
+            const totalCount = parsedCards.reduce((sum, c) => sum + c.qty, 0) + (commander.trim() ? 1 : 0);
+
+            let totalDeckPrice = 0;
+            window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
+            currentDeckCache = [];
+            const typeAgg = {};
+            const cmcAgg = {};
+
+            matchedCards.forEach(cardData => {
+                const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
+                if (!deckCard) return; 
+
+                const quantity = deckCard.qty;
+                currentDeckCache.push({ ...cardData, quantity: quantity });
+                
+                // V5.0: Build Structured List Entry
+                structuredDeck.push({
+                    name: cardData.name,
+                    qty: quantity,
+                    set: cardData.set,
+                    num: cardData.collector_number,
+                    img: getCardImage(cardData),
+                    type: cardData.type_line,
+                    cmc: cardData.cmc || 0,
+                    identity: cardData.color_identity || [],
+                    price: parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0)
+                });
+                
+                // --- STATS AGGREGATION (for Charts) ---
+                const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
+                typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
+                if (!cardData.type_line.toLowerCase().includes('land')) {
+                    const cmc = Math.floor(cardData.cmc || 0);
+                    cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity;
+                }
+                const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0);
+                totalDeckPrice += (price * quantity);
+                if (cardData.mana_cost) {
+                    const cost = cardData.mana_cost;
+                    window.currentDeckStats['W'] += (cost.match(/{W}/g) || []).length * quantity;
+                    window.currentDeckStats['U'] += (cost.match(/{U}/g) || []).length * quantity;
+                    window.currentDeckStats['B'] += (cost.match(/{B}/g) || []).length * quantity;
+                    window.currentDeckStats['R'] += (cost.match(/{R}/g) || []).length * quantity;
+                    window.currentDeckStats['G'] += (cost.match(/{G}/g) || []).length * quantity;
+                    window.currentDeckStats['C'] += (cost.match(/{C}/g) || []).length * quantity;
+                }
+                
+                // Legality Check (V4.0.1)
+                const legalityStatus = cardData.legalities?.[formatKey];
+                if (legalityStatus === 'banned' || legalityStatus === 'not_legal') {
+                    legalityErrors.push({
+                        name: cardData.name,
+                        status: legalityStatus,
+                        format: format,
+                        qty: deckCard.qty
+                    });
+                }
+                
+                // Color Identity Check (V4.0.1)
+                if (format === 'Commander' && commanderColors.length > 0) {
+                    const cardIdentity = cardData.color_identity || [];
+                    const isOutsideIdentity = cardIdentity.some(color => !commanderColors.includes(color));
+
+                    if (isOutsideIdentity) {
+                        identityErrors.push({
+                            name: cardData.name,
+                            qty: deckCard.qty,
+                            colors: cardIdentity.join(' ')
+                        });
+                    }
+                }
+            });
+
+            document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
+
+            // V5.0: Store structured data globally
+            window.currentDeckStructuredList = structuredDeck;
+
+            // Rerun ownership analysis (V5.1) using the new structured list
+            analyzeOwnership(document.getElementById('deckMain').value + '\n' + document.getElementById('deckSide').value);
+
+
+            // --- RENDER RESULTS ---
+            let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Cards: ${totalCount}</p>`;
+            output += `<p>Format Selected: <strong>${format}</strong>`;
+            
+            if (format === 'Commander' && commanderColors.length > 0) {
+                const colorPips = commanderColors.map(c => {
+                    const colorClass = `pip-${c.toLowerCase()}`;
+                    return `<span class="mana-pip ${colorClass}"></span>`;
+                }).join('');
+                output += `<br><span style="font-size:12px; color:var(--subtext);">Identity: ${colorPips}</span>`;
+            }
+            output += `</p>`;
+
+
+            if (legalityErrors.length > 0) {
+                output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${legalityErrors.length} Cards Illegal in ${format}:</p><ul>`;
+                legalityErrors.forEach(e => {
+                    const status = e.status === 'banned' ? 'BANNED' : (e.status === 'not_legal' ? 'Not Legal' : 'Illegal Slot');
+                    output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (<strong style="color:var(--red);">${status}</strong>)</li>`;
+                });
+                output += `</ul>`;
+                showToast(`Decklist is illegal in ${format}.`, "error");
+            }
+            
+            if (identityErrors.length > 0) {
+                output += `<p style="color:var(--red); font-weight: 600;">🚫 ${identityErrors.length} Cards Outside Color Identity:</p><ul>`;
+                identityErrors.forEach(e => {
+                    output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (Colors: ${e.colors})</li>`;
+                });
+                output += `</ul>`;
+                showToast(`Decklist violates Commander Color Identity.`, "error");
+            }
+
+
+            if (allUnmatched.length > 0) {
+                output += `<p style="color:var(--yellow); font-weight: 600;">⚠️ ${allUnmatched.length} Card Names Unmatched (Typo?):</p><ul>`;
+                allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'}</li>`);
+                output += `</ul>`;
+                if (legalityErrors.length === 0 && identityErrors.length === 0) showToast(`Validation complete with ${allUnmatched.length} unmatched names.`, "info");
+            }
+
+            if (legalityErrors.length === 0 && identityErrors.length === 0 && allUnmatched.length === 0) {
+                output += `<p style="color:var(--green);">All cards resolved and legal in ${format}!</p>`;
+                showToast(`Decklist successfully resolved!`, "success");
+            }
+
+            resultsEl.innerHTML = output;
+
+            if (allUnmatched.length === 0) {
+                document.getElementById('deck-charts').classList.remove('hidden');
+                renderTypeChart(typeAgg);
+                renderManaCurve(cmcAgg);
+                renderColorChart(window.currentDeckStats);
             }
         }
         
@@ -1962,34 +1980,55 @@
             container.appendChild(section);
         }
 
+        // V5.3: Updated to iterate over HTML elements for current ownership status
         function copyMissing() {
             const missingLines = [];
-            document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => {
+            
+            // Iterate over all list lines in the detailed viewer
+            document.querySelectorAll('#detail-decklist-viewer .deck-line').forEach(el => {
                 const needed = parseInt(el.getAttribute('data-qty-needed'));
                 const owned = parseInt(el.getAttribute('data-qty-owned'));
                 const name = el.getAttribute('data-name');
                 const toBuy = needed - owned;
-                if (toBuy > 0) missingLines.push(`${toBuy} ${name}`);
+                
+                if (toBuy > 0) {
+                    missingLines.push(`${toBuy} ${name}`);
+                }
             });
-            if (missingLines.length === 0) return showToast("You own all these cards!", "success");
+            
+            if (missingLines.length === 0) return showToast("You own all these cards! Nothing to copy.", "success");
+            
             navigator.clipboard.writeText(missingLines.join('\n')).then(() => {
-                showToast("📋 Missing cards copied to clipboard!", "success");
-            }).catch(() => showToast("Failed to copy.", "error"));
+                showToast(`📋 ${missingLines.length} missing card lines copied to clipboard!`, "success");
+            }).catch(() => showToast("Failed to copy missing cards list.", "error"));
         }
 
+        // V5.3: Updated to iterate over HTML elements for current ownership status
         function buyDeck() {
             const buyLines = [];
-            document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => {
+            
+            // Iterate over all list lines in the detailed viewer
+            document.querySelectorAll('#detail-decklist-viewer .deck-line').forEach(el => {
                 const needed = parseInt(el.getAttribute('data-qty-needed'));
                 const owned = parseInt(el.getAttribute('data-qty-owned'));
                 const name = el.getAttribute('data-name');
                 const toBuy = needed - owned;
-                if (toBuy > 0) buyLines.push(`${toBuy} ${name}`);
+                
+                if (toBuy > 0) {
+                    // Format for TCGPlayer Mass Entry: Qty Name 
+                    buyLines.push(`${toBuy} ${name}`);
+                }
             });
+            
             if (buyLines.length === 0) return showToast("You own all these cards! Nothing to buy.", "success");
-            const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||');
+            
+            // TCGPlayer mass entry format uses || as a separator
+            const queryParam = buyLines.join('||');
+            
             const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`;
+            
             window.open(url, '_blank');
+            showToast("🛒 Opening TCGPlayer Mass Entry for missing cards.", "info");
         }
 
         function clearCharts() {
@@ -2005,6 +2044,7 @@
                 colorChartInstance.destroy();
                 colorChartInstance = null;
             }
+            // Removed priceChartInstance clean up V5.1
             document.getElementById('deck-charts').classList.add('hidden');
         }
 
@@ -2155,60 +2195,7 @@
             });
         }
 
-        // NEW V4.0.5: Price History Chart Render
-        function renderPriceHistoryChart(historyData) {
-            if (priceChartInstance) priceChartInstance.destroy();
-
-            // Format data: Sort by date and format labels
-            historyData.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const labels = historyData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-            const data = historyData.map(d => d.portfolio_value);
-
-            const ctx = document.getElementById('priceHistoryChart').getContext('2d');
-            
-            priceChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Portfolio Value (USD)',
-                        data: data,
-                        borderColor: 'var(--primary)',
-                        backgroundColor: 'rgba(167, 139, 250, 0.2)',
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false, // Important for fixed height container
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return ` $${context.parsed.y.toFixed(2)}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { color: 'var(--subtext)' },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
-                        },
-                        y: {
-                            beginAtZero: false,
-                            ticks: { 
-                                color: 'var(--subtext)',
-                                callback: function(value) { return '$' + value.toFixed(0); }
-                            },
-                            grid: { color: 'rgba(255,255,255,0.1)' }
-                        }
-                    }
-                }
-            });
-        }
+        // REMOVED V5.1: Price History Chart Render (Stabilization)
         
         // --- BATTLEFIELD (V3.0.0) ---
         function initBattlefield() {
@@ -2384,45 +2371,6 @@
             showToast("Lands added to decklist. Click Validate to resolve.", "success");
         }
 
-        // =========================================================================
-// V5.6: Deck Tool Handler - BEGIN CHUNK
-// =========================================================================
-
-        function handleDeckTool(action) {
-            // Reset the dropdown immediately after selection
-            document.getElementById('tools-dropdown').value = '';
-
-            switch (action) {
-                case 'edit':
-                    showRitualEditor(true);
-                    break;
-                case 'view_toggle':
-                    toggleDeckView();
-                    break;
-                case 'copy_missing':
-                    copyMissing();
-                    break;
-                case 'buy':
-                    buyDeck();
-                    break;
-                case 'print':
-                    printProxies();
-                    break;
-                case 'export_arena':
-                    exportArena();
-                    break;
-                case 'export_text':
-                    exportDeck();
-                    break;
-                default:
-                    return;
-            }
-        }
-
-// =========================================================================
-// V5.6: Deck Tool Handler - END CHUNK
-// =========================================================================
-
         sb.auth.getSession().then(({
             data: {
                 session: s
@@ -2439,6 +2387,3 @@
     </script>
 </body>
 </html>
-
-
-
