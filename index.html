@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.2 (Dynamic Add Form)</title>
+    <title>The Grimoire | v4.0.3 (Auth/Dynamic Fix)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -383,7 +383,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.3</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -663,7 +663,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v4.0.1',
+                app_version: 'v4.0.3',
                 browser_info: navigator.userAgent
             };
 
@@ -839,34 +839,6 @@
             qtyInput.value = 1;
             qtyInput.max = 999; // Set a high arbitrary max, effectively unlimited
             qtyInput.readOnly = false;
-        }
-
-            // V4.0.2: DYNAMIC FORM LOGIC
-            const qtyInput = document.getElementById('qty');
-            const costGroup = document.querySelector('.input-group.quantity-group:nth-child(2)');
-            const tagsGroup = document.querySelector('.input-group.quantity-group:nth-child(3)');
-            
-            const isBasicLand = (v.type_line || '').includes("Basic Land");
-            const isOneOff = (v.legalities?.commander === 'restricted' || v.type_line?.includes('Legendary') || (v.legalities?.vintage === 'restricted' && !isBasicLand));
-
-            // Reset fields
-            qtyInput.max = 99;
-            qtyInput.readOnly = false;
-            costGroup.classList.remove('hidden');
-            tagsGroup.classList.remove('hidden');
-
-            if (isBasicLand) {
-                qtyInput.value = 1;
-                costGroup.classList.add('hidden');
-                tagsGroup.classList.add('hidden');
-            } else if (isOneOff) {
-                qtyInput.value = 1;
-                qtyInput.max = 1;
-                qtyInput.readOnly = true;
-            } else {
-                qtyInput.value = 1;
-                qtyInput.max = 4; 
-            }
         }
         async function addCard(isWatchlist = false) { if(!tempCardData) return showToast("Search and select a Relic version first", "error"); const costInput = document.getElementById('cost').value; let qty = document.getElementById('qty').value || 1; if(isWatchlist) qty = 0; else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error"); const costToSave = costInput.length > 0 ? parseFloat(costInput) : null; const tagStr = document.getElementById('add-tags').value; const tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : []; const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, tags: tags, last_price_update: new Date().toISOString() }); if(!error) { if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('add-tags').value = ""; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); } else { showToast(error.message, "error"); } }
 
@@ -1879,5 +1851,3 @@
     </script>
 </body>
 </html>
-
-
