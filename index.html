@@ -53,6 +53,26 @@
         .b-item.active { color: var(--primary); }
 
         /* --- COMPONENTS --- */
+        /* --- V3.5.5 SKELETON STYLES --- */
+        .skeleton {
+            background-color: var(--card-bg);
+            background-image: linear-gradient(90deg, 
+                var(--card-bg) 0%, 
+                rgba(167, 139, 250, 0.1) 20%, 
+                var(--card-bg) 40%, 
+                var(--card-bg) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 4px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton-text { height: 1em; width: 100%; margin-bottom: 0.5em; }
+        .skeleton-text-small { height: 0.7em; width: 60%; margin: 0 auto 0.5em; }
+        .skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; }
+        /* --- END SKELETON STYLES --- */
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
         h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
         h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;}
@@ -1643,4 +1663,5 @@
     </script>
 </body>
 </html>
+
 
