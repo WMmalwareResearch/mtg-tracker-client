@@ -521,6 +521,18 @@
                         <div class="theme-btn" style="background:#34d399;" onclick="applyTheme('green')" title="Green"></div> 
                     </div>
 
+                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">💵 Default Price Source</h3>
+<div class="input-group" style="padding-left: 0; margin-bottom: 30px;">
+    <span class="input-icon">💰</span>
+    <select id="settingsPriceSource" style="padding-left: 40px; margin-bottom: 0;">
+        <option value="usd">USD (TCGplayer Market)</option>
+        <option value="usd_foil">USD Foil (TCGplayer Market)</option>
+        <option value="eur">EUR (Cardmarket)</option>
+        <option value="tix">TIX (MTGO)</option>
+    </select>
+</div>
+<button onclick="savePrefs()" style="margin-bottom:30px; background:var(--green);">💾 Save Preferences</button>
+
                     <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔐 Security</h3>
                     <div class="input-group"><span class="input-icon">🔑</span><input type="password" id="new-password" placeholder="New Password"></div>
                     <button onclick="updatePassword()">Update Password</button>
@@ -551,7 +563,13 @@
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
-                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
+                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;">
+    <option value="usd">🇺🇸 USD (TCG Market)</option>
+    <option value="usd_foil">✨ USD Foil (TCG Market)</option>
+    <option value="eur">🇪🇺 EUR (Cardmarket)</option>
+    <option value="tix">💻 TIX (MTGO)</option>
+    <option value="global">🌎 Global Avg (US+EU)</option>
+                        </select></div>
                         <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
@@ -733,21 +751,49 @@
         function closeUserOptionsModal() {
             document.getElementById('user-options-modal').classList.add('hidden');
         }
+        // =========================================================================
+// V6.0: savePrefs Update - BEGIN CHUNK
+// =========================================================================
+
         function savePrefs() { 
             localStorage.setItem('grimoire_view', vaultViewMode); 
             localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); 
-            localStorage.setItem('grimoire_price', document.getElementById('priceSource').value); 
+            
+            // V6.0: Save the new preferred price source setting
+            if (document.getElementById('settingsPriceSource')) {
+                localStorage.setItem('grimoire_default_price_source', document.getElementById('settingsPriceSource').value);
+            }
+            // V6.0: Update price display dropdown in Add Card view immediately if present
+            if (document.getElementById('priceSource')) {
+                 document.getElementById('priceSource').value = localStorage.getItem('grimoire_default_price_source') || 'usd';
+            }
+            
+            showToast("Preferences saved!", "success");
         }
+        // =========================================================================
+        // V6.0: loadPrefs Update - BEGIN CHUNK
+        // =========================================================================
+
         function loadPrefs() { 
+            const defaultPriceSource = localStorage.getItem('grimoire_default_price_source') || 'usd';
+
             if(localStorage.getItem('grimoire_sort') && document.getElementById('vaultSort')) 
                 document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); 
             
-            if(localStorage.getItem('grimoire_price') && document.getElementById('priceSource')) 
-                document.getElementById('priceSource').value = localStorage.getItem('grimoire_price'); 
+            // V6.0: Load the default price source into both dropdowns
+            if(document.getElementById('priceSource')) 
+                document.getElementById('priceSource').value = localStorage.getItem('grimoire_price') || defaultPriceSource; 
             
+            if(document.getElementById('settingsPriceSource'))
+                document.getElementById('settingsPriceSource').value = defaultPriceSource;
+
             if(localStorage.getItem('grimoire_theme')) applyTheme(localStorage.getItem('grimoire_theme'));
             toggleVaultView(vaultViewMode); 
         }
+
+// =========================================================================
+// V6.0: loadPrefs Update - END CHUNK
+// =========================================================================
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
@@ -969,21 +1015,40 @@
             } 
         }
         
+        // =========================================================================
+// V6.0: updateSelectedVersion Update - BEGIN CHUNK
+// =========================================================================
+
         function updateSelectedVersion(){ 
             const index = document.getElementById('versionSelect').value;
             const v = allVersions[index];
             
             if(!v) return;
 
-            const usd=parseFloat(v.prices.usd||0), eur=parseFloat(v.prices.eur||0); 
-            const price = document.getElementById('priceSource').value==='global' && eur>0 ? (usd+(eur*1.05))/2 : usd; 
-            const priceHtml = (document.getElementById('priceSource').value === 'global') ? `$${price.toFixed(2)} <span style='font-size:10px; color:var(--subtext);'>($${usd.toFixed(2)} US / €${eur.toFixed(2)} EU)</span>` : `$${price.toFixed(2)}`; 
+            const selectedSource = document.getElementById('priceSource').value || 'usd';
+            let rawPrice = v.prices[selectedSource] || v.prices.usd || 0; // Fallback to USD if selected source is missing
+            const usd = parseFloat(v.prices.usd || 0);
+            const eur = parseFloat(v.prices.eur || 0);
+
+            let displayPrice;
+            let displayDetails = '';
+
+            if (selectedSource === 'global' && eur > 0) {
+                // Global is a special calculated average (kept for compatibility)
+                const calculatedPrice = (usd + (eur * 1.05)) / 2;
+                displayPrice = calculatedPrice.toFixed(2);
+                displayDetails = `($${usd.toFixed(2)} US / €${eur.toFixed(2)} EU)`;
+            } else {
+                displayPrice = parseFloat(rawPrice).toFixed(2);
+            }
             
-            const imageUrl = getCardImage(v); 
+            const priceHtml = `$${displayPrice} <span style='font-size:10px; color:var(--subtext);'>${displayDetails}</span>`;
             
             document.getElementById('set').value = v.set.toUpperCase(); 
             document.getElementById('num').value = v.collector_number; 
             document.getElementById('marketPrice').innerHTML = priceHtml; 
+            
+            const imageUrl = getCardImage(v); 
             
             const preview = document.getElementById('preview'); 
             preview.src = imageUrl; 
@@ -995,8 +1060,16 @@
                 set: v.set.toUpperCase(), 
                 num: v.collector_number, 
                 img: imageUrl, 
-                market_price: price 
+                // V6.0: Store the raw price value (which might be the selected source or the fallback USD)
+                market_price: parseFloat(rawPrice) 
             }; 
+
+            // ... (rest of the function remains the same)
+// ...
+
+// =========================================================================
+// V6.0: updateSelectedVersion Update - END CHUNK
+// =========================================================================
 
             // V4.0.3: RESTORATION - Collection Management requires NO deck limits.
             const qtyInput = document.getElementById('qty');
@@ -2387,3 +2460,4 @@
     </script>
 </body>
 </html>
+
