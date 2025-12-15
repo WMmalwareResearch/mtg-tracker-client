@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.16 (Mobile UI Fix)</title>
+    <title>The Grimoire | v4.0.17 (UX/API/Toast Fixes)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -53,6 +53,30 @@
             border: 1px solid var(--border);
         }
         /* End Login Aesthetic */
+        
+        /* V4.0.17: Toast Style */
+        .toast {
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            opacity: 1;
+            transition: opacity 0.3s, transform 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        .toast.hiding {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .toast.error { border-color: var(--red); color: var(--red); }
+        .toast.success { border-color: var(--green); color: var(--green); }
+        /* End Toast Style */
+
 
         /* --- LAYOUT & NAV FIX V3.4.4 --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
@@ -448,7 +472,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.15</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.17</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -537,7 +561,10 @@
                         <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
-                    <div style="display:flex; gap:10px;"><button onclick="addCard(false)" style="flex:2;">Bind to Collection</button><button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Watch</button></div>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="addCard(false)" style="flex:2;">Bind to Collection</button>
+                        <button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Add to Wishlist</button>
+                    </div>
                 </div>
             </div>
             
@@ -715,9 +742,21 @@
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
         }
+        // V4.0.17: Updated showToast to auto-hide after 3 seconds
         function showToast(m,t='info'){ 
-            let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} 
-            const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000); 
+            let c=document.getElementById('toast-container');
+            if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} 
+            
+            const el=document.createElement('div');
+            el.className=`toast ${t}`;
+            el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
+            c.appendChild(el);
+            
+            // Set timeout for auto-removal
+            setTimeout(()=>{
+                el.classList.add('hiding');
+                el.addEventListener('transitionend',()=>el.remove());
+            }, 3000); 
         }
         function getCardImage(c) { 
             if(!c) return ''; 
@@ -763,7 +802,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v4.0.15',
+                app_version: 'v4.0.17',
                 browser_info: navigator.userAgent
             };
 
@@ -876,7 +915,8 @@
                 const res = await fetch(apiUrl + searchQuery); 
                 const d = await res.json(); 
 
-                if (d.object === "error") {
+                // V4.0.17: Improved Error Check - Check if response succeeded AND if data exists
+                if (d.object === "error" && !d.data) {
                     document.getElementById('search-status').innerText = `Error: ${d.details}`;
                     return showToast("Card not found in archives.", "error");
                 }
@@ -889,6 +929,17 @@
                      document.getElementById('search-status').innerText = `No cards found matching "${n}"`;
                      allVersions = [];
                 }
+                
+                // If we got data, but the initial API call reported an error (like a fuzzy match warning), only show status, not the loud toast.
+                const statusMessage = `${allVersions.length} versions found.`;
+                document.getElementById('search-status').innerText = statusMessage;
+                if (d.object === "error") {
+                    console.warn(`Scryfall Warning: ${d.details}`);
+                }
+                
+                if (allVersions.length === 0) {
+                     return showToast("No cards found.", "error");
+                }
 
                 const s=document.getElementById('versionSelect'); 
                 s.innerHTML=''; 
@@ -900,7 +951,6 @@
                     s.appendChild(o); 
                 }); 
                 
-                document.getElementById('search-status').innerText = `${allVersions.length} versions found.`;
                 updateSelectedVersion(); 
 
             } catch(e){
@@ -952,13 +1002,22 @@
             qtyInput.max = 999; // Set a high arbitrary max, effectively unlimited
             qtyInput.readOnly = false;
         }
-        async function addCard(isWatchlist = false) { 
+        
+        // V4.0.17: Updated Add Card to handle Wishlist correctly (honors qty, 0 is Wishlist)
+        async function addCard(isWishlist = false) { 
             if(!tempCardData) return showToast("Search and select a Card version first", "error"); 
             const costInput = document.getElementById('cost').value; 
-            let qty = document.getElementById('qty').value || 1; 
+            let qty = parseInt(document.getElementById('qty').value) || 1; 
             
-            if(isWatchlist) qty = 0; 
-            else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error"); 
+            // If explicitly adding to wishlist, quantity is 0 (overrides user input if not 0)
+            if(isWishlist) {
+                // If user entered a qty > 0, use it but still mark as wishlist (qty=0)
+                // We keep the input qty separate for the console log.
+                if (qty <= 0) qty = 1; // Default to 1 if user put 0
+                qty = 0; // The actual quantity saved to DB for wishlist must be 0
+            } else if(qty <= 0) {
+                 return showToast("Quantity must be greater than zero to bind to Collection.", "error"); 
+            }
             
             const costToSave = costInput.length > 0 ? parseFloat(costInput) : null; 
             const tagStr = document.getElementById('add-tags').value; 
@@ -978,9 +1037,10 @@
             }); 
             
             if(!error) { 
-                if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Wishlist!`, "success"); 
+                if(isWishlist) showToast(`👁️ Added ${tempCardData.name} to Wishlist!`, "success"); 
                 else showToast(`✅ Added ${qty}x ${tempCardData.name} to Collection!`, "success"); 
                 
+                // Clear inputs after successful add
                 document.getElementById('search').value = ""; 
                 document.getElementById('cost').value = ""; 
                 document.getElementById('qty').value = "1"; 
@@ -2098,7 +2158,6 @@
             if (!currentDeckCache.length) return showToast("Resolve decklist first!", "error");
             document.getElementById('view-decks').classList.add('hidden');
             document.getElementById('view-battlefield').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.remove('hidden'); // Ensure sidebar logic is fixed for desktop
             document.querySelector('.sidebar').style.display = window.innerWidth <= 768 ? 'none' : 'flex';
 
             gameState = {
