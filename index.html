@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.9.0</title>
+    <title>The Grimoire | v2.9.1</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -104,7 +104,7 @@
         .editor-label { color: var(--subtext); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; }
         .deck-area-edit { display: block; } 
 
-        /* VISUAL DECK GRID & SET COVER (V2.9.0 FIX) */
+        /* VISUAL DECK GRID */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -113,18 +113,9 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
-        
-        /* THE STAR BUTTON - FIXED VISIBILITY */
-        .cover-btn { 
-            position: absolute; top: 5px; right: 5px; 
-            background: rgba(0,0,0,0.8); color: rgba(255,255,255,0.7); 
-            border: none; border-radius: 50%; width: 28px; height: 28px; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer; 
-            opacity: 0.7; /* Always visible */
-            transition: all 0.2s; z-index: 100; font-size: 16px; 
-        }
+        .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: rgba(255,255,255,0.7); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; z-index: 20; font-size: 14px; }
         .cover-btn:hover { background: var(--yellow); color: black; opacity: 1; transform: scale(1.1); }
-        .is-cover-card { border: 2px solid var(--yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); }
+        .is-cover-card { border: 2px solid var(--yellow); }
         .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); background: black; }
 
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
@@ -284,7 +275,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.1</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -389,6 +380,9 @@
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
+                                    
+                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="exportDeck()">📤 Export</button>
+
                                     <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button>
                                     <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="toggleDeckView()">👁️ / 📝</button>
                                 </div>
@@ -605,7 +599,7 @@
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
         function exportCSV() { if (!cardsCache || cardsCache.length === 0) return showToast("No data to export.", "error"); const headers = ["Name", "Set", "Collector Number", "Quantity", "Buy Price", "Market Price", "Tags", "Last Updated"]; const rows = cardsCache.map(c => { const name = c.name ? `"${c.name.replace(/"/g, '""')}"` : '""'; const set = c.set_code || ""; const num = c.collector_number || ""; const qty = c.quantity || 0; const buy = c.buy_price || 0; const mkt = c.market_price_usd || 0; const tags = c.tags ? `"${c.tags.join(', ')}"` : '""'; const date = c.last_price_update || ""; return [name, set, num, qty, buy, mkt, tags, date].join(","); }); const csvContent = [headers.join(",")].concat(rows).join("\n"); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "grimoire_export.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("Export successful!", "success"); }
 
-        // --- DECK LOGIC (V2.8.0 UPDATE) ---
+        // --- DECK LOGIC (V2.9.1 DECK EXPORT) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
         
         async function loadDecks() { 
@@ -653,6 +647,19 @@
             currentDeckCoverUrl = url;
             renderDeckVisuals(); 
             showToast("Cover art updated!", "success");
+        }
+
+        // NEW V2.9.1 EXPORT FUNCTION
+        function exportDeck() {
+            const main = document.getElementById('deckMain').value;
+            const side = document.getElementById('deckSide').value;
+            let exportText = main;
+            if (side.trim().length > 0) {
+                exportText += '\n\n// Sideboard\n' + side;
+            }
+            navigator.clipboard.writeText(exportText).then(() => {
+                showToast("📋 Deck exported to clipboard!", "success");
+            });
         }
 
         async function saveDeck() { 
@@ -779,7 +786,7 @@
                 // CHECK IF COVER
                 const isCover = (currentDeckCoverUrl === imgUrl);
                 const activeClass = isCover ? 'is-cover-card' : '';
-                const starColor = isCover ? 'var(--yellow)' : 'rgba(255,255,255,0.7)';
+                const starColor = isCover ? 'var(--yellow)' : 'var(--subtext)';
                 
                 const item = document.createElement('div'); item.className = `visual-card ${activeClass}`; 
                 
