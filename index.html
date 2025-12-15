@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.4.3</title>
+    <title>The Grimoire | v3.4.4</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,6 +22,7 @@
             --border: rgba(167, 139, 250, 0.2); 
             --green: #d946ef; --red: #dc2626; --yellow: #facc15; --blue: #3b82f6; 
             --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
         }
 
         body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #1a1a1a, var(--bg-dark)); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem); overflow: hidden; transition: background 0.5s; }
@@ -29,15 +30,26 @@
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- LAYOUT --- */
+        /* --- LAYOUT & NAV FIX V3.4.4 --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
-        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
+        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex !important; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
+        .bottom-nav { display: none !important; }
+
+        @media (max-width: 768px) { 
+            .app-container { grid-template-columns: 1fr !important; padding-bottom: 80px; } 
+            .sidebar { display: none !important; } 
+            .bottom-nav { display: flex !important; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+        }
+
         .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
         .nav-item { padding: 12px 15px; cursor: pointer; color: var(--subtext); font-weight: 500; border-radius: 8px; transition: all 0.2s; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
         .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
         .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
         .main { padding: 40px clamp(1rem, 2vw + 1rem, 5rem); overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
         #view-battlefield { position: absolute; top:0; left:0; width:100%; height:100%; z-index: 50; background: var(--bg-dark); overflow: hidden; display: flex; flex-direction: column; }
+        .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
+        .b-icon { font-size: 20px; margin-bottom: 4px; }
+        .b-item.active { color: var(--primary); }
 
         /* --- COMPONENTS --- */
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
@@ -184,6 +196,33 @@
         .mana-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items: center; }
         .mana-pip { width:20px; height:20px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; text-align: center; line-height: 20px; font-size: 12px; color:black; font-weight:700; }
         .pip-w { background:#f0f2c0; } .pip-u { background:#b3ceea; } .pip-b { background:#a69f9d; } .pip-r { background:#ea9f82; } .pip-g { background:#c4d3ca; }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 10, 28, 0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .modal-content { width: 90%; max-width: 800px; text-align: center; }
+        .prophecy-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 30px 0; min-height: 200px; }
+        .prophecy-card { width: 140px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.3s; cursor: pointer; animation: deal 0.5s ease-out forwards; opacity: 0; }
+        .prophecy-card:hover { transform: scale(1.1) translateY(-10px); z-index: 10; }
+        @keyframes deal { from { transform: translateY(50px) scale(0.8); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        
+        /* AUTH SCREEN */
+        #auth-screen { background: radial-gradient(circle at center, #450a0a, #0f0a1c); position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-box { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); padding: 40px; border-radius: 16px; width: 100%; max-width: 400px; text-align: center; }
+
+        /* MOBILE NAV */
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+        .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
+        .b-icon { font-size: 20px; margin-bottom: 4px; }
+        .b-item.active { color: var(--primary); }
+
+        @media (max-width: 900px) { 
+            .deck-area-edit, .deck-area-detail { grid-template-columns: 1fr; } 
+            .dashboard-split { grid-template-columns: 1fr; } 
+            .codex-layout { flex-direction: column; }
+            .codex-img { width: 100%; max-width: 300px; margin: 0 auto; }
+            .editor-split { grid-template-columns: 1fr; height: auto; }
+        }
+        @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } .sidebar { display: none; } .main { padding: 20px; padding-bottom: 100px; } .bottom-nav { display: flex; } }
     </style>
 </head>
 <body>
@@ -288,41 +327,28 @@
     </div>
 
     <div id="app" class="app-container hidden">
-    <div class="sidebar">
-        <div class="logo"><span>🩸</span> The Grimoire</div>
-        <div class="user-profile-section">
-            <img id="sidebar-avatar" class="avatar-circle" src="https://svgshare.com/i/10gq.svg">
-            <div class="user-meta">
-                <div id="sidebar-username" class="user-name">Wizard</div>
-                <div id="user-email" class="user-email-txt">Loading...</div>
+        <div class="sidebar">
+            <div class="logo"><span>🩸</span> The Grimoire</div>
+            <div class="user-profile-section">
+                <img id="sidebar-avatar" class="avatar-circle" src="https://svgshare.com/i/10gq.svg">
+                <div class="user-meta">
+                    <div id="sidebar-username" class="user-name">Wizard</div>
+                    <div id="user-email" class="user-email-txt">Loading...</div>
+                </div>
+            </div>
+            
+            <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
+            <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
+            <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
+            <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
+            <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
+            <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
+            <div style="flex-grow:1;"></div>
+            <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.4.4</div>
+                <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
-        
-        <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
-        <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
-        <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
-        <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
-        <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
-        <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
-        
-        <div style="flex-grow:1;"></div>
-        <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-            <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.4.4</div>
-            <button class="secondary" onclick="handleLogout()">Break Pact</button>
-        </div>
-    </div>
-
-    <div class="main">
-        </div>
-
-    <div class="bottom-nav">
-        <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
-        <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
-        <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Vault</div>
-        <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Rituals</div>
-        <div class="b-item" onclick="nav('settings', 'settings')"><span class="b-icon">⚙️</span>Set</div>
-    </div>
-</div>
 
         <div class="main">
             <div id="view-dashboard">
@@ -509,11 +535,52 @@
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[], currentDeckCoverUrl='';
         let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
+        let suggestedLands = []; // V3.3.0
         const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
-        let suggestedLands = [];
 
-        function savePrefs() { localStorage.setItem('grimoire_view', vaultViewMode); localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); localStorage.setItem('grimoire_price', document.getElementById('priceSource').value); }
-        function loadPrefs() { if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price'); if(localStorage.getItem('grimoire_theme')) applyTheme(localStorage.getItem('grimoire_theme')); toggleVaultView(vaultViewMode); }
+        // PREFERENCES V3.4.1 FIX
+        function savePrefs() { 
+            localStorage.setItem('grimoire_view', vaultViewMode); 
+            localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); 
+            localStorage.setItem('grimoire_price', document.getElementById('priceSource').value); 
+        }
+        function loadPrefs() { 
+            if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); 
+            if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price'); 
+            if(localStorage.getItem('grimoire_theme')) applyTheme(localStorage.getItem('grimoire_theme'));
+            toggleVaultView(vaultViewMode); 
+        }
+
+        // V3.4.1 CORRECTED MTG COLOR IDENTITIES
+        function applyTheme(theme) {
+            const root = document.documentElement.style;
+            localStorage.setItem('grimoire_theme', theme);
+            
+            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active-theme'));
+            
+            // WUBRG Standards + Purple default
+            const themes = {
+                'purple': { primary: '#a78bfa', bg: '#0f0a1c', card: 'rgba(45, 21, 60, 0.8)' },
+                'white': { primary: '#fcd34d', bg: '#1c1917', card: 'rgba(40, 35, 30, 0.8)' }, // White
+                'blue': { primary: '#60a5fa', bg: '#0f172a', card: 'rgba(30, 41, 59, 0.8)' }, // Blue
+                'black': { primary: '#a1a1aa', bg: '#000000', card: 'rgba(24, 24, 27, 0.8)' }, // Black
+                'red': { primary: '#f87171', bg: '#250808', card: 'rgba(69, 10, 10, 0.8)' }, // Red
+                'green': { primary: '#34d399', bg: '#064e3b', card: 'rgba(6, 78, 59, 0.8)' } // Green
+            };
+
+            const t = themes[theme] || themes['purple'];
+            root.setProperty('--primary', t.primary);
+            root.setProperty('--bg-dark', t.bg);
+            root.setProperty('--card-bg', t.card);
+            root.setProperty('--border', `rgba(${hexToRgb(t.primary)}, 0.2)`);
+            document.body.style.background = `radial-gradient(circle at top left, #1a1a1a, ${t.bg})`;
+        }
+        
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
+        }
+
         function showToast(m,t='info'){ let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000); }
         function getCardImage(c) { if(!c) return ''; if(c.image_url) return c.image_url; if(c.image_uris && c.image_uris.normal) return c.image_uris.normal; if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) return c.card_faces[0].image_uris.normal; return ''; }
 
@@ -527,31 +594,10 @@
         async function updatePassword() { const p = document.getElementById('new-password').value; if(!p) return showToast("Enter a password", "error"); const { error } = await sb.auth.updateUser({ password: p }); if(error) showToast(error.message, "error"); else { showToast("Password updated!", "success"); document.getElementById('new-password').value = ""; } }
         function openAvatarModal() { document.getElementById('avatar-modal').classList.remove('hidden'); const grid = document.getElementById('avatar-grid'); grid.innerHTML = cardsCache.filter(c=>c.image_url).slice(0, 50).map(c => `<img src="${getCardImage(c)}" class="avatar-option" onclick="setAvatar('${getCardImage(c)}')">`).join(''); }
         function setAvatar(url) { document.getElementById('settings-avatar').src = url; document.getElementById('avatar-modal').classList.add('hidden'); }
-        
-        function applyTheme(theme) {
-            const root = document.documentElement.style;
-            localStorage.setItem('grimoire_theme', theme);
-            document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active-theme'));
-            const themes = {
-                'purple': { primary: '#a78bfa', bg: '#0f0a1c', card: 'rgba(45, 21, 60, 0.8)' },
-                'white': { primary: '#fcd34d', bg: '#1c1917', card: 'rgba(40, 35, 30, 0.8)' },
-                'blue': { primary: '#60a5fa', bg: '#0f172a', card: 'rgba(30, 41, 59, 0.8)' },
-                'black': { primary: '#a1a1aa', bg: '#000000', card: 'rgba(24, 24, 27, 0.8)' },
-                'red': { primary: '#f87171', bg: '#250808', card: 'rgba(69, 10, 10, 0.8)' },
-                'green': { primary: '#34d399', bg: '#064e3b', card: 'rgba(6, 78, 59, 0.8)' }
-            };
-            const t = themes[theme] || themes['purple'];
-            root.setProperty('--primary', t.primary);
-            root.setProperty('--bg-dark', t.bg);
-            root.setProperty('--card-bg', t.card);
-            function hexToRgb(hex) { const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex); return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250'; }
-            root.setProperty('--border', `rgba(${hexToRgb(t.primary)}, 0.2)`);
-            document.body.style.background = `radial-gradient(circle at top left, #1a1a1a, ${t.bg})`;
-        }
 
         sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData(); loadPrefs(); loadProfile();}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
 
-        function nav(v,i){ document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); document.querySelectorAll('.b-item').forEach(el=>el.classList.remove('active')); if(v==='decks'){ loadDecks(); } else { document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden'); showRitualEditor(false); clearCharts(); } if(v==='collection') loadCollection(); if(v==='oracle') loadOracle(); }
+        function nav(v,i){ document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden')); document.getElementById('view-'+v).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); document.querySelectorAll('.b-item').forEach(el=>el.classList.remove('active')); if(v==='decks'){ loadDecks(); } else { document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden'); showRitualEditor(false); clearCharts(); } if(v==='collection') loadCollection(); if(v==='oracle') loadOracle(); if(v==='settings') {} } // Fixed settings navigation
         function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(fetchCardMeta,500); }
         async function fetchCardMeta(){ const n=document.getElementById('search').value; if(n.length<3)return; try{ const res=await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(n)}&unique=prints`); const d=await res.json(); if(d.data){ allVersions=d.data; const s=document.getElementById('versionSelect'); s.innerHTML=''; allVersions.forEach((v,i)=>{ const o=document.createElement('option'); o.value=i; o.text=`${v.set_name} - $${v.prices.usd||'N/A'}`; s.appendChild(o); }); updateSelectedVersion(); } }catch(e){} }
         function updateSelectedVersion(){ const v=allVersions[document.getElementById('versionSelect').value]; if(!v)return; const usd=parseFloat(v.prices.usd||0), eur=parseFloat(v.prices.eur||0); const price = document.getElementById('priceSource').value==='global' && eur>0 ? (usd+(eur*1.05))/2 : usd; const priceHtml = (document.getElementById('priceSource').value === 'global') ? `$${price.toFixed(2)} <span style='font-size:10px; color:var(--subtext);'>($${usd.toFixed(2)} US / €${eur.toFixed(2)} EU)</span>` : `$${price.toFixed(2)}`; const imageUrl = getCardImage(v); document.getElementById('set').value = v.set.toUpperCase(); document.getElementById('num').value = v.collector_number; document.getElementById('marketPrice').innerHTML = priceHtml; const preview = document.getElementById('preview'); preview.src = imageUrl; preview.style.display = 'block'; document.getElementById('preview-text').style.display = 'none'; tempCardData = { name: v.name, set: v.set.toUpperCase(), num: v.collector_number, img: imageUrl, market_price: price }; }
@@ -1333,4 +1379,3 @@
     </script>
 </body>
 </html>
-
