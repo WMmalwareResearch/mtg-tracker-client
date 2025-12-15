@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v7.2 (The Archivist)</title>
+    <title>The Grimoire | v8.2 (Final Polish)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -116,37 +116,6 @@
                 max-width: 100%;
                 margin: 0;
             }
-            /* V8.1: Floating Action Button (FAB) */
-        .fab-btn {
-            position: fixed;
-            bottom: 90px; /* Above the bottom nav (which is ~80px) */
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.6);
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 100;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .fab-btn:active {
-            transform: scale(0.90);
-        }
-
-        /* Hide FAB on Desktop (screens wider than 768px) */
-        @media (min-width: 769px) {
-            .fab-btn {
-                display: none;
-            }
-        }
         }
 
         .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
@@ -160,16 +129,19 @@
         .b-item.active { color: var(--primary); }
 
         /* --- COMPONENTS --- */
+        /* V8.2: Enhanced Skeleton Shimmer */
         .skeleton {
-            background-color: var(--card-bg);
-            background-image: linear-gradient(90deg, 
-                var(--card-bg) 0%, 
-                rgba(167, 139, 250, 0.1) 20%, 
-                var(--card-bg) 40%, 
-                var(--card-bg) 100%);
+            background-color: rgba(255, 255, 255, 0.05);
+            background-image: linear-gradient(
+                90deg, 
+                rgba(255, 255, 255, 0.05) 0%, 
+                rgba(255, 255, 255, 0.15) 20%, 
+                rgba(255, 255, 255, 0.05) 40%, 
+                rgba(255, 255, 255, 0.05) 100%
+            );
             background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            border-radius: 4px;
+            animation: shimmer 1.2s infinite linear;
+            border-radius: 6px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-text { height: 1em; width: 100%; margin-bottom: 0.5em; }
@@ -326,6 +298,38 @@
         }
         .bf-card[draggable="true"]:active {
             cursor: grabbing;
+        }
+
+        /* V8.1: Floating Action Button (FAB) */
+        .fab-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.6);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .fab-btn:active { transform: scale(0.90); }
+        @media (min-width: 769px) { .fab-btn { display: none; } }
+
+        /* V8.2: Visual Polish Animation */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            animation: fadeUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
         }
 
         /* LAND CALCULATOR MODAL */
@@ -517,7 +521,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v7.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v8.2</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -832,13 +836,15 @@
                 </div>
             </div>
         </div>
-<button class="fab-btn" onclick="nav('add', 'add')">+</button>
+
         <div class="bottom-nav">
             <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
             <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
             <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Coll</div>
             <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Decks</div>
         </div>
+        
+        <button class="fab-btn" onclick="nav('add', 'add')">+</button>
     </div>
 
     <script>
@@ -1047,7 +1053,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v7.2',
+                app_version: 'v8.2',
                 browser_info: navigator.userAgent
             };
 
@@ -1630,7 +1636,7 @@
             if (vaultViewMode === 'list') {
                 let html = `<table class="vault-table"><thead><tr><th>Img</th><th>Name</th><th>Set</th><th>Qty</th><th>Price</th><th>Tags</th><th>Edit</th></tr></thead><tbody>`;
                 html += f.map(c => `
-                    <tr onmouseenter="showPreview('${getCardImage(c)}', event)" onmouseleave="hidePreview()">
+                    <tr class="animate-in" onmouseenter="showPreview('${getCardImage(c)}', event)" onmouseleave="hidePreview()">
                         <td><img src="${getCardImage(c)}" class="list-img" loading="lazy" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')"></td>
                         <td style="font-weight:600; cursor:pointer;" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')">${c.name}</td>
                         <td style="color:var(--subtext);">${c.set_code || c.set} #${c.collector_number || c.num}</td>
@@ -1654,7 +1660,8 @@
                     if (c.tags && c.tags.length > 0) {
                         tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`;
                     }
-                    return `<div class="grid-card" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')"></div>`
+                    // V8.2: Added animate-in class
+                    return `<div class="grid-card animate-in" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')"></div>`
                 }).join('');
             }
             
@@ -2900,4 +2907,3 @@
     </script>
 </body>
 </html>
-
