@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.17 (UX/API/Toast Fixes)</title>
+    <title>The Grimoire | v5.0 (Structured Data Baseline)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -472,7 +472,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.17</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v5.0</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -699,6 +699,9 @@
     </div>
 
     <script>
+        // V5.0 BASELINE
+        let currentDeckStructuredList = null; 
+        
         // --- CONFIGURATION ---
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
@@ -802,7 +805,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v4.0.17',
+                app_version: 'v5.0',
                 browser_info: navigator.userAgent
             };
 
@@ -1011,10 +1014,9 @@
             
             // If explicitly adding to wishlist, quantity is 0 (overrides user input if not 0)
             if(isWishlist) {
-                // If user entered a qty > 0, use it but still mark as wishlist (qty=0)
-                // We keep the input qty separate for the console log.
-                if (qty <= 0) qty = 1; // Default to 1 if user put 0
-                qty = 0; // The actual quantity saved to DB for wishlist must be 0
+                // We save 0 to DB for wishlist, which overrides user input for the DB quantity.
+                // We keep the logic simple: if it's the wishlist button, qty = 0.
+                qty = 0; 
             } else if(qty <= 0) {
                  return showToast("Quantity must be greater than zero to bind to Collection.", "error"); 
             }
@@ -1450,10 +1452,7 @@
             printWindow.document.close();
         }
 
-        // =========================================================================
-// V5.0: Decklist Database Save Update - BEGIN CHUNK
-// =========================================================================
-
+        // V5.0: DECK SAVE FUNCTION UPDATED
         async function saveDeck() {
             const name = document.getElementById('deckName').value;
             const commander = document.getElementById('deckCommander').value; 
@@ -1536,36 +1535,6 @@
             }
         }
 
-// =========================================================================
-// V5.0: Decklist Database Save Update - END CHUNK
-// =========================================================================
-            
-            let error;
-            const deckData = {
-                name,
-                commander, 
-                card_list: fullList,
-                card_count: totalCount,
-                format,
-                cover_url: coverUrl
-            };
-
-            if (currentViewedDeckId) {
-                const res = await sb.from('decks').update(deckData).eq('id', currentViewedDeckId);
-                error = res.error;
-            } else {
-                const res = await sb.from('decks').insert({ user_id: session.user.id, ...deckData });
-                error = res.error;
-            }
-
-            if (!error) {
-                showToast(`💾 Decklist '${name}' saved!`, "success");
-                loadDecks();
-            } else {
-                showToast(error.message, "error");
-            }
-        }
-
         function viewRitualDetails(id) {
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
@@ -1582,6 +1551,13 @@
             document.getElementById('deckSide').value = parts[1] ? parts[1].trim() : '';
             document.getElementById('deckFormat').value = d.format || 'Casual';
             currentDeckCoverUrl = d.cover_url;
+            
+            // V5.0: If structured data exists in the fetched deck, use it for validation/rendering
+            if (d.structured_list && d.structured_list.length > 0) {
+                 window.currentDeckStructuredList = d.structured_list;
+            } else {
+                 window.currentDeckStructuredList = null;
+            }
             validateDeck();
         }
 
@@ -1592,6 +1568,7 @@
             document.getElementById('editor-mode').classList.remove('hidden');
             clearCharts();
             currentViewedDeckId = null;
+            window.currentDeckStructuredList = null; // Clear structured list when opening editor
             if (!keepData) {
                 document.getElementById('deckName').value = '';
                 document.getElementById('deckCommander').value = ''; 
@@ -1651,10 +1628,7 @@
             else bar.style.backgroundColor = 'var(--red)';
         }
 
-        // =========================================================================
-// V5.0: Decklist Component Saving (Core Data) - BEGIN CHUNK
-// =========================================================================
-
+        // V5.0: DECK VALIDATION FUNCTION UPDATED (includes structured list creation)
         async function validateDeck() {
             const name = document.getElementById('deckName').value;
             const commander = document.getElementById('deckCommander').value; 
@@ -1664,13 +1638,14 @@
             const listText = main + '\n' + side;
             const resultsEl = document.getElementById('detail-analysis-results');
             const btn = document.getElementById('validateDeckBtn');
+            
             if (!listText.trim() && !commander.trim()) return showToast("Decklist is empty.", "error");
 
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
-            document.getElementById('detail-deck-name').innerText = name || "New Decklist";
+            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Decklist";
             document.getElementById('detail-commander').innerText = commander.trim() ? `👑 Commander: ${commander}` : ''; 
             document.getElementById('detail-decklist-viewer').classList.remove('hidden');
             document.getElementById('detail-visual-grid').classList.add('hidden');
@@ -1726,7 +1701,8 @@
                         })
                     });
                     const data = await response.json();
-                    if (data.object === 'error') throw new Error(data.details);
+                    // V4.0.17 FIX: Only throw error if it's a genuine failure and not just a warning
+                    if (data.object === 'error' && !data.data) throw new Error(data.details);
                     allMatchedCards = allMatchedCards.concat(data.data);
                     if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
                 }
@@ -1840,7 +1816,7 @@
 
                 document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
 
-                // V5.0: Store structured data in the current deck object for later saving
+                // V5.0: Store structured data in the global variable for later saving
                 window.currentDeckStructuredList = structuredDeck;
 
                 // --- RENDER RESULTS ---
@@ -1908,205 +1884,17 @@
                 }
             }
         }
-
-// =========================================================================
-// V5.0: Decklist Component Saving (Core Data) - END CHUNK
-// =========================================================================
-            const identifiers = cardsToResolve.map(c => ({
-                name: c.name
-            }));
-            const chunkSize = 75;
-            const totalChunks = Math.ceil(identifiers.length / chunkSize);
-            let allMatchedCards = [];
-            let allUnmatched = [];
-            let legalityErrors = []; 
-            let identityErrors = []; 
-            let commanderCardData = null; 
-            let commanderColors = []; 
-
-            try {
-                for (let i = 0; i < totalChunks; i++) {
-                    const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize);
-                    const response = await fetch('https://api.scryfall.com/cards/collection', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            identifiers: chunk
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.object === 'error') throw new Error(data.details);
-                    allMatchedCards = allMatchedCards.concat(data.data);
-                    if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
-                }
-
-                // --- LEGALITY AND COLOR IDENTITY CHECK LOGIC (V4.0.1) ---
-                const formatKey = format.toLowerCase().replace(/[^a-z]/g, '');
-
-                if (commander.trim()) {
-                    commanderCardData = allMatchedCards.find(c => c.name.toLowerCase() === commander.toLowerCase());
-                    if (commanderCardData) {
-                        commanderColors = commanderCardData.color_identity || []; 
-                        allMatchedCards = allMatchedCards.filter(c => c.name.toLowerCase() !== commander.toLowerCase());
-                    } 
-                }
-                
-                // 1. Commander Legality Check
-                if (commanderCardData) {
-                    const legalityStatus = commanderCardData.legalities?.[formatKey];
-                    const isLegalCommander = format === 'Commander' ? legalityStatus === 'commander' : true; 
-                    
-                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal' || (format === 'Commander' && !isLegalCommander)) {
-                        legalityErrors.push({
-                            name: commanderCardData.name + (format === 'Commander' ? " (Commander)" : ""),
-                            status: legalityStatus || 'Not Legal',
-                            format: format,
-                            qty: 1
-                        });
-                    }
-                }
-                
-                // 2. Deck Card Legality and Color Identity Check
-                allMatchedCards.forEach(cardData => {
-                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
-                    if (!deckCard) return;
-
-                    // Standard Legality Check
-                    const legalityStatus = cardData.legalities?.[formatKey];
-                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal') {
-                        legalityErrors.push({
-                            name: cardData.name,
-                            status: legalityStatus,
-                            format: format,
-                            qty: deckCard.qty
-                        });
-                    }
-                    
-                    // Color Identity Check (Only for Commander format and if commander is defined)
-                    if (format === 'Commander' && commanderColors.length > 0) {
-                        const cardIdentity = cardData.color_identity || [];
-                        const isOutsideIdentity = cardIdentity.some(color => !commanderColors.includes(color));
-
-                        if (isOutsideIdentity) {
-                            identityErrors.push({
-                                name: cardData.name,
-                                qty: deckCard.qty,
-                                colors: cardIdentity.join(' ')
-                            });
-                        }
-                    }
-                });
-
-
-                // --- STATS GENERATION ---
-                const typeAgg = {};
-                const cmcAgg = {};
-                let totalDeckPrice = 0;
-                window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-                currentDeckCache = [];
-                
-                const cardsForStats = commanderCardData ? [commanderCardData, ...allMatchedCards] : allMatchedCards;
-
-                cardsForStats.forEach(cardData => {
-                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase()) || (cardData.name.toLowerCase() === commander.toLowerCase() ? {qty: 1, name: cardData.name} : null);
-                    if (!deckCard) return; 
-
-                    const quantity = deckCard.qty;
-                    currentDeckCache.push({ ...cardData, quantity: quantity });
-                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
-                    typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
-                    if (!cardData.type_line.toLowerCase().includes('land')) {
-                        const cmc = Math.floor(cardData.cmc || 0);
-                        cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity;
-                    }
-                    const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0);
-                    totalDeckPrice += (price * quantity);
-                    if (cardData.mana_cost) {
-                        const cost = cardData.mana_cost;
-                        window.currentDeckStats['W'] += (cost.match(/{W}/g) || []).length * quantity;
-                        window.currentDeckStats['U'] += (cost.match(/{U}/g) || []).length * quantity;
-                        window.currentDeckStats['B'] += (cost.match(/{B}/g) || []).length * quantity;
-                        window.currentDeckStats['R'] += (cost.match(/{R}/g) || []).length * quantity;
-                        window.currentDeckStats['G'] += (cost.match(/{G}/g) || []).length * quantity;
-                        window.currentDeckStats['C'] += (cost.match(/{C}/g) || []).length * quantity;
-                    }
-                });
-
-                document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
-
-                // --- RENDER RESULTS (UPDATED) ---
-                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Cards: ${totalCount + (commander.trim() ? 1 : 0)}</p>`;
-                output += `<p>Format Selected: <strong>${format}</strong>`;
-                if (format === 'Commander' && commanderColors.length > 0) {
-                    const colorPips = commanderColors.map(c => {
-                        const colorClass = `pip-${c.toLowerCase()}`;
-                        return `<span class="mana-pip ${colorClass}"></span>`;
-                    }).join('');
-                    output += `<br><span style="font-size:12px; color:var(--subtext);">Identity: ${colorPips}</span>`;
-                }
-                output += `</p>`;
-
-
-                if (legalityErrors.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${legalityErrors.length} Cards Illegal in ${format}:</p><ul>`;
-                    legalityErrors.forEach(e => {
-                        const status = e.status === 'banned' ? 'BANNED' : (e.status === 'not_legal' ? 'Not Legal' : 'Illegal Slot');
-                        output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (<strong style="color:var(--red);">${status}</strong>)</li>`;
-                    });
-                    output += `</ul>`;
-                    showToast(`Decklist is illegal in ${format}.`, "error");
-                }
-                
-                if (identityErrors.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">🚫 ${identityErrors.length} Cards Outside Color Identity:</p><ul>`;
-                    identityErrors.forEach(e => {
-                        output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (Colors: ${e.colors})</li>`;
-                    });
-                    output += `</ul>`;
-                    showToast(`Decklist violates Commander Color Identity.`, "error");
-                }
-
-
-                if (allUnmatched.length > 0) {
-                    output += `<p style="color:var(--yellow); font-weight: 600;">⚠️ ${allUnmatched.length} Card Names Unmatched (Typo?):</p><ul>`;
-                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'}</li>`);
-                    output += `</ul>`;
-                    if (legalityErrors.length === 0 && identityErrors.length === 0) showToast(`Validation complete with ${allUnmatched.length} unmatched names.`, "info");
-                }
-
-                if (legalityErrors.length === 0 && identityErrors.length === 0 && allUnmatched.length === 0) {
-                    output += `<p style="color:var(--green);">All cards resolved and legal in ${format}!</p>`;
-                    showToast(`Decklist successfully resolved!`, "success");
-                }
-
-                resultsEl.innerHTML = output;
-
-                if (allUnmatched.length === 0) {
-                    document.getElementById('deck-charts').classList.remove('hidden');
-                    renderTypeChart(typeAgg);
-                    renderManaCurve(cmcAgg);
-                    renderColorChart(window.currentDeckStats);
-                }
-
-            } catch (error) {
-                resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`;
-                showToast("Validation Error.", "error");
-            } finally {
-                if (btn) {
-                    btn.innerText = "✅ Validate & Resolve Decklist";
-                    btn.disabled = false;
-                }
-            }
-        }
         
         function toggleDeckView() {
             const textView = document.getElementById('detail-decklist-viewer');
             const visualView = document.getElementById('detail-visual-grid');
             if (textView.classList.contains('hidden')) {
-                if (currentDeckCache.length === 0) return showToast("Resolve decklist first to see visuals.", "error");
-                renderDeckVisuals();
+                // V5.0: Use structured list data if available, otherwise fallback to parsing text
+                if (window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
+                     renderDeckVisuals(window.currentDeckStructuredList);
+                } else if (currentDeckCache.length === 0) {
+                     return showToast("Resolve decklist first to see visuals.", "error");
+                }
                 textView.classList.add('hidden');
                 visualView.classList.remove('hidden');
             } else {
@@ -2115,15 +1903,18 @@
             }
         }
 
-        function renderDeckVisuals() {
+        // V5.0: Render visuals directly from the structured list
+        function renderDeckVisuals(structuredList = currentDeckCache) {
             const container = document.getElementById('detail-visual-grid');
             container.innerHTML = '';
             const groups = {};
-            currentDeckCache.forEach(card => {
-                const type = card.type_line.split('—')[0].trim();
+            
+            structuredList.forEach(card => {
+                const type = card.type ? card.type.split('—')[0].trim() : (card.type_line ? card.type_line.split('—')[0].trim() : 'Unknown');
                 if (!groups[type]) groups[type] = [];
                 groups[type].push(card);
             });
+            
             const typeOrder = ["Creature", "Planeswalker", "Instant", "Sorcery", "Artifact", "Enchantment", "Land"];
             typeOrder.forEach(type => {
                 if (groups[type]) {
@@ -2136,22 +1927,23 @@
             }
         }
 
+
         function renderSection(container, title, cards) {
             const section = document.createElement('div');
             section.className = 'visual-section';
-            const count = cards.reduce((a, c) => a + c.quantity, 0);
+            const count = cards.reduce((a, c) => a + c.qty, 0); // Use .qty from structured list
             section.innerHTML = `<div class="visual-header">${title} (${count})</div>`;
             const grid = document.createElement('div');
             grid.className = 'visual-card-grid';
             cards.forEach(card => {
-                const imgUrl = getCardImage(card);
-                const price = card.prices.usd || card.prices.usd_foil || 'N/A';
+                const imgUrl = card.img || getCardImage(card); // Use .img from structured list
+                const price = card.price || card.prices.usd || card.prices.usd_foil || 'N/A';
                 const isCover = (currentDeckCoverUrl === imgUrl);
                 const activeClass = isCover ? 'is-cover-card' : '';
                 const starColor = isCover ? 'var(--yellow)' : 'var(--subtext)';
                 const item = document.createElement('div');
                 item.className = `visual-card ${activeClass}`;
-                item.innerHTML = ` <button class="cover-btn" style="color:${starColor}" onclick="setDeckCover('${imgUrl}'); event.stopPropagation();">★</button> <img src="${imgUrl}" loading="lazy" onclick="openCodex('${card.set || card.set_code}', '${card.collector_number || card.num}')"> <div class="visual-badge">${card.quantity}x</div> `;
+                item.innerHTML = ` <button class="cover-btn" style="color:${starColor}" onclick="setDeckCover('${imgUrl}'); event.stopPropagation();">★</button> <img src="${imgUrl}" loading="lazy" onclick="openCodex('${card.set || card.set_code}', '${card.num || card.collector_number}')"> <div class="visual-badge">${card.qty || card.quantity}x</div> `;
                 item.title = `${card.name} ($${price})`;
                 grid.appendChild(item);
             });
@@ -2601,4 +2393,3 @@
     </script>
 </body>
 </html>
-
