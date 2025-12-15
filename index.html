@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.0 (The Advisor)</title>
+    <title>The Grimoire | v9.1 (The Architect)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -521,7 +521,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.1</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -742,6 +742,17 @@
                                 </select>
                                 <button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button>
                             </div>
+                            
+                            <div class="card-box" style="padding: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <span style="font-size: 12px; color: var(--subtext); font-weight: 600; text-transform: uppercase;">⚡ Live Curve (Local Cache)</span>
+                                    <span id="editor-card-count" style="font-size: 12px; color: white;">0 Cards</span>
+                                </div>
+                                <div style="height: 100px; width: 100%;">
+                                    <canvas id="editorManaChart"></canvas>
+                                </div>
+                            </div>
+
                             <div class="editor-split">
                                 <div class="editor-column"><div class="editor-label">Mainboard</div><textarea id="deckMain" placeholder="1 Sol Ring..."></textarea></div>
                                 <div class="editor-column"><div class="editor-label">Sideboard</div><textarea id="deckSide" placeholder="15 Island..."></textarea></div>
@@ -1063,7 +1074,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v8.2',
+                app_version: 'v9.1',
                 browser_info: navigator.userAgent
             };
 
@@ -1223,8 +1234,7 @@
             } 
         }
         
-        // V6.0: updateSelectedVersion Update (Use Saved Default)
-        // V7.0: updateSelectedVersion (Capture Metadata)
+        // V9.1: Updated to capture CMC
         function updateSelectedVersion(){ 
             const index = document.getElementById('versionSelect').value;
             const v = allVersions[index];
@@ -1240,7 +1250,6 @@
             let displayDetails = '';
 
             if (selectedSource === 'global' && eur > 0) {
-                // Global is a special calculated average (kept for compatibility)
                 const calculatedPrice = (usd + (eur * 1.05)) / 2;
                 displayPrice = calculatedPrice.toFixed(2);
                 displayDetails = `($${usd.toFixed(2)} US / €${eur.toFixed(2)} EU)`;
@@ -1261,36 +1270,32 @@
             preview.style.display = 'block'; 
             document.getElementById('preview-text').style.display = 'none'; 
             
-            // V7.0: Capture Metadata for Filtering
             tempCardData = { 
                 name: v.name, 
                 set: v.set.toUpperCase(), 
                 num: v.collector_number, 
                 img: imageUrl, 
-                // V6.0: Store the raw price value (which might be the selected source or the fallback USD)
                 market_price: parseFloat(rawPrice),
-                // V7.0: New Fields
                 type_line: v.type_line,
                 rarity: v.rarity,
-                colors: v.colors || [] // Scryfall provides colors as ['W', 'U']
+                colors: v.colors || [],
+                // V9.1: Capture CMC
+                cmc: v.cmc || 0
             }; 
 
-            // V4.0.3: RESTORATION - Collection Management requires NO deck limits.
             const qtyInput = document.getElementById('qty');
             const costGroup = document.querySelector('.input-group.quantity-group:nth-child(2)');
             const tagsGroup = document.querySelector('.input-group.quantity-group:nth-child(3)');
             
-            // 1. Ensure all inputs are visible (Default Collection Management UX)
             costGroup.classList.remove('hidden');
             tagsGroup.classList.remove('hidden');
 
-            // 2. Remove all limits/locks on Quantity input
             qtyInput.value = 1;
-            qtyInput.max = 999; // Set a high arbitrary max, effectively unlimited
+            qtyInput.max = 999;
             qtyInput.readOnly = false;
         }
         
-        // V6.2: Updated Add Card to reset to custom default
+        // V9.1: Updated to save CMC
         async function addCard(isWishlist = false) { 
             if(!tempCardData) return showToast("Search and select a Card version first", "error"); 
             const costInput = document.getElementById('cost').value; 
@@ -1317,20 +1322,19 @@
                 market_price_usd: tempCardData.market_price, 
                 tags: tags, 
                 last_price_update: new Date().toISOString(),
-                // V7.0: Save new metadata fields
                 type_line: tempCardData.type_line,
                 rarity: tempCardData.rarity,
-                colors: tempCardData.colors
+                colors: tempCardData.colors,
+                // V9.1: Save CMC
+                cmc: tempCardData.cmc
             });
             
             if(!error) { 
                 if(isWishlist) showToast(`👁️ Added ${tempCardData.name} to Wishlist!`, "success"); 
                 else showToast(`✅ Added ${qty}x ${tempCardData.name} to Collection!`, "success"); 
                 
-                // Clear inputs after successful add
                 document.getElementById('search').value = ""; 
                 document.getElementById('cost').value = ""; 
-                // V6.2: Reset quantity to stored default or 1
                 document.getElementById('qty').value = localStorage.getItem('grimoire_default_qty') || "1";
                 document.getElementById('add-tags').value = ""; 
                 document.getElementById('versionSelect').innerHTML = ''; 
@@ -1340,7 +1344,6 @@
                 document.getElementById('num').value = ''; 
                 document.getElementById('marketPrice').innerText = '--'; 
                 
-                // V6.1: Refresh quick tags state
                 renderQuickTags();
                 
                 tempCardData = null; 
@@ -1448,10 +1451,11 @@
                                 quantity: originalInput.qty, 
                                 market_price_usd: parseFloat(price), 
                                 last_price_update: new Date().toISOString(),
-                                // V7.2: Metadata Capture for Filtering
                                 type_line: scryCard.type_line,
                                 rarity: scryCard.rarity,
-                                colors: scryCard.colors || []
+                                colors: scryCard.colors || [],
+                                // V9.1: Save CMC
+                                cmc: scryCard.cmc || 0
                             }); 
                         } 
                     }); 
@@ -1473,12 +1477,10 @@
         }
 
         async function logDailyValue(totalVal) {
-            // This function is kept to avoid breaking older functions that called it, but is empty due to V5.1 stabilization.
             console.log("[LOG] Skipping daily value logging (Removed for stabilization).");
         }
 
         async function loadPriceHistory() {
-            // This function is kept but returns an empty array to avoid breaking the Chart component if it was not fully removed.
             return [];
         }
 
@@ -1528,9 +1530,6 @@
             } else { 
                 document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable cards found.</div>'; 
             } 
-            
-            // logDailyValue(totalVal); // REMOVED V5.1
-            // loadPriceHistory().then(renderPriceHistoryChart); // REMOVED V5.1
         }
 
         async function appraiseCollection(){ 
@@ -1590,7 +1589,6 @@
         function showPreview(url, e) { const el = document.getElementById('hover-preview'); if(!url) return; el.src = url; el.style.display = 'block'; el.style.left = (e.clientX + 20) + 'px'; el.style.top = e.clientY + 'px'; }
         function hidePreview() { document.getElementById('hover-preview').style.display = 'none'; }
         
-        // V7.0: filterVault Update (The Prism)
         function filterVault() {
             const search = document.getElementById('vaultSearch').value.toLowerCase();
             const sort = document.getElementById('vaultSort').value;
@@ -1613,11 +1611,11 @@
 
                 // 2. Color Filter
                 if (fColor !== 'all') {
-                    if (!c.colors) return false; // If old card data without colors, hide it when filtering
+                    if (!c.colors) return false; 
                     if (fColor === 'C') {
-                        if (c.colors.length > 0) return false; // Colorless means empty color array
+                        if (c.colors.length > 0) return false; 
                     } else if (fColor === 'M') {
-                        if (c.colors.length < 2) return false; // Multicolor means 2+ colors
+                        if (c.colors.length < 2) return false; 
                     } else {
                         if (!c.colors.includes(fColor)) return false;
                     }
@@ -1670,7 +1668,6 @@
                     if (c.tags && c.tags.length > 0) {
                         tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`;
                     }
-                    // V8.2: Added animate-in class
                     return `<div class="grid-card animate-in" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')"></div>`
                 }).join('');
             }
@@ -1760,8 +1757,10 @@
                 document.getElementById('deckMain').value = '';
                 document.getElementById('deckSide').value = '';
                 document.getElementById('deckFormat').value = 'Casual';
-                window.currentDeckStructuredList = null; // Clear cached structured data
+                window.currentDeckStructuredList = null; 
                 showToast("Deck editor cleared.", "info");
+                // V9.1: Reset chart
+                updateLiveEditorStats();
             }
         }
 
@@ -1976,6 +1975,101 @@
             validateDeck();
         }
 
+        // V9.1: Live Architect Engine
+        let editorChartInstance = null;
+
+        function initEditorListeners() {
+            const main = document.getElementById('deckMain');
+            const side = document.getElementById('deckSide');
+            
+            let timeout;
+            const handler = () => {
+                clearTimeout(timeout);
+                timeout = setTimeout(updateLiveEditorStats, 500); 
+            };
+
+            main.addEventListener('input', handler);
+            side.addEventListener('input', handler);
+        }
+
+        function updateLiveEditorStats() {
+            const mainText = document.getElementById('deckMain').value;
+            const lines = mainText.split('\n');
+            const cmcCounts = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0 }; 
+            let totalCards = 0;
+
+            lines.forEach(line => {
+                const match = line.trim().match(/^(\d+)\s+(.+)/);
+                if (match) {
+                    const qty = parseInt(match[1]);
+                    const name = match[2].trim().toLowerCase();
+                    totalCards += qty;
+
+                    const cachedCard = cardsCache.find(c => c.name.toLowerCase() === name);
+                    
+                    if (cachedCard) {
+                        let cmc = -1;
+                        
+                        const deckHit = currentDeckCache.find(c => c.name.toLowerCase() === name);
+                        if(deckHit) cmc = deckHit.cmc;
+                        
+                        // Fallback to local DB cmc (V9.1) or guess based on type
+                        if (cmc === -1) cmc = cachedCard.cmc || -1;
+                        
+                        if (cmc === -1 && cachedCard.type_line && cachedCard.type_line.toLowerCase().includes('land')) {
+                            cmc = 0;
+                        }
+
+                        if (cmc > -1) {
+                            let bucket = Math.floor(cmc);
+                            if (bucket > 7) bucket = 7;
+                            cmcCounts[bucket] += qty;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('editor-card-count').innerText = `${totalCards} Cards`;
+            renderEditorChart(cmcCounts);
+        }
+
+        function renderEditorChart(data) {
+            const ctx = document.getElementById('editorManaChart').getContext('2d');
+            
+            if (editorChartInstance) {
+                editorChartInstance.destroy();
+            }
+
+            editorChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['0', '1', '2', '3', '4', '5', '6', '7+'],
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: '#3b82f6', 
+                        borderRadius: 2,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { 
+                            ticks: { color: '#a1a1aa', font: { size: 9 } }, 
+                            grid: { display: false } 
+                        },
+                        y: { 
+                            display: false, 
+                            grid: { display: false } 
+                        }
+                    },
+                    animation: { duration: 0 } 
+                }
+            });
+        }
+
         function showRitualEditor(keepData = false) {
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
@@ -1983,13 +2077,17 @@
             document.getElementById('editor-mode').classList.remove('hidden');
             clearCharts();
             currentViewedDeckId = null;
-            window.currentDeckStructuredList = null; // Clear structured list when opening editor
+            window.currentDeckStructuredList = null; 
             if (!keepData) {
                 document.getElementById('deckName').value = '';
                 document.getElementById('deckCommander').value = ''; 
                 document.getElementById('deckMain').value = '';
                 document.getElementById('deckSide').value = '';
             }
+            
+            // V9.1: Start Listening
+            initEditorListeners();
+            updateLiveEditorStats();
         }
 
         // V5.1: Ownership Analysis updated to use structured data
