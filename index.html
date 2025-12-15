@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.7.0</title>
+    <title>The Grimoire | v2.8.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -43,7 +43,7 @@
         .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; }
         .input-icon { position: absolute; left: 12px; color: var(--subtext); font-size: 16px; pointer-events: none; }
         input, select { width: 100%; padding: 14px 14px 14px 40px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: white; font-size: 14px; margin: 0; }
-        textarea { padding: 14px; margin-bottom: 15px; height: 350px; resize: vertical; }
+        textarea { padding: 14px; margin-bottom: 15px; height: 350px; resize: vertical; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; width: 100%; font-family: monospace; font-size: 13px; }
         button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s; }
         button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
@@ -93,11 +93,17 @@
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
         .new-deck-card::after { display: none; }
         
-        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        /* V2.8.0 ADVANCED EDITOR UI */
+        .editor-header { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
+        .editor-split { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; height: 60vh; }
+        .editor-column { display: flex; flex-direction: column; }
+        .editor-label { color: var(--subtext); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; }
+        
+        .deck-area-edit { display: block; } /* Override previous grid */
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* VISUAL DECK GRID & SET COVER (V2.7.0) */
+        /* VISUAL DECK GRID */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -106,12 +112,9 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
-        
-        /* V2.7.0: Set Cover Button & Active State */
         .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--subtext); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 20; font-size: 14px; }
         .visual-card:hover .cover-btn { opacity: 1; }
         .cover-btn:hover { background: var(--yellow); color: black; }
-        /* Active Cover Style */
         .is-cover-card { border: 2px solid var(--yellow); }
         .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); }
 
@@ -182,6 +185,7 @@
             .dashboard-split { grid-template-columns: 1fr; } 
             .codex-layout { flex-direction: column; }
             .codex-img { width: 100%; max-width: 300px; margin: 0 auto; }
+            .editor-split { grid-template-columns: 1fr; height: auto; }
         }
         @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } .sidebar { display: none; } .main { padding: 20px; padding-bottom: 100px; } .bottom-nav { display: flex; } }
     </style>
@@ -260,7 +264,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.7.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -328,23 +332,31 @@
                 <div id="deck-workspace" class="hidden">
                     <button onclick="closeDeck()" class="secondary" style="width:auto; margin-bottom:15px; padding:8px 15px; font-size:12px;">← Back to Library</button>
                     
-                    <div id="editor-mode" class="deck-area-edit hidden">
+                    <div id="editor-mode" class="hidden">
                         <div class="card-box">
-                            <div style="display:flex; gap:10px; margin-bottom:10px;">
-                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin-bottom: 0; flex-grow: 2; padding-left:14px;">
-                                <select id="deckFormat" style="flex-grow:1; margin-bottom:0;">
-                                    <option value="Casual">Casual</option>
-                                    <option value="Commander">Commander</option>
-                                    <option value="Modern">Modern</option>
-                                    <option value="Standard">Standard</option>
-                                    <option value="Pauper">Pauper</option>
-                                    <option value="Legacy">Legacy</option>
+                            <div class="editor-header">
+                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin:0; flex-grow:2;">
+                                <select id="deckFormat" style="margin:0; flex-grow:1; width:auto;">
+                                    <option value="Casual">Casual</option><option value="Commander">Commander</option><option value="Modern">Modern</option><option value="Standard">Standard</option><option value="Pauper">Pauper</option><option value="Legacy">Legacy</option>
                                 </select>
                                 <button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button>
                             </div>
-                            <textarea id="deckList" placeholder="1 Sol Ring..."></textarea>
-                            <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve Ritual</button>
-                            <button onclick="saveDeck()" style="margin-top:10px;">💾 Forge Ritual</button>
+                            
+                            <div class="editor-split">
+                                <div class="editor-column">
+                                    <div class="editor-label">Mainboard</div>
+                                    <textarea id="deckMain" placeholder="1 Sol Ring..."></textarea>
+                                </div>
+                                <div class="editor-column">
+                                    <div class="editor-label">Sideboard</div>
+                                    <textarea id="deckSide" placeholder="15 Island..."></textarea>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:10px; margin-top:15px;">
+                                <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve</button>
+                                <button onclick="saveDeck()" style="background:var(--green);">💾 Save Ritual</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -544,7 +556,7 @@
         function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-tags').value = (card.tags || []).join(', '); document.getElementById('edit-modal').classList.remove('hidden'); }
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
 
-        // --- DECK LOGIC (V2.7.0 UPDATE) ---
+        // --- DECK LOGIC (V2.8.0 UPDATE) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
         
         async function loadDecks() { 
@@ -586,24 +598,29 @@
             });
         }
 
-        // V2.7.0 SET COVER FEATURE
         async function setDeckCover(url) {
             if(!currentViewedDeckId) return showToast("Save deck first.", "error");
             await sb.from('decks').update({ cover_url: url }).eq('id', currentViewedDeckId);
             currentDeckCoverUrl = url;
-            renderDeckVisuals(); // Re-render to show new gold star
+            renderDeckVisuals(); 
             showToast("Cover art updated!", "success");
         }
 
         async function saveDeck() { 
             const name = document.getElementById('deckName').value; 
-            const list = document.getElementById('deckList').value; 
+            // CONCATENATE MAIN + SIDE
+            const main = document.getElementById('deckMain').value;
+            const side = document.getElementById('deckSide').value;
+            let fullList = main;
+            if(side.trim().length > 0) {
+                fullList += '\n// Sideboard\n' + side;
+            }
             const format = document.getElementById('deckFormat').value;
             
             if(!name) return showToast("Name required", "error"); 
-            const { totalCount, cards } = parseDeckList(list); 
+            const { totalCount, cards } = parseDeckList(fullList); 
             
-            // GET COVER IMAGE (SMART DEFAULT) - Skip Lands
+            // GET COVER IMAGE (SMART DEFAULT)
             let coverUrl = '';
             if(!currentViewedDeckId && cards.length > 0) {
                 const basicLands = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes'];
@@ -620,10 +637,10 @@
 
             let error; 
             if (currentViewedDeckId) { 
-                const res = await sb.from('decks').update({ name, card_list: list, card_count: totalCount, format }).eq('id', currentViewedDeckId); 
+                const res = await sb.from('decks').update({ name, card_list: fullList, card_count: totalCount, format }).eq('id', currentViewedDeckId); 
                 error = res.error; 
             } else { 
-                const res = await sb.from('decks').insert({ user_id: session.user.id, name, card_list: list, card_count: totalCount, format, cover_url: coverUrl }); 
+                const res = await sb.from('decks').insert({ user_id: session.user.id, name, card_list: fullList, card_count: totalCount, format, cover_url: coverUrl }); 
                 error = res.error; 
             } 
             
@@ -634,22 +651,116 @@
             document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); 
             currentViewedDeckId = id; const d = window.myDecks.find(x => x.id == id); if (!d) return showToast("Ritual not found in local cache.", "error"); 
             document.getElementById('deckName').value = d.name; 
-            document.getElementById('deckList').value = d.card_list; 
+            
+            // SPLIT LIST
+            const parts = (d.card_list || '').split('// Sideboard');
+            document.getElementById('deckMain').value = parts[0].trim();
+            document.getElementById('deckSide').value = parts[1] ? parts[1].trim() : '';
+            
             document.getElementById('deckFormat').value = d.format || 'Casual';
-            currentDeckCoverUrl = d.cover_url; // Store for visual view highlighting
+            currentDeckCoverUrl = d.cover_url; 
             validateDeck(); 
         }
         function showRitualEditor(keepData = false) { 
             document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); 
             document.getElementById('detail-mode').classList.add('hidden'); document.getElementById('editor-mode').classList.remove('hidden'); clearCharts(); currentViewedDeckId = null; 
-            if (!keepData) { document.getElementById('deckName').value = ''; document.getElementById('deckList').value = ''; } 
+            if (!keepData) { 
+                document.getElementById('deckName').value = ''; 
+                document.getElementById('deckMain').value = ''; 
+                document.getElementById('deckSide').value = ''; 
+            } 
         }
         function analyzeOwnership(t) { /* Same as V2.4.0 */ const vaultMap = {}; cardsCache.forEach(c => { const key = c.name.toLowerCase().trim(); vaultMap[key] = (vaultMap[key] || 0) + c.quantity; }); const basics = ['plains','island','swamp','mountain','forest','wastes','snow-covered plains','snow-covered island','snow-covered swamp','snow-covered mountain','snow-covered forest']; const lines = t.split('\n'); let html = ''; let totalCards = 0; let totalOwned = 0; const regex = /^(\d+)\s+(.+)/; lines.forEach(line => { const match = line.trim().match(regex); if (match) { const qtyNeeded = parseInt(match[1]); const name = match[2].trim(); const key = name.toLowerCase(); let qtyOwned = 0; if (basics.includes(key)) { qtyOwned = qtyNeeded; } else { for (let vKey in vaultMap) { if (vKey === key || vKey.includes(key) || key.includes(vKey)) { qtyOwned += vaultMap[vKey]; } } } totalCards += qtyNeeded; const ownedForThisLine = Math.min(qtyOwned, qtyNeeded); totalOwned += ownedForThisLine; let statusClass = 'is-missing'; if (qtyOwned >= qtyNeeded) statusClass = 'is-owned'; else if (qtyOwned > 0) statusClass = 'is-partial'; html += `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${name}"><strong>${qtyNeeded}</strong> ${name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`; } else if (line.trim().length > 0) { html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`; } }); const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0; const viewer = document.getElementById('detail-decklist-viewer'); viewer.innerHTML = html; viewer.classList.remove('hidden'); document.getElementById('detail-owned-percent').innerText = `${percent}%`; document.getElementById('detail-owned-bar').style.width = `${percent}%`; const bar = document.getElementById('detail-owned-bar'); if(percent === 100) bar.style.backgroundColor = 'var(--green)'; else if(percent > 50) bar.style.backgroundColor = 'var(--primary)'; else bar.style.backgroundColor = 'var(--red)'; }
-        async function validateDeck(){ /* Same as V2.4.0 */ const listText = document.getElementById('deckList').value; const resultsEl = document.getElementById('detail-analysis-results'); const btn = document.getElementById('validateDeckBtn'); if (!listText) return showToast("Ritual list is empty.", "error"); document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); document.getElementById('editor-mode').classList.add('hidden'); document.getElementById('detail-mode').classList.remove('hidden'); document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual"; document.getElementById('detail-decklist-viewer').classList.remove('hidden'); document.getElementById('detail-visual-grid').classList.add('hidden'); analyzeOwnership(listText); resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`; if(btn) { btn.innerText = "Resolving..."; btn.disabled = true; } const { totalCount, cards: parsedCards } = parseDeckList(listText); if (parsedCards.length === 0) { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found.</p>'; return showToast("No valid ritual lines found.", "error"); } const identifiers = parsedCards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let allMatchedCards = []; let allUnmatched = []; try { for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); if (data.object === 'error') throw new Error(data.details); allMatchedCards = allMatchedCards.concat(data.data); if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found); } const typeAgg = {}; const cmcAgg = {}; let totalDeckPrice = 0; const colorAgg = { W:0, U:0, B:0, R:0, G:0, C:0 }; currentDeckCache = []; allMatchedCards.forEach(cardData => { const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; currentDeckCache.push({ ...cardData, quantity: quantity }); const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; if (!cardData.type_line.toLowerCase().includes('land')) { const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; } const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0); totalDeckPrice += (price * quantity); if (cardData.mana_cost) { const cost = cardData.mana_cost; colorAgg['W'] += (cost.match(/{W}/g) || []).length * quantity; colorAgg['U'] += (cost.match(/{U}/g) || []).length * quantity; colorAgg['B'] += (cost.match(/{B}/g) || []).length * quantity; colorAgg['R'] += (cost.match(/{R}/g) || []).length * quantity; colorAgg['G'] += (cost.match(/{G}/g) || []).length * quantity; colorAgg['C'] += (cost.match(/{C}/g) || []).length * quantity; } }); document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`; let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`; output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`; if (allUnmatched.length > 0) { output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`; allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`); output += `</ul><p>Please fix these names in the editor.</p>`; showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error"); } else { output += `<p style="color:var(--green);">All unique relic names resolved!</p>`; showToast(`Ritual successfully resolved!`, "success"); } resultsEl.innerHTML = output; if (allUnmatched.length === 0) { document.getElementById('deck-charts').classList.remove('hidden'); renderTypeChart(typeAgg); renderManaCurve(cmcAgg); renderColorChart(colorAgg); } } catch (error) { resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`; showToast("Validation Error.", "error"); } finally { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } } }
-        function openCodex(set, num) { /* Same as V2.4.0 */ const modal = document.getElementById('codex-modal'); const loading = document.getElementById('codex-loading'); const content = document.getElementById('codex-content'); modal.classList.remove('hidden'); loading.classList.remove('hidden'); content.classList.add('hidden'); fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(card=>{ document.getElementById('codex-img').src = getCardImage(card); document.getElementById('codex-title').innerText = card.name; document.getElementById('codex-type').innerText = card.type_line; document.getElementById('codex-text').innerText = card.oracle_text || "No rule text."; const fmts = ['commander', 'modern', 'standard', 'pauper']; document.getElementById('codex-legality').innerHTML = fmts.map(f => { const status = card.legalities[f]; const cls = status === 'legal' ? 'is-legal' : 'not-legal'; return `<div class="legality-badge ${cls}"><span>${f.charAt(0).toUpperCase() + f.slice(1)}</span><span>${status.toUpperCase()}</span></div>`; }).join(''); window.scryfallLink = card.scryfall_uri; loading.classList.add('hidden'); content.classList.remove('hidden'); }).catch(e=>loading.innerText="Error."); }
-        function closeDeck() { loadDecks(); }
-        async function deleteDeck(id, e) { e.stopPropagation(); if(!confirm("Delete ritual?")) return; if (currentViewedDeckId == id) { showRitualEditor(false); } await sb.from('decks').delete().eq('id', id); showToast("Ritual removed.", "success"); loadDecks(); }
-        function clearDeckEditor() { showRitualEditor(false); showToast("Ritual editor cleared.", "info"); }
+        
+        async function validateDeck(){ 
+            const main = document.getElementById('deckMain').value;
+            const side = document.getElementById('deckSide').value;
+            const listText = main + '\n' + side;
+
+            const resultsEl = document.getElementById('detail-analysis-results'); const btn = document.getElementById('validateDeckBtn');
+            if (!listText.trim()) return showToast("Ritual list is empty.", "error");
+            
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('editor-mode').classList.add('hidden'); 
+            document.getElementById('detail-mode').classList.remove('hidden'); 
+            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
+            document.getElementById('detail-decklist-viewer').classList.remove('hidden'); 
+            document.getElementById('detail-visual-grid').classList.add('hidden');
+
+            analyzeOwnership(listText);
+
+            resultsEl.innerHTML = `<p style="color:var(--subtext);">Processing ritual list...</p>`;
+            if(btn) { btn.innerText = "Resolving..."; btn.disabled = true; }
+
+            const { totalCount, cards: parsedCards } = parseDeckList(listText);
+            if (parsedCards.length === 0) { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found.</p>'; return showToast("No valid ritual lines found.", "error"); }
+            const identifiers = parsedCards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let allMatchedCards = []; let allUnmatched = [];
+            try {
+                for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); if (data.object === 'error') throw new Error(data.details); allMatchedCards = allMatchedCards.concat(data.data); if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found); }
+                const typeAgg = {}; const cmcAgg = {}; let totalDeckPrice = 0; const colorAgg = { W:0, U:0, B:0, R:0, G:0, C:0 };
+                
+                currentDeckCache = [];
+                allMatchedCards.forEach(cardData => { 
+                    const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; 
+                    currentDeckCache.push({ ...cardData, quantity: quantity });
+                    const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; 
+                    if (!cardData.type_line.toLowerCase().includes('land')) { const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; }
+                    const price = parseFloat(cardData.prices.usd || cardData.prices.usd_foil || 0); totalDeckPrice += (price * quantity);
+                    if (cardData.mana_cost) { const cost = cardData.mana_cost; colorAgg['W'] += (cost.match(/{W}/g) || []).length * quantity; colorAgg['U'] += (cost.match(/{U}/g) || []).length * quantity; colorAgg['B'] += (cost.match(/{B}/g) || []).length * quantity; colorAgg['R'] += (cost.match(/{R}/g) || []).length * quantity; colorAgg['G'] += (cost.match(/{G}/g) || []).length * quantity; colorAgg['C'] += (cost.match(/{C}/g) || []).length * quantity; }
+                });
+                document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
+                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`; output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`;
+                if (allUnmatched.length > 0) { output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`; allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`); output += `</ul><p>Please fix these names in the editor.</p>`; showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error"); } else { output += `<p style="color:var(--green);">All unique relic names resolved!</p>`; showToast(`Ritual successfully resolved!`, "success"); }
+                resultsEl.innerHTML = output;
+                if (allUnmatched.length === 0) { document.getElementById('deck-charts').classList.remove('hidden'); renderTypeChart(typeAgg); renderManaCurve(cmcAgg); renderColorChart(colorAgg); }
+                
+            } catch (error) { resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`; showToast("Validation Error.", "error"); } finally { if(btn) { btn.innerText = "✅ Validate & Resolve Ritual"; btn.disabled = false; } }
+        }
+
+        // TOGGLE & VISUALS
+        function toggleDeckView() {
+            const textView = document.getElementById('detail-decklist-viewer');
+            const visualView = document.getElementById('detail-visual-grid');
+            if (textView.classList.contains('hidden')) { textView.classList.remove('hidden'); visualView.classList.add('hidden'); } else { if (currentDeckCache.length === 0) return showToast("Resolve deck first to see visuals.", "error"); renderDeckVisuals(); textView.classList.add('hidden'); visualView.classList.remove('hidden'); }
+        }
+        function renderDeckVisuals() {
+            const container = document.getElementById('detail-visual-grid'); container.innerHTML = '';
+            const groups = {}; currentDeckCache.forEach(card => { const type = card.type_line.split('—')[0].trim(); if (!groups[type]) groups[type] = []; groups[type].push(card); });
+            const typeOrder = ["Creature", "Planeswalker", "Instant", "Sorcery", "Artifact", "Enchantment", "Land"];
+            typeOrder.forEach(type => { if (groups[type]) { renderSection(container, type, groups[type]); delete groups[type]; } });
+            for (const type in groups) { renderSection(container, type, groups[type]); }
+        }
+        function renderSection(container, title, cards) {
+            const section = document.createElement('div'); section.className = 'visual-section';
+            const count = cards.reduce((a, c) => a + c.quantity, 0); section.innerHTML = `<div class="visual-header">${title} (${count})</div>`;
+            const grid = document.createElement('div'); grid.className = 'visual-card-grid';
+            cards.forEach(card => {
+                const imgUrl = getCardImage(card); // Use Helper
+                const price = card.prices.usd || card.prices.usd_foil || 'N/A';
+                
+                // CHECK IF COVER
+                const isCover = (currentDeckCoverUrl === imgUrl);
+                const activeClass = isCover ? 'is-cover-card' : '';
+                const starColor = isCover ? 'var(--yellow)' : 'var(--subtext)';
+                
+                const item = document.createElement('div'); item.className = `visual-card ${activeClass}`; 
+                
+                // CLICK = OPEN CODEX
+                // CLICK STAR = SET COVER
+                item.innerHTML = ` 
+                    <button class="cover-btn" style="color:${starColor}" onclick="setDeckCover('${imgUrl}'); event.stopPropagation();">★</button>
+                    <img src="${imgUrl}" loading="lazy" onclick="openCodex('${card.set}', '${card.collector_number}')"> 
+                    <div class="visual-badge">${card.quantity}x</div> 
+                `; 
+                item.title = `${card.name} ($${price})`; grid.appendChild(item);
+            });
+            section.appendChild(grid); container.appendChild(section);
+        }
+
+        // CHARTS & HELPERS
+        function copyMissing() { const missingLines = []; document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => { const needed = parseInt(el.getAttribute('data-qty-needed')); const owned = parseInt(el.getAttribute('data-qty-owned')); const name = el.getAttribute('data-name'); const toBuy = needed - owned; if(toBuy > 0) missingLines.push(`${toBuy} ${name}`); }); if(missingLines.length === 0) return showToast("You own all these relics!", "success"); navigator.clipboard.writeText(missingLines.join('\n')).then(() => { showToast("📋 Missing relics copied to clipboard!", "success"); }).catch(() => showToast("Failed to copy.", "error")); }
+        function buyDeck() { const buyLines = []; document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => { const needed = parseInt(el.getAttribute('data-qty-needed')); const owned = parseInt(el.getAttribute('data-qty-owned')); const name = el.getAttribute('data-name'); const toBuy = needed - owned; if(toBuy > 0) buyLines.push(`${toBuy} ${name}`); }); if(buyLines.length === 0) return showToast("You own all these relics! Nothing to buy.", "success"); const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||'); const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`; window.open(url, '_blank'); }
         function clearCharts() { if (typeChartInstance) { typeChartInstance.destroy(); typeChartInstance = null; } if (manaCurveInstance) { manaCurveInstance.destroy(); manaCurveInstance = null; } if (colorChartInstance) { colorChartInstance.destroy(); colorChartInstance = null; } document.getElementById('deck-charts').classList.add('hidden'); }
         function renderTypeChart(typeData) { if (typeChartInstance) typeChartInstance.destroy(); const ctx = document.getElementById('typeChart').getContext('2d'); typeChartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(typeData), datasets: [{ data: Object.values(typeData), backgroundColor: CHART_COLORS, borderColor: 'rgba(0, 0, 0, 0.4)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, title: { display: true, text: 'Card Type Breakdown', color: 'white' } } } }); }
         function renderManaCurve(cmcData) { if (manaCurveInstance) manaCurveInstance.destroy(); const ctx = document.getElementById('manaCurve').getContext('2d'); const maxCmc = Math.max(...Object.keys(cmcData).map(Number)); const labels = []; const data = []; for (let i = 0; i <= Math.min(maxCmc, 6); i++) { labels.push(i.toString()); data.push(cmcData[i] || 0); } let cmcSevenPlus = 0; for (let i = 7; i <= maxCmc; i++) { cmcSevenPlus += (cmcData[i] || 0); } if (maxCmc >= 7 || maxCmc === 0) { labels.push('7+'); data.push(cmcSevenPlus); } manaCurveInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Card Count', data: data, backgroundColor: '#a78bfa', borderColor: 'rgba(167, 139, 250, 0.2)', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, title: { display: true, text: 'Mana Value (CMC) Curve', color: 'white' } }, scales: { x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }, y: { ticks: { color: '#a1a1aa', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } } } } }); }
