@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.3.0</title>
+    <title>The Grimoire | v2.3.1</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -68,8 +68,6 @@
         .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
-        
-        /* TAG BADGES (V2.3.0) */
         .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
 
@@ -236,7 +234,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.3.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.3.1</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -457,7 +455,7 @@
             document.getElementById('stat-count').innerText = count; document.getElementById('stat-cost').innerText = "$" + totalCost.toFixed(2); document.getElementById('stat-value').innerText = "$" + totalVal.toFixed(2); document.getElementById('stat-oracle').innerText = "$" + oracleCost.toFixed(2);
             const gain = totalVal - totalCost; const gainEl = document.getElementById('stat-gain'); gainEl.innerText = `$${gain.toFixed(2)}`; gainEl.style.color = gain >= 0 ? 'var(--green)' : 'var(--red)';
             const ownedCards = cards.filter(c => c.quantity > 0);
-            if(ownedCards.length > 0) { const recent = ownedCards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${getCardImage(c)}" loading="lazy" onclick="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
+            if(ownedCards.length > 0) { const recent = ownedCards.slice(0, 5); document.getElementById('recent-grid').innerHTML = recent.map(c => ` <div class="grid-card"><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"><div class="overlay"><span>${c.name.substring(0, 15)}...</span><span>$${Number(c.market_price_usd || 0).toFixed(2)}</span></div></div> `).join(''); } else { document.getElementById('recent-grid').innerHTML = '<div style="color:var(--subtext); padding:20px; font-size:13px; grid-column:1/-1; text-align:center;">No cards found. Go to \'Add Relic\' to start!</div>'; }
             const topAssets = [...ownedCards].sort((a,b) => (b.market_price_usd || 0) - (a.market_price_usd || 0)).slice(0, 5);
             if (topAssets.length > 0 && topAssets[0].market_price_usd > 0) { document.getElementById('top-assets-list').innerHTML = topAssets.map(c => ` <div class="asset-row"> <div class="asset-info"><img src="${getCardImage(c)}" class="asset-img" onclick="openCodex('${c.set_code}', '${c.collector_number}')"><div><div style="font-weight:600; font-size:14px;">${c.name}</div><div style="font-size:11px; color:var(--subtext);">${c.set_code} #${c.collector_number}</div></div></div> <div class="asset-val">$${Number(c.market_price_usd).toFixed(2)}</div> </div> `).join(''); } else { document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>'; }
         }
@@ -643,44 +641,6 @@
             section.appendChild(grid); container.appendChild(section);
         }
 
-        // CODEX (V2.2.0)
-        async function openCodex(set, num) {
-            const modal = document.getElementById('codex-modal');
-            const loading = document.getElementById('codex-loading');
-            const content = document.getElementById('codex-content');
-            
-            modal.classList.remove('hidden');
-            loading.classList.remove('hidden');
-            content.classList.add('hidden');
-            
-            try {
-                // Fetch fresh data
-                const res = await fetch(`https://api.scryfall.com/cards/${set}/${num}`);
-                const card = await res.json();
-                
-                // Populate
-                document.getElementById('codex-img').src = getCardImage(card);
-                document.getElementById('codex-title').innerText = card.name;
-                document.getElementById('codex-type').innerText = card.type_line;
-                document.getElementById('codex-text').innerText = card.oracle_text || "No rule text.";
-                
-                // Legality
-                const fmts = ['commander', 'modern', 'standard', 'pauper'];
-                document.getElementById('codex-legality').innerHTML = fmts.map(f => {
-                    const status = card.legalities[f];
-                    const cls = status === 'legal' ? 'is-legal' : 'not-legal';
-                    return `<div class="legality-badge ${cls}"><span>${f.charAt(0).toUpperCase() + f.slice(1)}</span><span>${status.toUpperCase()}</span></div>`;
-                }).join('');
-                
-                window.scryfallLink = card.scryfall_uri;
-                
-                loading.classList.add('hidden');
-                content.classList.remove('hidden');
-            } catch(e) {
-                loading.innerText = "Error consulting archives.";
-            }
-        }
-
         // CHARTS & HELPERS
         function copyMissing() { const missingLines = []; document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => { const needed = parseInt(el.getAttribute('data-qty-needed')); const owned = parseInt(el.getAttribute('data-qty-owned')); const name = el.getAttribute('data-name'); const toBuy = needed - owned; if(toBuy > 0) missingLines.push(`${toBuy} ${name}`); }); if(missingLines.length === 0) return showToast("You own all these relics!", "success"); navigator.clipboard.writeText(missingLines.join('\n')).then(() => { showToast("📋 Missing relics copied to clipboard!", "success"); }).catch(() => showToast("Failed to copy.", "error")); }
         function buyDeck() { const buyLines = []; document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => { const needed = parseInt(el.getAttribute('data-qty-needed')); const owned = parseInt(el.getAttribute('data-qty-owned')); const name = el.getAttribute('data-name'); const toBuy = needed - owned; if(toBuy > 0) buyLines.push(`${toBuy} ${name}`); }); if(buyLines.length === 0) return showToast("You own all these relics! Nothing to buy.", "success"); const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||'); const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`; window.open(url, '_blank'); }
@@ -691,12 +651,12 @@
 
         // --- BATTLEFIELD ---
         let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
-        function initBattlefield(){ if(!currentDeckCache.length) return showToast("Resolve deck first!","error"); document.getElementById('view-decks').classList.add('hidden'); document.getElementById('view-battlefield').classList.remove('hidden'); document.querySelector('.sidebar').classList.add('hidden'); gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1}; currentDeckCache.forEach(c=>{ for(let i=0;i<c.quantity;i++) gameState.lib.push({id:Math.random(), ...c, tapped:false}); }); for(let i=gameState.lib.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; } for(let i=0;i<7;i++) gameState.hand.push(gameState.lib.pop()); renderBF(); }
-        function renderBF(){ document.getElementById('bf-life').innerText=gameState.life; document.getElementById('bf-turn').innerText=gameState.turn; document.getElementById('bf-lib-count').innerText=gameState.lib.length; document.getElementById('bf-grave-count').innerText=gameState.grave.length; document.getElementById('bf-exile-count').innerText=gameState.exile.length; document.getElementById('bf-hand').innerHTML=gameState.hand.map(c=>`<div class="bf-card" onclick="playCard(${c.id})"><img src="${getCardImage(c)}"></div>`).join(''); document.getElementById('bf-battlefield').innerHTML=gameState.field.map(c=>`<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard(${c.id})" oncontextmenu="killCard(${c.id},event)"><img src="${getCardImage(c)}"></div>`).join(''); }
+        function initBattlefield(){ if(!currentDeckCache.length) return showToast("Resolve deck first!","error"); document.getElementById('view-decks').classList.add('hidden'); document.getElementById('view-battlefield').classList.remove('hidden'); document.querySelector('.sidebar').classList.add('hidden'); gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1}; currentDeckCache.forEach(c=>{ for(let i=0;i<c.quantity;i++) gameState.lib.push({uid:Math.random().toString(36), ...c, tapped:false}); }); for(let i=gameState.lib.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; } for(let i=0;i<7;i++) gameState.hand.push(gameState.lib.pop()); renderBF(); }
+        function renderBF(){ document.getElementById('bf-life').innerText=gameState.life; document.getElementById('bf-turn').innerText=gameState.turn; document.getElementById('bf-lib-count').innerText=gameState.lib.length; document.getElementById('bf-grave-count').innerText=gameState.grave.length; document.getElementById('bf-exile-count').innerText=gameState.exile.length; document.getElementById('bf-hand').innerHTML=gameState.hand.map(c=>`<div class="bf-card" onclick="playCard('${c.uid}')"><img src="${getCardImage(c)}"></div>`).join(''); document.getElementById('bf-battlefield').innerHTML=gameState.field.map(c=>`<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)"><img src="${getCardImage(c)}"></div>`).join(''); }
         function drawCard(){ if(gameState.lib.length) gameState.hand.push(gameState.lib.pop()); renderBF(); }
-        function playCard(id){ const i=gameState.hand.findIndex(c=>c.id==id); if(i>-1) gameState.field.push(gameState.hand.splice(i,1)[0]); renderBF(); }
-        function tapCard(id){ const c=gameState.field.find(c=>c.id==id); if(c) c.tapped=!c.tapped; renderBF(); }
-        function killCard(id,e){ e.preventDefault(); const i=gameState.field.findIndex(c=>c.id==id); if(i>-1){ const c=gameState.field.splice(i,1)[0]; c.tapped=false; gameState.grave.push(c); } renderBF(); }
+        function playCard(uid){ const i=gameState.hand.findIndex(c=>c.uid===uid); if(i>-1) gameState.field.push(gameState.hand.splice(i,1)[0]); renderBF(); }
+        function tapCard(uid){ const c=gameState.field.find(c=>c.uid===uid); if(c) c.tapped=!c.tapped; renderBF(); }
+        function killCard(uid,e){ e.preventDefault(); const i=gameState.field.findIndex(c=>c.uid===uid); if(i>-1){ const c=gameState.field.splice(i,1)[0]; c.tapped=false; gameState.grave.push(c); } renderBF(); }
         function nextTurn(){ gameState.turn++; gameState.field.forEach(c=>c.tapped=false); drawCard(); showToast("Untap, Upkeep, Draw."); }
         function updateLife(n){ gameState.life+=n; renderBF(); }
         function exitBattlefield(){ document.getElementById('view-battlefield').classList.add('hidden'); document.getElementById('view-decks').classList.remove('hidden'); document.querySelector('.sidebar').classList.remove('hidden'); }
