@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.9.2</title>
+    <title>The Grimoire | v2.9.3</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -70,6 +70,16 @@
         .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
         .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* LIST VIEW (V2.9.3) */
+        .vault-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .vault-table th { text-align: left; padding: 12px; color: var(--subtext); border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        .vault-table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        .vault-table tr:hover { background: rgba(255,255,255,0.03); }
+        .list-img { width: 30px; height: 42px; border-radius: 4px; object-fit: cover; }
+        .view-toggle { display: flex; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 2px; border: 1px solid var(--border); }
+        .view-btn { padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: var(--subtext); font-weight: 600; }
+        .view-btn.active { background: var(--primary); color: white; }
 
         /* DECK WORKSPACE */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
@@ -93,7 +103,7 @@
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
         .new-deck-card::after { display: none; }
         
-        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .deck-area-edit { display: block; }
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
@@ -102,8 +112,7 @@
         .editor-split { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; height: 60vh; }
         .editor-column { display: flex; flex-direction: column; }
         .editor-label { color: var(--subtext); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; }
-        .deck-area-edit { display: block; } 
-
+        
         /* VISUAL DECK GRID */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
@@ -275,7 +284,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.3</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -303,11 +312,10 @@
                     <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
                     <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
                     <div style="display:flex; gap:10px; margin-bottom: 15px;"><input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;"></div>
-                    <div class="input-group" style="margin-bottom:15px;"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;"></div>
+                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;"></div>
                     <div class="input-group"><span class="input-icon">🏷️</span><input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;"></div>
-                    
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
-                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion()" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
+                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
                         <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
@@ -321,11 +329,17 @@
                     <div style="display:flex; gap:10px;"><button id="btn-appraise" class="secondary" style="width:auto; padding:8px 16px; font-size:12px; background:var(--green); color:white; border:none;" onclick="appraiseCollection()">🔄 Appraise Vault</button><button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadCollection()">Refresh</button></div>
                 </div>
                 <div id="appraisal-status" style="margin-bottom:15px; font-size:12px; color:var(--subtext);" class="hidden"></div>
+                
                 <div style="display:flex; gap:10px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
                     <div class="input-group" style="flex:1; margin-bottom:0;"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search Vault (Names or Tags)..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;"></div>
-                    <select id="vaultSort" onchange="filterVault()" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;"><option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option></select>
+                    <select id="vaultSort" onchange="filterVault(); savePrefs();" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;"><option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option></select>
+                    <div class="view-toggle">
+                        <div id="view-grid-btn" class="view-btn active" onclick="toggleVaultView('grid')">Grid</div>
+                        <div id="view-list-btn" class="view-btn" onclick="toggleVaultView('list')">List</div>
+                    </div>
                 </div>
-                <div class="collection-grid" id="collection-grid">Loading...</div>
+                
+                <div id="collection-grid" class="collection-grid">Loading...</div>
             </div>
 
             <div id="view-oracle" class="hidden">
@@ -354,18 +368,10 @@
                                 </select>
                                 <button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button>
                             </div>
-                            
                             <div class="editor-split">
-                                <div class="editor-column">
-                                    <div class="editor-label">Mainboard</div>
-                                    <textarea id="deckMain" placeholder="1 Sol Ring..."></textarea>
-                                </div>
-                                <div class="editor-column">
-                                    <div class="editor-label">Sideboard</div>
-                                    <textarea id="deckSide" placeholder="15 Island..."></textarea>
-                                </div>
+                                <div class="editor-column"><div class="editor-label">Mainboard</div><textarea id="deckMain" placeholder="1 Sol Ring..."></textarea></div>
+                                <div class="editor-column"><div class="editor-label">Sideboard</div><textarea id="deckSide" placeholder="15 Island..."></textarea></div>
                             </div>
-
                             <div style="display:flex; gap:10px; margin-top:15px;">
                                 <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve</button>
                                 <button onclick="saveDeck()" style="background:var(--green);">💾 Save Ritual</button>
@@ -382,9 +388,7 @@
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--yellow); color:black;" onclick="buyDeck()">🛒 Buy</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
-                                    
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="exportDeck()">📤 Export</button>
-
                                     <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button>
                                     <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="toggleDeckView()">👁️ / 📝</button>
                                 </div>
@@ -436,7 +440,20 @@
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[], currentDeckCoverUrl='';
         let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
+        let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
         const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
+
+        // PREFERENCES
+        function savePrefs() {
+            localStorage.setItem('grimoire_view', vaultViewMode);
+            localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value);
+            localStorage.setItem('grimoire_price', document.getElementById('priceSource').value);
+        }
+        function loadPrefs() {
+            if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort');
+            if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price');
+            toggleVaultView(vaultViewMode);
+        }
 
         function showToast(m,t='info'){
             let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)}
@@ -455,7 +472,7 @@
         async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){if(error.message.includes("Invalid login credentials")){showToast("Invalid credentials. Attempting creation...","info");const sup=await sb.auth.signUp({email:e,password:p});if(sup.error){showToast(sup.error.message,"error");}else{if(sup.data.session)finalizeLogin(sup.data.session);else showToast("Account created! Check email.","success");}}else{showToast(error.message,"error");}}else{finalizeLogin(data.session);}}}
         function finalizeLogin(s){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;loadData()}
         async function handleLogout(){await sb.auth.signOut();window.location.reload()}
-        sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData()}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
+        sb.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;if(cardsCache.length===0)loadData(); loadPrefs();}else if(e==='SIGNED_OUT'){document.getElementById('auth-screen').classList.remove('hidden');document.getElementById('app').classList.add('hidden');session=null}});
 
         // --- NAV & SEARCH ---
         function nav(v,i){
@@ -486,31 +503,10 @@
             let qty = document.getElementById('qty').value || 1;
             if(isWatchlist) qty = 0; else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error");
             const costToSave = costInput.length > 0 ? parseFloat(costInput) : null;
-            
-            // GET TAGS V2.9.2
             const tagStr = document.getElementById('add-tags').value;
             const tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
-
             const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, tags: tags, last_price_update: new Date().toISOString() });
-            
-            if(!error) { 
-                if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); 
-                else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); 
-                
-                // Clear Form
-                document.getElementById('search').value = ""; 
-                document.getElementById('cost').value = ""; 
-                document.getElementById('qty').value = "1"; 
-                document.getElementById('add-tags').value = ""; // Clear tags
-                document.getElementById('versionSelect').innerHTML = ''; 
-                document.getElementById('preview').style.display = 'none'; 
-                document.getElementById('search-status').innerText = ""; 
-                document.getElementById('set').value = ''; 
-                document.getElementById('num').value = ''; 
-                document.getElementById('marketPrice').innerText = '--'; 
-                tempCardData = null; 
-                loadData(); 
-            } else { showToast(error.message, "error"); }
+            if(!error) { if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('add-tags').value = ""; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); } else { showToast(error.message, "error"); }
         }
 
         // --- BULK IMPORT ---
@@ -540,7 +536,16 @@
             } catch(e) { statusEl.innerText = "Error: " + e.message; }
         }
 
-        // --- VAULT & APPRAISAL ---
+        // --- VAULT (V2.9.3 LIST VIEW) ---
+        function toggleVaultView(mode) {
+            vaultViewMode = mode;
+            savePrefs();
+            document.getElementById('view-grid-btn').classList.toggle('active', mode === 'grid');
+            document.getElementById('view-list-btn').classList.toggle('active', mode === 'list');
+            document.getElementById('collection-grid').className = mode === 'grid' ? 'collection-grid' : ''; // Remove grid class for list
+            filterVault();
+        }
+
         async function loadData() {
             const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             if(error) return console.error(error); cardsCache = cards; 
@@ -578,16 +583,39 @@
             } catch(e) { showToast("Appraisal failed","error"); console.error(e); } finally { btn.disabled=false; btn.innerText="🔄 Appraise Vault"; status.classList.add('hidden'); }
         }
         function loadCollection(){ if(!cardsCache.length) loadData(); filterVault(); }
+        
         function filterVault(){
             const t=document.getElementById('vaultSearch').value.toLowerCase(); const s=document.getElementById('vaultSort').value;
             let f=cardsCache.filter(c=>c.quantity>0 && c.name.toLowerCase().includes(t));
             if(t.startsWith('#')) { const tagSearch = t.substring(1); f = cardsCache.filter(c => c.quantity > 0 && c.tags && c.tags.some(tag => tag.toLowerCase().includes(tagSearch))); }
             if(s==='price-high')f.sort((a,b)=>b.market_price_usd-a.market_price_usd); else f.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-            document.getElementById('collection-grid').innerHTML=f.map(c=>{
-                let badge=''; if(c.buy_price && c.market_price_usd){ const diff=c.market_price_usd-c.buy_price; const color=diff>=0?'var(--green)':'var(--red)'; const sign=diff>=0?'+':''; badge=`<div class="gain-badge" style="color:${color}">${sign}$${diff.toFixed(2)}</div>`; }
-                let tagHtml = ''; if(c.tags && c.tags.length > 0) { tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`; }
-                return `<div class="grid-card" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`
-            }).join('');
+            
+            const container = document.getElementById('collection-grid');
+            
+            // RENDER LOGIC SWITCH
+            if (vaultViewMode === 'list') {
+                let html = `<table class="vault-table"><thead><tr><th>Img</th><th>Name</th><th>Set</th><th>Qty</th><th>Price</th><th>Tags</th><th>Edit</th></tr></thead><tbody>`;
+                html += f.map(c => `
+                    <tr>
+                        <td><img src="${getCardImage(c)}" class="list-img" loading="lazy" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></td>
+                        <td style="font-weight:600;">${c.name}</td>
+                        <td style="color:var(--subtext);">${c.set_code} #${c.collector_number}</td>
+                        <td>${c.quantity}</td>
+                        <td style="color:var(--green);">$${Number(c.market_price_usd).toFixed(2)}</td>
+                        <td>${c.tags ? c.tags.map(tag => `<span style="font-size:10px; background:rgba(255,255,255,0.1); padding:2px 4px; border-radius:3px; margin-right:2px;">${tag}</span>`).join('') : ''}</td>
+                        <td><button class="secondary" style="padding:4px 8px; width:auto;" onclick="openEditModal('${c.id}', event)">✎</button></td>
+                    </tr>
+                `).join('');
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            } else {
+                // GRID MODE
+                container.innerHTML=f.map(c=>{
+                    let badge=''; if(c.buy_price && c.market_price_usd){ const diff=c.market_price_usd-c.buy_price; const color=diff>=0?'var(--green)':'var(--red)'; const sign=diff>=0?'+':''; badge=`<div class="gain-badge" style="color:${color}">${sign}$${diff.toFixed(2)}</div>`; }
+                    let tagHtml = ''; if(c.tags && c.tags.length > 0) { tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`; }
+                    return `<div class="grid-card" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code}', '${c.collector_number}')"></div>`
+                }).join('');
+            }
         }
         function loadOracle(){
             const f=cardsCache.filter(c=>c.quantity===0);
