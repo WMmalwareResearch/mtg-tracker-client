@@ -440,21 +440,33 @@
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width:500px; margin:0 auto;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;"><h2 style="margin:0;">Add Relic</h2><button class="secondary" style="width:auto; font-size:12px; padding: 8px 12px; height: auto;" onclick="openBulkModal()">📜 Bulk Import</button></div>
-                    <div class="input-group"><span class="input-icon">🔍</span><input type="text" id="search" placeholder="Search Card Name, or SET XXX (e.g., KTK 16)" oninput="debounceSearch()"></div>
-                    <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
-                    <div style="display:flex; gap:10px; margin-bottom: 15px;"><input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;"></div>
-                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;"></div>
-                    <div class="input-group"><span class="input-icon">🏷️</span><input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;"></div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
-                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
-                        <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
-                    </div>
-                    <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
-                    <div style="display:flex; gap:10px;"><button onclick="addCard(false)" style="flex:2;">Bind to Vault</button><button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Watch</button></div>
-                </div>
-            </div>
-            
+                   <div class="input-group">
+    <span class="input-icon">🔍</span>
+    <input type="text" id="search" placeholder="Search Card Name, or SET XXX (e.g., KTK 16)" oninput="debounceSearch()">
+</div>
+<div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
+<select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
+
+<div style="display:flex; gap:10px; margin-bottom: 15px;">
+    <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
+    <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
+    <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;">
+</div>
+
+<div class="input-group quantity-group"> 
+    <span class="input-icon">💰</span>
+    <input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;">
+</div>
+
+<div class="input-group quantity-group">
+    <span class="input-icon">🏷️</span>
+    <input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;">
+</div>
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
+    <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
+    <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
+</div>
             <div id="view-collection" class="hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                     <h2>Relic Vault</h2>
@@ -811,6 +823,43 @@
                 img: imageUrl, 
                 market_price: price 
             }; 
+
+            // V4.0.2: DYNAMIC FORM LOGIC
+            const qtyInput = document.getElementById('qty');
+            const costGroup = document.querySelector('.input-group .input-icon + #cost').parentElement;
+            const tagsGroup = document.querySelector('.input-group .input-icon + #add-tags').parentElement;
+            
+            // Check for Basic Land type
+            const isBasicLand = (v.type_line || '').includes("Basic Land");
+
+            // Check for format-restricted cards (e.g., Legendary, restricted list)
+            // Note: This is an approximation; true restriction depends on the deck format, but 1 is safest default for non-lands.
+            const isOneOff = (v.legalities?.commander === 'restricted' || v.type_line?.includes('Legendary') || (v.legalities?.vintage === 'restricted' && !isBasicLand));
+
+
+            if (isBasicLand) {
+                // Scenario 1: Basic Land (Quantity is virtually unlimited)
+                qtyInput.value = 1;
+                qtyInput.max = 99;
+                qtyInput.readOnly = false;
+                costGroup.classList.add('hidden');
+                tagsGroup.classList.add('hidden');
+            } else if (isOneOff) {
+                // Scenario 2: Legendary/Restricted Card (Quantity limited to 1)
+                qtyInput.value = 1;
+                qtyInput.max = 1;
+                qtyInput.readOnly = true;
+                costGroup.classList.remove('hidden');
+                tagsGroup.classList.remove('hidden');
+            } else {
+                // Scenario 3: Standard Card (Max 4 in most formats)
+                qtyInput.value = 1;
+                qty// Set max to 4 for most 60-card formats, or 99 for Commander flexibility
+                qtyInput.max = 4; 
+                qtyInput.readOnly = false;
+                costGroup.classList.remove('hidden');
+                tagsGroup.classList.remove('hidden');
+            }
         }
         async function addCard(isWatchlist = false) { if(!tempCardData) return showToast("Search and select a Relic version first", "error"); const costInput = document.getElementById('cost').value; let qty = document.getElementById('qty').value || 1; if(isWatchlist) qty = 0; else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error"); const costToSave = costInput.length > 0 ? parseFloat(costInput) : null; const tagStr = document.getElementById('add-tags').value; const tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : []; const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, tags: tags, last_price_update: new Date().toISOString() }); if(!error) { if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('add-tags').value = ""; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); } else { showToast(error.message, "error"); } }
 
@@ -1823,3 +1872,4 @@
     </script>
 </body>
 </html>
+
