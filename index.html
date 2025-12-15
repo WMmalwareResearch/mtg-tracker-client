@@ -871,9 +871,11 @@
         async function processBulkImport() { const text = document.getElementById('bulkList').value; const statusEl = document.getElementById('bulk-status'); if(!text.trim()) return showToast("Please paste a list first.", "error"); const { cards } = parseDeckList(text); if(cards.length === 0) return showToast("No valid cards found.", "error"); statusEl.innerText = `Resolving ${cards.length} relics via Scryfall...`; const identifiers = cards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let finalInserts = []; try { for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); data.data.forEach(scryCard => { const originalInput = cards.find(c => c.name.toLowerCase() === scryCard.name.toLowerCase()) || cards.find(c => scryCard.name.toLowerCase().includes(c.name.toLowerCase())); if(originalInput) { const img = getCardImage(scryCard); const price = scryCard.prices.usd || scryCard.prices.usd_foil || 0; finalInserts.push({ user_id: session.user.id, name: scryCard.name, set_code: scryCard.set.toUpperCase(), collector_number: scryCard.collector_number, image_url: img, buy_price: null, quantity: originalInput.qty, market_price_usd: parseFloat(price), last_price_update: new Date().toISOString() }); } }); } if(finalInserts.length > 0) { statusEl.innerText = `Binding ${finalInserts.length} relics to Vault...`; const { error } = await sb.from('cards').insert(finalInserts); if(error) throw error; showToast(`✅ Successfully bound ${finalInserts.length} relics!`, "success"); closeBulkModal(); loadData(); } else { statusEl.innerText = "Could could not identify any relics."; } } catch(e) { statusEl.innerText = "Error: " + e.message; } }
 
         async function logDailyValue(totalVal) {
-            // V4.0.7 FIX: Corrected Date object creation and using composite key for update
+            // V4.0.8 FIX: 1. Uses portfolio_vale (as per user's table). 
+            // 2. Replaces showToast calls with console logging to prevent crash.
             const today = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
             const numericValue = parseFloat(totalVal.toFixed(2));
+            const VALUE_COLUMN = 'portfolio_vale'; // <-- Must match user's actual table column name
 
             // 1. Check if a log entry exists for today, selecting an arbitrary column (like 'date')
             const { data: existingEntry, error: selectError } = await sb
@@ -884,7 +886,7 @@
                 .maybeSingle();
 
             if (selectError) {
-                console.error("Supabase Select Error in logDailyValue (Select):", selectError.message);
+                console.error("Supabase Select Error in logDailyValue:", selectError.message);
                 return;
             }
 
@@ -893,27 +895,27 @@
                 const { error: insertError } = await sb.from('price_history').insert({
                     user_id: session.user.id,
                     date: today,
-                    portfolio_value: numericValue
+                    [VALUE_COLUMN]: numericValue // Use bracket notation for the custom column name
                 });
 
                 if (insertError) {
-                    console.error("Supabase Insert Error in logDailyValue (Insert):", insertError.message);
-                    showToast("Error logging price history: Check console.", "error");
+                    console.error("Supabase Insert Error in logDailyValue:", insertError.message);
+                    // Critical Error: This means the key constraint is violated.
                 } else {
-                    console.log(`Successfully logged daily value: $${numericValue}`);
+                    console.log(`[LOG] Successfully INSERTED daily value: $${numericValue}`);
                 }
             } else {
-                // 3. If entry IS found, UPDATE using the composite primary key (user_id and date)
+                // 3. If entry IS found, UPDATE using the composite primary key
                 const { error: updateError } = await sb.from('price_history').update({
-                    portfolio_value: numericValue
+                    [VALUE_COLUMN]: numericValue // Use bracket notation for the custom column name
                 })
                 .eq('user_id', session.user.id)
                 .eq('date', today);
                 
                 if (updateError) {
-                    console.error("Supabase Update Error in logDailyValue (Update):", updateError.message);
+                    console.error("Supabase Update Error in logDailyValue:", updateError.message);
                 } else {
-                     console.log(`Updated existing daily value for ${today}: $${numericValue}`); 
+                     console.log(`[LOG] Successfully UPDATED existing daily value for ${today}: $${numericValue}`); 
                 }
             }
         }
@@ -2023,3 +2025,4 @@
     </script>
 </body>
 </html>
+
