@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.12 (UX/Clarity Renames)</title>
+    <title>The Grimoire | v4.0.13 (Enhanced Logout Menu)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -285,6 +285,15 @@
         </div>
     </div>
 
+    <div id="user-options-modal" class="modal-overlay hidden" onclick="closeUserOptionsModal()">
+        <div class="modal-content card-box" style="max-width: 300px; text-align: left;" onclick="event.stopPropagation()">
+            <h2 style="color:var(--primary); margin-bottom: 15px;">Account Actions</h2>
+            <button class="secondary" onclick="nav('settings', 'settings'); closeUserOptionsModal()" style="margin-bottom: 10px; padding: 12px; border: 1px solid var(--border); color: var(--subtext); width: 100%;">⚙️ View Settings</button>
+            <button onclick="openAvatarModal(); closeUserOptionsModal()" style="margin-bottom: 10px; padding: 12px; background: rgba(255, 255, 255, 0.1); color: white; width: 100%;">🖼️ Change Avatar</button>
+            <button onclick="handleLogout()" style="background:var(--red); width: 100%;">🚪 Break Pact (Log Out)</button>
+        </div>
+    </div>
+
     <div id="bulk-modal" class="modal-overlay hidden">
         <div class="modal-content card-box">
             <h2 style="color:var(--primary);">The Scribe (Bulk Import)</h2>
@@ -383,8 +392,8 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.12</div>
-                <button class="secondary" onclick="handleLogout()">Break Pact</button>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v4.0.13</div>
+                <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
 
@@ -624,6 +633,12 @@
         let gameState = { lib: [], hand: [], field: [], grave: [], exile: [], life: 20, turn: 1 }; // Game state for battlefield
 
         // --- UTILITIES ---
+        function openUserOptionsModal() {
+            document.getElementById('user-options-modal').classList.remove('hidden');
+        }
+        function closeUserOptionsModal() {
+            document.getElementById('user-options-modal').classList.add('hidden');
+        }
         function savePrefs() { 
             localStorage.setItem('grimoire_view', vaultViewMode); 
             localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); 
@@ -642,6 +657,10 @@
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
+        }
+        function showToast(m,t='info'){ 
+            let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} 
+            const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;c.appendChild(el);setTimeout(()=>{el.classList.add('hiding');el.addEventListener('animationend',()=>el.remove())},3000); 
         }
         function getCardImage(c) { 
             if(!c) return ''; 
@@ -687,7 +706,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v4.0.12',
+                app_version: 'v4.0.13',
                 browser_info: navigator.userAgent
             };
 
@@ -837,11 +856,6 @@
             document.getElementById('num').value = v.collector_number; 
             document.getElementById('marketPrice').innerHTML = priceHtml; 
             
-            const preview = document.getElementById('preview'); 
-            preview.src = imageUrl; 
-            preview.style.display = 'block'; 
-            document.getElementById('preview-text').style.display = 'none'; 
-            
             tempCardData = { 
                 name: v.name, 
                 set: v.set.toUpperCase(), 
@@ -874,7 +888,7 @@
             // V4.0.11 FIX: Robust logic to check only by user_id and then find today's date in memory.
             const todayISO = new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD (e.g., '2025-12-15')
             const numericValue = parseFloat(totalVal.toFixed(2));
-            const VALUE_COLUMN = 'portfolio_value'; 
+            const VALUE_COLUMN = 'portfolio_value'; // Standard/Correct Column Name
 
             // 1. Fetch all entries for this user.
             const { data: allDates, error: selectError } = await sb
@@ -934,9 +948,10 @@
                 .limit(7); // Limit to last 7 days
 
             if (error) {
-                // If column name is custom, try again using the custom name 'portfolio_vale'
+                // If there's an error, try fetching with the non-standard column name 'portfolio_vale' 
+                // as a fallback to ensure the chart still loads if the user has legacy/mistyped columns.
                 if (error.message.includes('portfolio_value') && error.message.includes('does not exist')) {
-                    console.warn("Retrying Price History Load with 'portfolio_vale' column.");
+                    console.warn("Retrying Price History Load with non-standard column name 'portfolio_vale' as fallback.");
                     const { data: customData, error: customError } = await sb
                         .from('price_history')
                         .select('date, portfolio_vale')
