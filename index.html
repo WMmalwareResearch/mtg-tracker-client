@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.9.1</title>
+    <title>The Grimoire | v2.9.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -275,7 +275,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.2</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -303,7 +303,9 @@
                     <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
                     <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
                     <div style="display:flex; gap:10px; margin-bottom: 15px;"><input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;"><input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;"></div>
-                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;"></div>
+                    <div class="input-group" style="margin-bottom:15px;"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;"></div>
+                    <div class="input-group"><span class="input-icon">🏷️</span><input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;"></div>
+                    
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
                         <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion()" style="width:auto; padding:4px 8px; margin:0; font-size:11px;"><option value="usd">🇺🇸 TCG Market</option><option value="global">🌎 Global Avg (US+EU)</option></select></div>
                         <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
@@ -484,8 +486,31 @@
             let qty = document.getElementById('qty').value || 1;
             if(isWatchlist) qty = 0; else if(Number(qty) <= 0) return showToast("Quantity must be greater than zero.", "error");
             const costToSave = costInput.length > 0 ? parseFloat(costInput) : null;
-            const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, last_price_update: new Date().toISOString() });
-            if(!error) { if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); document.getElementById('search').value = ""; document.getElementById('cost').value = ""; document.getElementById('qty').value = "1"; document.getElementById('versionSelect').innerHTML = ''; document.getElementById('preview').style.display = 'none'; document.getElementById('search-status').innerText = ""; document.getElementById('set').value = ''; document.getElementById('num').value = ''; document.getElementById('marketPrice').innerText = '--'; tempCardData = null; loadData(); } else { showToast(error.message, "error"); }
+            
+            // GET TAGS V2.9.2
+            const tagStr = document.getElementById('add-tags').value;
+            const tags = tagStr ? tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0) : [];
+
+            const { error } = await sb.from('cards').insert({ user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, image_url: tempCardData.img, buy_price: costToSave, quantity: qty, market_price_usd: tempCardData.market_price, tags: tags, last_price_update: new Date().toISOString() });
+            
+            if(!error) { 
+                if(isWatchlist) showToast(`👁️ Added ${tempCardData.name} to Oracle Watchlist!`, "success"); 
+                else showToast(`✅ Added ${qty}x ${tempCardData.name} to Vault!`, "success"); 
+                
+                // Clear Form
+                document.getElementById('search').value = ""; 
+                document.getElementById('cost').value = ""; 
+                document.getElementById('qty').value = "1"; 
+                document.getElementById('add-tags').value = ""; // Clear tags
+                document.getElementById('versionSelect').innerHTML = ''; 
+                document.getElementById('preview').style.display = 'none'; 
+                document.getElementById('search-status').innerText = ""; 
+                document.getElementById('set').value = ''; 
+                document.getElementById('num').value = ''; 
+                document.getElementById('marketPrice').innerText = '--'; 
+                tempCardData = null; 
+                loadData(); 
+            } else { showToast(error.message, "error"); }
         }
 
         // --- BULK IMPORT ---
@@ -599,7 +624,7 @@
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
         function exportCSV() { if (!cardsCache || cardsCache.length === 0) return showToast("No data to export.", "error"); const headers = ["Name", "Set", "Collector Number", "Quantity", "Buy Price", "Market Price", "Tags", "Last Updated"]; const rows = cardsCache.map(c => { const name = c.name ? `"${c.name.replace(/"/g, '""')}"` : '""'; const set = c.set_code || ""; const num = c.collector_number || ""; const qty = c.quantity || 0; const buy = c.buy_price || 0; const mkt = c.market_price_usd || 0; const tags = c.tags ? `"${c.tags.join(', ')}"` : '""'; const date = c.last_price_update || ""; return [name, set, num, qty, buy, mkt, tags, date].join(","); }); const csvContent = [headers.join(",")].concat(rows).join("\n"); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.setAttribute("href", url); link.setAttribute("download", "grimoire_export.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); showToast("Export successful!", "success"); }
 
-        // --- DECK LOGIC (V2.9.1 DECK EXPORT) ---
+        // --- DECK LOGIC (V2.9.2 FIX) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
         
         async function loadDecks() { 
@@ -746,7 +771,8 @@
                 
                 currentDeckCache = [];
                 allMatchedCards.forEach(cardData => { 
-                    const deckCard = parsedCards.find(c => c.name === cardData.name); const quantity = deckCard ? deckCard.qty : 1; 
+                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase()); // V2.9.2 FIX: CASE INSENSITIVE
+                    const quantity = deckCard ? deckCard.qty : 1; 
                     currentDeckCache.push({ ...cardData, quantity: quantity });
                     const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown'; typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity; 
                     if (!cardData.type_line.toLowerCase().includes('land')) { const cmc = Math.floor(cardData.cmc || 0); cmcAgg[cmc] = (cmcAgg[cmc] || 0) + quantity; }
