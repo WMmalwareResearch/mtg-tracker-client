@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v4.0.4 (Image Caching + All Fixes)</title>
+    <title>The Grimoire | v4.0.5 (Price History)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -97,7 +97,7 @@
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
-        .dashboard-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .dashboard-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .asset-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .asset-info { display: flex; align-items: center; gap: 15px; }
         .asset-img { width: 40px; height: 56px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
@@ -407,7 +407,14 @@
                         <div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div>
                     </div></div>
                 </div>
-            </div>
+                
+                <div class="card-box">
+                    <h3>📈 Portfolio Value History (Last 7 Days)</h3>
+                    <div style="position:relative; height: 300px;">
+                        <canvas id="priceHistoryChart"></canvas>
+                    </div>
+                </div>
+                </div>
 
             <div id="view-settings" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
@@ -610,9 +617,9 @@
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf'; // PASTE YOUR PUBLIC KEY HERE
 
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[], currentDeckCoverUrl='';
-        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
+        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null, priceChartInstance = null; // Added priceChartInstance
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
-        const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
+        const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
         let gameState = { lib: [], hand: [], field: [], grave: [], exile: [], life: 20, turn: 1 }; // Game state for battlefield
 
@@ -640,12 +647,10 @@
             if(!c) return ''; 
             
             // V4.0.4: Check Local Cache First (improves performance significantly)
-            // Use set_code/num from the object passed, ensuring fallbacks
             const setCode = c.set_code || c.set;
             const num = c.collector_number || c.num;
 
             if (!setCode || !num) {
-                // If we don't have enough data to form a unique key, just return the raw URL
                  return c.image_url || (c.image_uris && c.image_uris.normal) || (c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) || '';
             }
 
@@ -660,7 +665,6 @@
             else if(c.image_uris && c.image_uris.normal) imageUrl = c.image_uris.normal; 
             else if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) imageUrl = c.card_faces[0].image_uris.normal; 
             
-            // Only cache valid URLs
             if (imageUrl) {
                 localStorage.setItem(cacheKey, imageUrl);
             }
@@ -866,7 +870,51 @@
         function closeBulkModal() { document.getElementById('bulk-modal').classList.add('hidden'); document.getElementById('bulkList').value = ''; document.getElementById('bulk-status').innerText = ''; }
         async function processBulkImport() { const text = document.getElementById('bulkList').value; const statusEl = document.getElementById('bulk-status'); if(!text.trim()) return showToast("Please paste a list first.", "error"); const { cards } = parseDeckList(text); if(cards.length === 0) return showToast("No valid cards found.", "error"); statusEl.innerText = `Resolving ${cards.length} relics via Scryfall...`; const identifiers = cards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let finalInserts = []; try { for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); data.data.forEach(scryCard => { const originalInput = cards.find(c => c.name.toLowerCase() === scryCard.name.toLowerCase()) || cards.find(c => scryCard.name.toLowerCase().includes(c.name.toLowerCase())); if(originalInput) { const img = getCardImage(scryCard); const price = scryCard.prices.usd || scryCard.prices.usd_foil || 0; finalInserts.push({ user_id: session.user.id, name: scryCard.name, set_code: scryCard.set.toUpperCase(), collector_number: scryCard.collector_number, image_url: img, buy_price: null, quantity: originalInput.qty, market_price_usd: parseFloat(price), last_price_update: new Date().toISOString() }); } }); } if(finalInserts.length > 0) { statusEl.innerText = `Binding ${finalInserts.length} relics to Vault...`; const { error } = await sb.from('cards').insert(finalInserts); if(error) throw error; showToast(`✅ Successfully bound ${finalInserts.length} relics!`, "success"); closeBulkModal(); loadData(); } else { statusEl.innerText = "Could could not identify any relics."; } } catch(e) { statusEl.innerText = "Error: " + e.message; } }
 
-        async function loadData() { const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false }); if(error) return console.error(error); cardsCache = cards; 
+        async function logDailyValue(totalVal) {
+            // V4.0.5: Logs the portfolio value once per day.
+            const today = new Date().toISOString().slice(0, 10);
+            
+            // 1. Check if a log entry exists for today
+            const { data: existingEntry } = await sb
+                .from('price_history')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .eq('date', today)
+                .single();
+            
+            // 2. If not found, insert the new value
+            if (!existingEntry) {
+                const { error } = await sb.from('price_history').insert({
+                    user_id: session.user.id,
+                    date: today,
+                    portfolio_value: totalVal
+                });
+
+                if (error) console.error("Error logging daily value:", error);
+                // else showToast("Daily portfolio value logged.", "info"); // Too chatty
+            }
+        }
+
+        async function loadPriceHistory() {
+            // V4.0.5: Loads historical data for the chart
+            const { data, error } = await sb
+                .from('price_history')
+                .select('date, portfolio_value')
+                .eq('user_id', session.user.id)
+                .order('date', { ascending: true })
+                .limit(7); // Limit to last 7 days
+
+            if (error) {
+                console.error("Error loading price history:", error);
+                return [];
+            }
+            return data;
+        }
+
+        async function loadData() { 
+            const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false }); 
+            if(error) return console.error(error); 
+            cardsCache = cards; 
 
             // V4.0.4: Ensure card keys are normalized for caching logic
             cardsCache.forEach(c => { 
@@ -903,6 +951,10 @@
             } else { 
                 document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable relics found.</div>'; 
             } 
+            
+            // V4.0.5: Log daily value and render history chart
+            logDailyValue(totalVal);
+            loadPriceHistory().then(renderPriceHistoryChart);
         }
         async function appraiseCollection(){ if(cardsCache.length===0) return showToast("Vault is empty. Add cards first.", "info"); const btn=document.getElementById('btn-appraise'); const status=document.getElementById('appraisal-status'); btn.disabled=true; btn.innerText="Appraising..."; status.classList.remove('hidden'); status.innerText="Contacting market oracles..."; const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number})); const chunkSize=75; const totalChunks=Math.ceil(ids.length/chunkSize); let updatedCount=0; try { for(let i=0; i<Math.ceil(ids.length/75); i++){ status.innerText = `Processing Batch ${i+1}/${Math.ceil(ids.length/75)}...`; const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:ids.slice(i*75,(i+1)*75)})}); const d=await res.json(); if(d.data) { for(const sc of d.data){ const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number); if(local){ const np=parseFloat(sc.prices.usd||0); await sb.from('cards').update({market_price_usd:np, last_price_update: new Date().toISOString()}).eq('id',local.id); local.market_price_usd=np; } } } await new Promise(r => setTimeout(r, 100)); } showToast("Appraisal Complete!","success"); loadData(); filterVault(); } catch(e) { showToast("Appraisal failed","error"); console.error(e); } finally { btn.disabled=false; btn.innerText="🔄 Appraise Vault"; status.classList.add('hidden'); } }
         function loadCollection(){ 
@@ -1550,6 +1602,10 @@
                 colorChartInstance.destroy();
                 colorChartInstance = null;
             }
+            if (priceChartInstance) { // NEW: Clear price chart
+                priceChartInstance.destroy();
+                priceChartInstance = null;
+            }
             document.getElementById('deck-charts').classList.add('hidden');
         }
 
@@ -1694,6 +1750,61 @@
                             grid: {
                                 color: 'rgba(255,255,255,0.1)'
                             }
+                        }
+                    }
+                }
+            });
+        }
+
+        // NEW V4.0.5: Price History Chart Render
+        function renderPriceHistoryChart(historyData) {
+            if (priceChartInstance) priceChartInstance.destroy();
+
+            // Format data: Sort by date and format labels
+            historyData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const labels = historyData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+            const data = historyData.map(d => d.portfolio_value);
+
+            const ctx = document.getElementById('priceHistoryChart').getContext('2d');
+            
+            priceChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Portfolio Value (USD)',
+                        data: data,
+                        borderColor: 'var(--primary)',
+                        backgroundColor: 'rgba(167, 139, 250, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Important for fixed height container
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` $${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: 'var(--subtext)' },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: { 
+                                color: 'var(--subtext)',
+                                callback: function(value) { return '$' + value.toFixed(0); }
+                            },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
                         }
                     }
                 }
