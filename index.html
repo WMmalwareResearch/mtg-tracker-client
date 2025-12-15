@@ -382,6 +382,14 @@
         <div class="modal-content card-box">
             <h2 style="color:var(--primary);">The Scribe (Bulk Import)</h2>
             <p style="color:var(--subtext); margin-bottom: 20px;">Paste a list of cards to bind them all at once.<br>Format: <code>Quantity Name</code> (e.g., "4 Sol Ring")</p>
+            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px dashed var(--border); margin-bottom:15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; color:var(--subtext);">Import from CSV (Moxfield, ManaBox, TCGPlayer)</span>
+        <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleCSVUpload(this)">
+        <button class="secondary" onclick="document.getElementById('csvFile').click()" style="width:auto; padding:6px 12px; font-size:11px;">📂 Select File</button>
+    </div>
+    <div id="csv-status" style="font-size:11px; color:var(--primary); margin-top:5px; text-align:right;"></div>
+</div>
             <textarea id="bulkList" placeholder="4 Sol Ring&#10;10 Mountain&#10;1 The One Ring" style="height: 300px;"></textarea>
             <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;"><button onclick="processBulkImport()" style="background: var(--green);">📜 Inscribe to Collection</button><button onclick="closeBulkModal()" class="secondary">Cancel</button></div>
             <div id="bulk-status" style="margin-top:15px; font-size:13px; color:var(--subtext);"></div>
@@ -1354,6 +1362,80 @@
                 statusEl.innerText = "Error: " + e.message; 
             } 
         }
+
+        // =========================================================================
+// V7.2: CSV Parsing Logic - BEGIN CHUNK
+// =========================================================================
+
+        function handleCSVUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const statusEl = document.getElementById('csv-status');
+            statusEl.innerText = "Reading scroll...";
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r\n|\n/);
+                
+                if (lines.length < 2) {
+                    statusEl.innerText = "Error: File appears empty.";
+                    return;
+                }
+
+                // 1. Identify Header Columns
+                const header = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+                
+                // Common column names across different apps
+                let nameIdx = header.findIndex(h => h === 'name' || h === 'card name' || h.includes('name'));
+                let qtyIdx = header.findIndex(h => h === 'qty' || h === 'quantity' || h === 'count' || h === 'amount');
+                
+                // Fallback: If no headers found, assume TCGPlayer standard (Qty, Name) or just Name
+                if (nameIdx === -1) {
+                    // Try to guess based on first row of data
+                    statusEl.innerText = "Warning: Could not auto-detect columns. Assuming 'Quantity Name' format.";
+                    // Logic continues, hoping for the best, or we could stop here.
+                }
+
+                // 2. Parse Rows
+                let outputList = "";
+                let count = 0;
+
+                for (let i = 1; i < lines.length; i++) {
+                    const row = lines[i];
+                    if (!row.trim()) continue;
+
+                    // Handle CSV quotes (simple regex split isn't enough for complex CSVs, but works for most card lists)
+                    // This regex splits by comma ONLY if not inside quotes
+                    const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, ''));
+                    
+                    let name = (nameIdx > -1 && cols[nameIdx]) ? cols[nameIdx] : "";
+                    let qty = (qtyIdx > -1 && cols[qtyIdx]) ? cols[qtyIdx] : "1";
+
+                    // Fallback logic if parsing failed slightly
+                    if (!name && cols.length > 0) name = cols[0]; // Assume first col is name if missing
+
+                    // Clean up name (remove foil tags if imported often has them in name)
+                    name = name.split('(')[0].trim();
+
+                    if (name) {
+                        outputList += `${qty} ${name}\n`;
+                        count++;
+                    }
+                }
+
+                document.getElementById('bulkList').value = outputList;
+                statusEl.innerText = `✅ Parsed ${count} cards from CSV. Click Inscribe to finish.`;
+                showToast("CSV loaded into text area. Review before inscribing.", "success");
+            };
+            
+            reader.readAsText(file);
+        }
+
+// =========================================================================
+// V7.2: CSV Parsing Logic - END CHUNK
+// =========================================================================
 
         async function logDailyValue(totalVal) {
             // This function is kept to avoid breaking older functions that called it, but is empty due to V5.1 stabilization.
@@ -2799,3 +2881,4 @@
     </script>
 </body>
 </html>
+
