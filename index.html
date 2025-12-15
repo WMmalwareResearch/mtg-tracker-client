@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v7.0 (The Prism)</title>
+    <title>The Grimoire | v7.1 (Tactical Maneuvers)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -264,7 +264,7 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
-        /* BATTLEFIELD 2.0 */
+        /* BATTLEFIELD 2.0 (V7.1 Drag Updates) */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
@@ -283,6 +283,19 @@
         .bf-tapped .tap-icon { opacity: 1; }
         .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #0f0a1c; z-index: 20; box-shadow: 0 2px 5px black; }
         .token-card { background: #1e1e1e; border: 2px dashed var(--subtext); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; text-align: center; font-size: 12px; }
+        
+        /* V7.1: Drag & Drop Visuals */
+        .drag-over {
+            background: rgba(167, 139, 250, 0.2) !important;
+            border: 2px dashed var(--primary) !important;
+            transform: scale(1.02);
+        }
+        .bf-card[draggable="true"] {
+            cursor: grab;
+        }
+        .bf-card[draggable="true"]:active {
+            cursor: grabbing;
+        }
 
         /* LAND CALCULATOR MODAL */
         .mana-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items: center; }
@@ -463,7 +476,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v7.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v7.1</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -754,14 +767,27 @@
                     <div class="bf-stat"><button style="width:auto; padding:5px 15px; background:var(--blue);" onclick="createToken()">+ Token</button> <button style="width:auto; padding:5px 15px; background:var(--red);" onclick="initBattlefield()">Reset Game</button></div>
                 </div>
                 <div class="bf-main">
-                    <div id="bf-frontline" class="bf-row"><div class="bf-row-label">Combat / Spells</div></div>
-                    <div id="bf-backline" class="bf-row"><div class="bf-row-label">Lands / Mana</div></div>
+                    <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="bf-row-label">Combat / Spells</div>
+                    </div>
+                    <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div class="bf-row-label">Lands / Mana</div>
+                    </div>
                 </div>
                 <div class="bf-hand-area">
-                    <div class="bf-zone-btn" onclick="drawCard()"><div>📚 Library</div><div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div></div>
-                    <div class="bf-zone-btn" style="border-color:var(--red);"><div>💀 Graveyard</div><div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div></div>
-                    <div class="bf-zone-btn" style="border-color:var(--blue);"><div>🌀 Exile</div><div id="bf-exile-count" style="font-size:18px; font-weight:700;">0</div></div>
-                    <div id="bf-hand" style="display:flex; gap:10px; overflow-x:auto; padding:5px; flex:1;"></div>
+                    <div class="bf-zone-btn" onclick="drawCard()" ondrop="drop(event, 'library')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div>📚 Library</div>
+                        <div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div>
+                    </div>
+                    <div class="bf-zone-btn" style="border-color:var(--red);" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div>💀 Graveyard</div>
+                        <div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div>
+                    </div>
+                    <div class="bf-zone-btn" style="border-color:var(--blue);" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                        <div>🌀 Exile</div>
+                        <div id="bf-exile-count" style="font-size:18px; font-weight:700;">0</div>
+                    </div>
+                    <div id="bf-hand" style="display:flex; gap:10px; overflow-x:auto; padding:5px; flex:1;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
                 </div>
             </div>
         </div>
@@ -980,7 +1006,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v6.4',
+                app_version: 'v7.1',
                 browser_info: navigator.userAgent
             };
 
@@ -2543,20 +2569,106 @@
             }
         }
 
+        // V7.1: Drag and Drop Logic
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev, uid) {
+            ev.dataTransfer.setData("uid", uid);
+            // Optional: Set a drag image or effect here
+        }
+
+        function dragEnter(ev) {
+            ev.preventDefault();
+            // Find the closest droppable zone and add highlight class
+            const zone = ev.target.closest('.bf-row, .bf-zone-btn, #bf-hand');
+            if (zone) zone.classList.add('drag-over');
+        }
+
+        function dragLeave(ev) {
+            const zone = ev.target.closest('.bf-row, .bf-zone-btn, #bf-hand');
+            if (zone) zone.classList.remove('drag-over');
+        }
+
+        function drop(ev, targetZoneName) {
+            ev.preventDefault();
+            
+            // Remove highlight
+            const zone = ev.target.closest('.bf-row, .bf-zone-btn, #bf-hand');
+            if (zone) zone.classList.remove('drag-over');
+
+            const uid = ev.dataTransfer.getData("uid");
+            let sourceZoneName = '';
+            let cardObj = null;
+            let cardIndex = -1;
+
+            // 1. Find the card in the current game state arrays
+            const zones = ['hand', 'field', 'grave', 'exile', 'lib']; // 'lib' maps to gameState.lib
+            
+            for (const z of zones) {
+                const arr = (z === 'lib') ? gameState.lib : gameState[z];
+                const idx = arr.findIndex(c => c.uid === uid);
+                if (idx > -1) {
+                    sourceZoneName = (z === 'lib') ? 'library' : z;
+                    cardIndex = idx;
+                    cardObj = arr[idx];
+                    break;
+                }
+            }
+
+            if (!cardObj) return; // Card not found (shouldn't happen)
+            if (sourceZoneName === targetZoneName) return; // Dropped in same zone
+
+            // 2. Remove from source
+            const sourceArr = (sourceZoneName === 'library') ? gameState.lib : gameState[sourceZoneName];
+            sourceArr.splice(cardIndex, 1);
+
+            // 3. Add to target
+            const targetArr = (targetZoneName === 'library') ? gameState.lib : gameState[targetZoneName];
+            
+            // Reset state when moving zones (untap if moving to hand/lib, etc.)
+            if (targetZoneName === 'hand' || targetZoneName === 'library') {
+                cardObj.tapped = false;
+                delete cardObj.counters;
+            }
+            
+            targetArr.push(cardObj);
+
+            // 4. Re-render
+            renderBF();
+        }
+
+        // V7.1: renderBF Update (Draggable)
         function renderBF() {
             document.getElementById('bf-life').innerText = gameState.life;
             document.getElementById('bf-turn').innerText = gameState.turn;
             document.getElementById('bf-lib-count').innerText = gameState.lib.length;
             document.getElementById('bf-grave-count').innerText = gameState.grave.length;
             document.getElementById('bf-exile-count').innerText = gameState.exile.length;
-            document.getElementById('bf-hand').innerHTML = gameState.hand.map(c => `<div class="bf-card" onclick="playCard('${c.uid}')"><img src="${getCardImage(c)}"></div>`).join('');
+            
+            // V7.1: Add draggable attributes to Hand cards
+            document.getElementById('bf-hand').innerHTML = gameState.hand.map(c => 
+                `<div class="bf-card" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="playCard('${c.uid}')">
+                    <img src="${getCardImage(c)}" draggable="false">
+                </div>`
+            ).join('');
+
             const cardHTML = (c) => {
-                const img = c.isToken ? `<div class="token-card" style="width:100%; height:100%; border-radius:8px;">${c.name}</div>` : `<img src="${getCardImage(c)}">`;
+                const img = c.isToken ? `<div class="token-card" style="width:100%; height:100%; border-radius:8px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`;
                 const counters = c.counters ? `<div class="counter-badge" onclick="event.stopPropagation(); addCounter('${c.uid}', 1)" oncontextmenu="event.preventDefault(); event.stopPropagation(); addCounter('${c.uid}', -1)">${c.counters}</div>` : `<div class="counter-badge" onclick="event.stopPropagation(); addCounter('${c.uid}', 1)" style="opacity:0.3; background:black;">+</div>`;
-                return `<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)"><div class="tap-icon">⤵</div>${counters}${img}</div>`;
+                
+                // V7.1: Add draggable attributes to Field cards
+                return `<div class="bf-card ${c.tapped?'bf-tapped':''}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)">
+                            <div class="tap-icon">⤵</div>
+                            ${counters}
+                            ${img}
+                        </div>`;
             };
+
             const front = gameState.field.filter(c => !c.type_line.includes('Land') || c.isToken);
             const back = gameState.field.filter(c => c.type_line.includes('Land') && !c.isToken);
+            
             document.getElementById('bf-frontline').innerHTML = '<div class="bf-row-label">Combat / Spells</div>' + front.map(cardHTML).join('');
             document.getElementById('bf-backline').innerHTML = '<div class="bf-row-label">Lands / Mana</div>' + back.map(cardHTML).join('');
         }
