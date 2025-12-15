@@ -116,6 +116,37 @@
                 max-width: 100%;
                 margin: 0;
             }
+            /* V8.1: Floating Action Button (FAB) */
+        .fab-btn {
+            position: fixed;
+            bottom: 90px; /* Above the bottom nav (which is ~80px) */
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.6);
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .fab-btn:active {
+            transform: scale(0.90);
+        }
+
+        /* Hide FAB on Desktop (screens wider than 768px) */
+        @media (min-width: 769px) {
+            .fab-btn {
+                display: none;
+            }
+        }
         }
 
         .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
@@ -801,7 +832,7 @@
                 </div>
             </div>
         </div>
-
+<button class="fab-btn" onclick="nav('add', 'add')">+</button>
         <div class="bottom-nav">
             <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
             <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
@@ -2869,3 +2900,4 @@
     </script>
 </body>
 </html>
+
