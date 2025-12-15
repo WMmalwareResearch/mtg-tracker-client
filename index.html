@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.8.1</title>
+    <title>The Grimoire | v2.8.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -93,16 +93,17 @@
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
         .new-deck-card::after { display: none; }
         
-        /* V2.8.0 ADVANCED EDITOR UI */
+        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* EDITOR UI */
         .editor-header { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
         .editor-split { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; height: 60vh; }
         .editor-column { display: flex; flex-direction: column; }
         .editor-label { color: var(--subtext); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; }
-        
-        .deck-area-edit { display: block; } /* Override previous grid */
-        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
-        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
-        
+        .deck-area-edit { display: block; } 
+
         /* VISUAL DECK GRID */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
@@ -264,7 +265,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.2</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -521,20 +522,22 @@
             if(cardsCache.length===0) return showToast("Vault is empty. Add cards first.", "info");
             const btn=document.getElementById('btn-appraise'); const status=document.getElementById('appraisal-status');
             btn.disabled=true; btn.innerText="Appraising..."; status.classList.remove('hidden'); status.innerText="Contacting market oracles...";
-            const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number})); const chunkSize=75; const totalChunks=Math.ceil(identifiers.length/chunkSize); let updatedCount=0;
+            const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number})); const chunkSize=75; const totalChunks=Math.ceil(ids.length/chunkSize); let updatedCount=0;
             try {
                 for(let i=0; i<Math.ceil(ids.length/75); i++){
                     status.innerText = `Processing Batch ${i+1}/${Math.ceil(ids.length/75)}...`;
                     const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:ids.slice(i*75,(i+1)*75)})});
                     const d=await res.json();
-                    for(const sc of d.data){
-                        const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
-                        if(local){ const np=parseFloat(sc.prices.usd||0); await sb.from('cards').update({market_price_usd:np}).eq('id',local.id); local.market_price_usd=np; }
+                    if(d.data) {
+                        for(const sc of d.data){
+                            const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
+                            if(local){ const np=parseFloat(sc.prices.usd||0); await sb.from('cards').update({market_price_usd:np, last_price_update: new Date().toISOString()}).eq('id',local.id); local.market_price_usd=np; }
+                        }
                     }
                     await new Promise(r => setTimeout(r, 100));
                 }
                 showToast("Appraisal Complete!","success"); loadData(); filterVault();
-            } catch(e) { showToast("Appraisal failed","error"); } finally { btn.disabled=false; btn.innerText="🔄 Appraise Vault"; status.classList.add('hidden'); }
+            } catch(e) { showToast("Appraisal failed","error"); console.error(e); } finally { btn.disabled=false; btn.innerText="🔄 Appraise Vault"; status.classList.add('hidden'); }
         }
         function loadCollection(){ if(!cardsCache.length) loadData(); filterVault(); }
         function filterVault(){
