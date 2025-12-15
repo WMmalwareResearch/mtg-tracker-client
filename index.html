@@ -871,27 +871,40 @@
         async function processBulkImport() { const text = document.getElementById('bulkList').value; const statusEl = document.getElementById('bulk-status'); if(!text.trim()) return showToast("Please paste a list first.", "error"); const { cards } = parseDeckList(text); if(cards.length === 0) return showToast("No valid cards found.", "error"); statusEl.innerText = `Resolving ${cards.length} relics via Scryfall...`; const identifiers = cards.map(c => ({ name: c.name })); const chunkSize = 75; const totalChunks = Math.ceil(identifiers.length / chunkSize); let finalInserts = []; try { for (let i = 0; i < totalChunks; i++) { const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize); const response = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ identifiers: chunk }) }); const data = await response.json(); data.data.forEach(scryCard => { const originalInput = cards.find(c => c.name.toLowerCase() === scryCard.name.toLowerCase()) || cards.find(c => scryCard.name.toLowerCase().includes(c.name.toLowerCase())); if(originalInput) { const img = getCardImage(scryCard); const price = scryCard.prices.usd || scryCard.prices.usd_foil || 0; finalInserts.push({ user_id: session.user.id, name: scryCard.name, set_code: scryCard.set.toUpperCase(), collector_number: scryCard.collector_number, image_url: img, buy_price: null, quantity: originalInput.qty, market_price_usd: parseFloat(price), last_price_update: new Date().toISOString() }); } }); } if(finalInserts.length > 0) { statusEl.innerText = `Binding ${finalInserts.length} relics to Vault...`; const { error } = await sb.from('cards').insert(finalInserts); if(error) throw error; showToast(`✅ Successfully bound ${finalInserts.length} relics!`, "success"); closeBulkModal(); loadData(); } else { statusEl.innerText = "Could could not identify any relics."; } } catch(e) { statusEl.innerText = "Error: " + e.message; } }
 
         async function logDailyValue(totalVal) {
-            // V4.0.5: Logs the portfolio value once per day.
-            const today = new Date().toISOString().slice(0, 10);
-            
+            // V4.0.5 FIX: Ensuring correct date format and explicit select/insert.
+            const today = new new Date().toISOString().slice(0, 10); // Format YYYY-MM-DD
+            const numericValue = parseFloat(totalVal.toFixed(2));
+
             // 1. Check if a log entry exists for today
-            const { data: existingEntry } = await sb
+            const { data: existingEntry, error: selectError } = await sb
                 .from('price_history')
-                .select('*')
+                .select('id')
                 .eq('user_id', session.user.id)
                 .eq('date', today)
-                .single();
-            
-            // 2. If not found, insert the new value
+                .maybeSingle();
+
+            if (selectError) {
+                console.error("Supabase Select Error:", selectError.message);
+                return;
+            }
+
+            // 2. If NO entry is found, perform the insert
             if (!existingEntry) {
-                const { error } = await sb.from('price_history').insert({
+                const { error: insertError } = await sb.from('price_history').insert({
                     user_id: session.user.id,
                     date: today,
-                    portfolio_value: totalVal
+                    portfolio_value: numericValue
                 });
 
-                if (error) console.error("Error logging daily value:", error);
-                // else showToast("Daily portfolio value logged.", "info"); // Too chatty
+                if (insertError) {
+                    console.error("Supabase Insert Error:", insertError.message);
+                    showToast("Error logging price history: Check console.", "error");
+                } else {
+                    console.log(`Successfully logged daily value: $${numericValue}`);
+                }
+            } else {
+                // Optionally log that the value already exists for today
+                // console.log(`Daily value for ${today} already exists.`); 
             }
         }
 
@@ -2000,3 +2013,4 @@
     </script>
 </body>
 </html>
+
