@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.6.0</title>
+    <title>The Grimoire | v2.7.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -97,7 +97,7 @@
         .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
         .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* VISUAL DECK GRID (V2.6.0) */
+        /* VISUAL DECK GRID & SET COVER (V2.7.0) */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -106,10 +106,14 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
-        /* Set Cover Button */
-        .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--yellow); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 20; font-size: 12px; }
+        
+        /* V2.7.0: Set Cover Button & Active State */
+        .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--subtext); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 20; font-size: 14px; }
         .visual-card:hover .cover-btn { opacity: 1; }
         .cover-btn:hover { background: var(--yellow); color: black; }
+        /* Active Cover Style */
+        .is-cover-card { border: 2px solid var(--yellow); }
+        .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); }
 
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
         #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
@@ -256,7 +260,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.6.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.7.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -402,7 +406,7 @@
     <script>
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-        let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[];
+        let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[], currentDeckCoverUrl='';
         let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
         const CHART_COLORS=['#d946ef','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
 
@@ -540,7 +544,7 @@
         function openEditModal(id, e) { e.stopPropagation(); const card = cardsCache.find(c => c.id == id); if(!card) return; document.getElementById('edit-card-id').value = id; document.getElementById('edit-card-name').innerText = `Edit: ${card.name}`; document.getElementById('edit-qty').value = card.quantity; document.getElementById('edit-cost').value = card.buy_price || ''; document.getElementById('edit-tags').value = (card.tags || []).join(', '); document.getElementById('edit-modal').classList.remove('hidden'); }
         async function saveEdit() { const id = document.getElementById('edit-card-id').value; const qty = document.getElementById('edit-qty').value; const cost = document.getElementById('edit-cost').value; const tagStr = document.getElementById('edit-tags').value; const tags = tagStr.split(',').map(t => t.trim()).filter(t => t.length > 0); if(qty < 0) return showToast("Quantity cannot be negative", "error"); const costVal = cost ? parseFloat(cost) : null; const { error } = await sb.from('cards').update({ quantity: parseInt(qty), buy_price: costVal, tags: tags }).eq('id', id); if(error) { showToast(error.message, "error"); } else { showToast("Relic updated.", "success"); document.getElementById('edit-modal').classList.add('hidden'); const idx = cardsCache.findIndex(c => c.id == id); if(idx !== -1) { cardsCache[idx].quantity = parseInt(qty); cardsCache[idx].buy_price = costVal; cardsCache[idx].tags = tags; } loadData(); filterVault(); loadOracle(); } }
 
-        // --- DECK LOGIC (V2.6.0 UPDATE) ---
+        // --- DECK LOGIC (V2.7.0 UPDATE) ---
         function parseDeckList(t){ const l=t.split('\n');let T=0;const u=new Map();const r=/^(\d+)\s+(.+)/;l.forEach(x=>{const m=x.trim().match(r);if(m){const q=parseInt(m[1]),n=m[2].trim();if(!isNaN(q)){T+=q;const k=n.toLowerCase().replace(/[^a-z0-9]/g,'');u.set(k,{qty:q,name:n})}}});return{totalCount:T,cards:Array.from(u.values())};}
         
         async function loadDecks() { 
@@ -582,10 +586,12 @@
             });
         }
 
-        // V2.6.0 SET COVER FEATURE
+        // V2.7.0 SET COVER FEATURE
         async function setDeckCover(url) {
             if(!currentViewedDeckId) return showToast("Save deck first.", "error");
             await sb.from('decks').update({ cover_url: url }).eq('id', currentViewedDeckId);
+            currentDeckCoverUrl = url;
+            renderDeckVisuals(); // Re-render to show new gold star
             showToast("Cover art updated!", "success");
         }
 
@@ -597,11 +603,16 @@
             if(!name) return showToast("Name required", "error"); 
             const { totalCount, cards } = parseDeckList(list); 
             
-            // GET COVER IMAGE FROM FIRST CARD (ONLY IF NEW DECK)
+            // GET COVER IMAGE (SMART DEFAULT) - Skip Lands
             let coverUrl = '';
             if(!currentViewedDeckId && cards.length > 0) {
+                const basicLands = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes'];
+                let candidate = cards[0];
+                for(let c of cards) {
+                    if(!basicLands.includes(c.name.toLowerCase())) { candidate = c; break; }
+                }
                 try {
-                    const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cards[0].name)}`);
+                    const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(candidate.name)}`);
                     const data = await res.json();
                     coverUrl = getCardImage(data);
                 } catch(e) { console.log("Cover fetch failed"); }
@@ -619,13 +630,13 @@
             if(!error) { showToast(`💾 Ritual '${name}' saved!`, "success"); loadDecks(); } else { showToast(error.message, "error"); } 
         }
 
-        // DECK WORKSPACE HELPERS
         function viewRitualDetails(id) { 
             document.getElementById('deck-library').classList.add('hidden'); document.getElementById('deck-workspace').classList.remove('hidden'); 
             currentViewedDeckId = id; const d = window.myDecks.find(x => x.id == id); if (!d) return showToast("Ritual not found in local cache.", "error"); 
             document.getElementById('deckName').value = d.name; 
             document.getElementById('deckList').value = d.card_list; 
             document.getElementById('deckFormat').value = d.format || 'Casual';
+            currentDeckCoverUrl = d.cover_url; // Store for visual view highlighting
             validateDeck(); 
         }
         function showRitualEditor(keepData = false) { 
