@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.5.0</title>
+    <title>The Grimoire | v3.5.1</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -87,7 +87,7 @@
         .user-meta { display: flex; flex-direction: column; overflow: hidden; }
         .user-name { font-weight: 700; color: white; font-size: 14px; }
         .user-email-txt { font-size: 11px; color: var(--subtext); overflow: hidden; text-overflow: ellipsis; }
-        .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; max-height: 400px; overflow-y: auto; margin-top: 15px; }
+        .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-height: 400px; overflow-y: auto; margin-top: 15px; }
         .avatar-option { width: 100%; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
         .avatar-option:hover { transform: scale(1.05); border-color: var(--primary); }
 
@@ -196,6 +196,29 @@
         .mana-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); align-items: center; }
         .mana-pip { width:20px; height:20px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; text-align: center; line-height: 20px; font-size: 12px; color:black; font-weight:700; }
         .pip-w { background:#f0f2c0; } .pip-u { background:#b3ceea; } .pip-b { background:#a69f9d; } .pip-r { background:#ea9f82; } .pip-g { background:#c4d3ca; }
+
+        /* MODALS FIX V3.5.1 */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(15, 10, 28, 0.95); 
+            z-index: 1000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow-y: auto;
+            padding: 20px;
+            backdrop-filter: blur(10px); 
+        }
+        .modal-content { 
+            width: 90%; 
+            max-width: 800px; 
+            text-align: center; 
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -295,7 +318,7 @@
             <h2 style="color:var(--primary); text-shadow: 0 0 10px var(--primary); margin-bottom: 10px;">🔮 The Prophecy</h2>
             <p style="color:var(--subtext); margin-bottom: 20px;">Divining a starting hand from the ether...</p>
             <div class="prophecy-hand" id="prophecy-hand-container"></div>
-            <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="drawProphecy()" style="width: auto; padding: 12px 30px; background: var(--primary);">🔄 Mulligan</button><button onclick="closeProphecy()" class="secondary" style="width: auto; padding: 12px 30px;">Close Vision</button></div>
+            <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="drawProphecy()" class="secondary" style="width: auto; padding: 12px 30px; background: var(--primary);">🔄 Mulligan</button><button onclick="closeProphecy()" class="secondary" style="width: auto; padding: 12px 30px;">Close Vision</button></div>
         </div>
     </div>
 
@@ -339,7 +362,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.1</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -375,11 +398,11 @@
                     <h3 style="border-top:1px solid var(--border); padding-top:20px;">🎨 Grimoire Theme</h3>
                     <div class="theme-grid">
                         <div class="theme-btn" style="background:#a78bfa;" onclick="applyTheme('purple')" title="Arcane (Default)"></div> 
-                        <div class="theme-btn" style="background:#fcd34d;" onclick="applyTheme('white')" title="White (Order)"></div> 
-                        <div class="theme-btn" style="background:#3b82f6;" onclick="applyTheme('blue')" title="Blue (Mind)"></div> 
-                        <div class="theme-btn" style="background:#18181b; border-color:#52525b;" onclick="applyTheme('black')" title="Black (Death)"></div> 
-                        <div class="theme-btn" style="background:#ef4444;" onclick="applyTheme('red')" title="Red (Chaos)"></div> 
-                        <div class="theme-btn" style="background:#10b981;" onclick="applyTheme('green')" title="Green (Nature)"></div> 
+                        <div class="theme-btn" style="background:#fcd34d;" onclick="applyTheme('white')" title="White"></div> 
+                        <div class="theme-btn" style="background:#60a5fa;" onclick="applyTheme('blue')" title="Blue"></div> 
+                        <div class="theme-btn" style="background:#18181b; border-color:#52525b;" onclick="applyTheme('black')" title="Black"></div> 
+                        <div class="theme-btn" style="background:#f87171;" onclick="applyTheme('red')" title="Red"></div> 
+                        <div class="theme-btn" style="background:#34d399;" onclick="applyTheme('green')" title="Green"></div> 
                     </div>
 
                     <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔐 Security</h3>
@@ -527,7 +550,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
         
-        // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN)
+        // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN!)
         const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // e.g. service_g46y49u
         const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // e.g. template_1w9s54k
         const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // e.g. Uq6H-Qz3d9Nq7T7bF
@@ -581,7 +604,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v3.5.0',
+                app_version: 'v3.5.1',
                 browser_info: navigator.userAgent
             };
 
@@ -607,7 +630,7 @@
         async function updatePassword() { const p = document.getElementById('new-password').value; if(!p) return showToast("Enter a password", "error"); const { error } = await sb.auth.updateUser({ password: p }); if(error) showToast(error.message, "error"); else { showToast("Password updated!", "success"); document.getElementById('new-password').value = ""; } }
         function openAvatarModal() { document.getElementById('avatar-modal').classList.remove('hidden'); const grid = document.getElementById('avatar-grid'); grid.innerHTML = cardsCache.filter(c=>c.image_url).slice(0, 50).map(c => `<img src="${getCardImage(c)}" class="avatar-option" onclick="setAvatar('${getCardImage(c)}')">`).join(''); }
         function setAvatar(url) { document.getElementById('settings-avatar').src = url; document.getElementById('avatar-modal').classList.add('hidden'); }
-        
+
         function applyTheme(theme) {
             const root = document.documentElement.style;
             localStorage.setItem('grimoire_theme', theme);
