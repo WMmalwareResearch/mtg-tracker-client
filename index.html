@@ -627,11 +627,14 @@
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <div style="flex-grow:1;">
+                                <div style="flex-grow:1; display:flex; gap: 20px; align-items: flex-start;">
+                                    <img id="detail-commander-img" style="width: 70px; height: 98px; border-radius: 6px; box-shadow: var(--shadow); display: none;">
+                                <div>
                                     <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
                                     <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
                                     <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div>
                                 </div>
+                            </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
@@ -1707,8 +1710,16 @@
                     } 
                 }
                 
+           // V5.5: Commander Card Image Display - BEGIN CHUNK
+                // Reset Commander Image Display
+                document.getElementById('detail-commander-img').style.display = 'none';
+
                 // 1. Commander Legality Check
                 if (commanderCardData) {
+                    // V5.5: Display Commander Image
+                    document.getElementById('detail-commander-img').src = getCardImage(commanderCardData);
+                    document.getElementById('detail-commander-img').style.display = 'block';
+
                     const legalityStatus = commanderCardData.legalities?.[formatKey];
                     const isLegalCommander = format === 'Commander' ? legalityStatus === 'commander' : true; 
                     
@@ -1721,6 +1732,7 @@
                         });
                     }
                 }
+// V5.5: Commander Card Image Display - END CHUNK
                 
                 // 2. Deck Card Legality and Color Identity Check
                 allMatchedCards.forEach(cardData => {
@@ -2378,4 +2390,5 @@
     </script>
 </body>
 </html>
+
 
