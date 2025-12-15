@@ -496,13 +496,6 @@
                         <div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div>
                     </div></div>
                 </div>
-                
-                <div class="card-box">
-                    <h3>📈 Portfolio Value History (Last 7 Days)</h3>
-                    <div style="position:relative; height: 300px;">
-                        <canvas id="priceHistoryChart"></canvas>
-                    </div>
-                </div>
             </div>
 
             <div id="view-settings" class="hidden">
@@ -713,7 +706,7 @@
 
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false;
         let currentDeckCache=[], currentDeckCoverUrl='';
-        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null, priceChartInstance = null;
+        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
@@ -1247,10 +1240,6 @@
             } else { 
                 document.getElementById('top-assets-list').innerHTML = '<div style="color:var(--subtext); padding:20px; text-align:center;">No valuable cards found.</div>'; 
             } 
-            
-            // V4.0.5: Log daily value and render history chart
-            logDailyValue(totalVal);
-            loadPriceHistory().then(renderPriceHistoryChart);
         }
 
         async function appraiseCollection(){ 
@@ -1994,10 +1983,6 @@
                 colorChartInstance.destroy();
                 colorChartInstance = null;
             }
-            if (priceChartInstance) { // NEW: Clear price chart
-                priceChartInstance.destroy();
-                priceChartInstance = null;
-            }
             document.getElementById('deck-charts').classList.add('hidden');
         }
 
@@ -2393,3 +2378,4 @@
     </script>
 </body>
 </html>
+
