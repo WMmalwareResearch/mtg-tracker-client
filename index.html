@@ -288,28 +288,41 @@
     </div>
 
     <div id="app" class="app-container hidden">
-        <div class="sidebar">
-            <div class="logo"><span>🩸</span> The Grimoire</div>
-            <div class="user-profile-section">
-                <img id="sidebar-avatar" class="avatar-circle" src="https://svgshare.com/i/10gq.svg">
-                <div class="user-meta">
-                    <div id="sidebar-username" class="user-name">Wizard</div>
-                    <div id="user-email" class="user-email-txt">Loading...</div>
-                </div>
-            </div>
-            
-            <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
-            <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
-            <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
-            <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
-            <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
-            <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
-            <div style="flex-grow:1;"></div>
-            <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.4.3</div>
-                <button class="secondary" onclick="handleLogout()">Break Pact</button>
+    <div class="sidebar">
+        <div class="logo"><span>🩸</span> The Grimoire</div>
+        <div class="user-profile-section">
+            <img id="sidebar-avatar" class="avatar-circle" src="https://svgshare.com/i/10gq.svg">
+            <div class="user-meta">
+                <div id="sidebar-username" class="user-name">Wizard</div>
+                <div id="user-email" class="user-email-txt">Loading...</div>
             </div>
         </div>
+        
+        <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
+        <div class="nav-item" onclick="nav('add', 'add')">➕ Add Relic</div>
+        <div class="nav-item" onclick="nav('collection', 'collection')">📚 Vault</div>
+        <div class="nav-item" onclick="nav('oracle', 'oracle')">👁️ The Oracle</div>
+        <div class="nav-item" onclick="nav('decks', 'decks')">📋 Rituals</div>
+        <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
+        
+        <div style="flex-grow:1;"></div>
+        <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
+            <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.4.4</div>
+            <button class="secondary" onclick="handleLogout()">Break Pact</button>
+        </div>
+    </div>
+
+    <div class="main">
+        </div>
+
+    <div class="bottom-nav">
+        <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
+        <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
+        <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Vault</div>
+        <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Rituals</div>
+        <div class="b-item" onclick="nav('settings', 'settings')"><span class="b-icon">⚙️</span>Set</div>
+    </div>
+</div>
 
         <div class="main">
             <div id="view-dashboard">
@@ -1320,3 +1333,4 @@
     </script>
 </body>
 </html>
+
