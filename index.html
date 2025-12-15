@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.5.2</title>
+    <title>The Grimoire | v3.5.3</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -362,7 +362,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.2</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.3</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -466,7 +466,11 @@
                     <div id="editor-mode" class="hidden">
                         <div class="card-box">
                             <div class="editor-header">
-                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin:0; flex-grow:2;">
+                                <input id="deckName" placeholder="Ritual Name (e.g. Eldrazi Aggro)" style="margin:0; flex-grow:2; margin-right: 10px;">
+                                <div class="input-group" style="margin:0; flex-grow:2;">
+                                    <span class="input-icon">👑</span>
+                                    <input type="text" id="deckCommander" placeholder="Commander Name (Optional)" style="padding-left: 40px;">
+                                </div>
                                 <select id="deckFormat" style="margin:0; flex-grow:1; width:auto;">
                                     <option value="Casual">Casual</option><option value="Commander">Commander</option><option value="Modern">Modern</option><option value="Standard">Standard</option><option value="Pauper">Pauper</option><option value="Legacy">Legacy</option>
                                 </select>
@@ -486,7 +490,11 @@
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <div style="flex-grow:1;"><h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3><div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div></div>
+                                <div style="flex-grow:1;">
+                                    <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
+                                    <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
+                                    <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div>
+                                </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
@@ -550,10 +558,10 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
         
-         // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN!)
+        // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN!)
         const EMAILJS_SERVICE_ID = 'service_n9utr47'; // PASTE YOUR SERVICE ID HERE
-        const EMAILJS_TEMPLATE_ID = 'template_xtth5gu'; // e.g. template_1w9s54k
-        const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf'; // e.g. Uq6H-Qz3d9Nq7T7bF
+        const EMAILJS_TEMPLATE_ID = 'template_xtth5gu'; // PASTE YOUR TEMPLATE ID HERE
+        const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf'; // PASTE YOUR PUBLIC KEY HERE
 
         let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[], currentViewedDeckId=null, isResetMode=false, currentDeckCache=[], currentDeckCoverUrl='';
         let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null;
@@ -569,7 +577,7 @@
         }
         function loadPrefs() { 
             if(localStorage.getItem('grimoire_sort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); 
-            if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_price'); 
+            if(localStorage.getItem('grimoire_price')) document.getElementById('priceSource').value = localStorage.getItem('priceSource').value; 
             if(localStorage.getItem('grimoire_theme')) applyTheme(localStorage.getItem('grimoire_theme'));
             toggleVaultView(vaultViewMode); 
         }
@@ -604,7 +612,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v3.5.2',
+                app_version: 'v3.5.3',
                 browser_info: navigator.userAgent
             };
 
@@ -621,7 +629,7 @@
         
         // --- AUTH & PROFILE ---
         function toggleResetMode(){ isResetMode=!isResetMode; const g=document.getElementById('password').parentElement; if(isResetMode){g.classList.add('hidden');document.getElementById('auth-btn').innerText="Send Recovery";document.getElementById('forgot-link').innerText="Back";}else{g.classList.remove('hidden');document.getElementById('auth-btn').innerText="Summon Session";document.getElementById('forgot-link').innerText="Forgot Password?";}}
-        async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){if(error.message.includes("Invalid login credentials")){showToast("Invalid credentials. Attempting creation...","info");const sup=await sb.auth.signUp({email:e,password:p});if(sup.error){showToast(sup.error.message,"error");}else{if(sup.data.session)finalizeLogin(sup.data.session);else showToast("Account created! Check email.","success");}}else{showToast(error.message,"error");}}else{finalizeLogin(data.session);}}}
+        async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){if(error.message.includes("Invalid login credentials")){showToast("Invalid credentials. Attempting creation...","info");const sup=await sb.auth.signUp({email:e,password:p});if(sup.error){showToast(sup.error.message,"error");}else{if(sup.data.session)finalizeLogin(sup.data.session);else showToast("Account created! Check email.","success");}}else{showToast(error.message,"error");}}else{finalizeLogin(data.data.session);}}}
         function finalizeLogin(s){session=s;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('user-email').innerText=s.user.email;loadData(); loadPrefs(); loadProfile(); }
         async function handleLogout(){await sb.auth.signOut();window.location.reload()}
         
@@ -781,6 +789,7 @@
 
         async function saveDeck() {
             const name = document.getElementById('deckName').value;
+            const commander = document.getElementById('deckCommander').value; // NEW: Commander
             const main = document.getElementById('deckMain').value;
             const side = document.getElementById('deckSide').value;
             let fullList = main;
@@ -792,7 +801,26 @@
                 cards
             } = parseDeckList(fullList);
             let coverUrl = '';
-            if (!currentViewedDeckId && cards.length > 0) {
+            
+            // Determine Cover URL: Commander takes precedence if set
+            if (commander.trim().length > 0) {
+                try {
+                    const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(commander)}`);
+                    const data = await res.json();
+                    coverUrl = getCardImage(data);
+                } catch (e) {
+                    // Fallback to searching first card in mainboard if commander not found
+                    if (cards.length > 0) {
+                        try {
+                            const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(cards[0].name)}`);
+                            const data = await res.json();
+                            coverUrl = getCardImage(data);
+                        } catch (e2) {
+                            console.log("Cover fetch failed for both commander and main card.");
+                        }
+                    }
+                }
+            } else if (cards.length > 0) { // If no commander, use first card in list
                 const basicLands = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes'];
                 let candidate = cards[0];
                 for (let c of cards) {
@@ -806,29 +834,28 @@
                     const data = await res.json();
                     coverUrl = getCardImage(data);
                 } catch (e) {
-                    console.log("Cover fetch failed");
+                    console.log("Cover fetch failed.");
                 }
             }
+            
             let error;
+            const deckData = {
+                name,
+                commander, // NEW: Commander
+                card_list: fullList,
+                card_count: totalCount,
+                format,
+                cover_url: coverUrl
+            };
+
             if (currentViewedDeckId) {
-                const res = await sb.from('decks').update({
-                    name,
-                    card_list: fullList,
-                    card_count: totalCount,
-                    format
-                }).eq('id', currentViewedDeckId);
+                const res = await sb.from('decks').update(deckData).eq('id', currentViewedDeckId);
                 error = res.error;
             } else {
-                const res = await sb.from('decks').insert({
-                    user_id: session.user.id,
-                    name,
-                    card_list: fullList,
-                    card_count: totalCount,
-                    format,
-                    cover_url: coverUrl
-                });
+                const res = await sb.from('decks').insert({ user_id: session.user.id, ...deckData });
                 error = res.error;
             }
+
             if (!error) {
                 showToast(`💾 Ritual '${name}' saved!`, "success");
                 loadDecks();
@@ -843,7 +870,12 @@
             currentViewedDeckId = id;
             const d = window.myDecks.find(x => x.id == id);
             if (!d) return showToast("Ritual not found in local cache.", "error");
+            
+            // Load data into editor fields
             document.getElementById('deckName').value = d.name;
+            document.getElementById('deckCommander').value = d.commander || ''; // NEW: Commander
+            document.getElementById('detail-commander').innerText = d.commander ? `👑 Commander: ${d.commander}` : ''; // NEW: Commander display
+            
             const parts = (d.card_list || '').split('// Sideboard');
             document.getElementById('deckMain').value = parts[0].trim();
             document.getElementById('deckSide').value = parts[1] ? parts[1].trim() : '';
@@ -861,6 +893,7 @@
             currentViewedDeckId = null;
             if (!keepData) {
                 document.getElementById('deckName').value = '';
+                document.getElementById('deckCommander').value = ''; // NEW: Commander
                 document.getElementById('deckMain').value = '';
                 document.getElementById('deckSide').value = '';
             }
@@ -920,18 +953,19 @@
         async function validateDeck() {
             const main = document.getElementById('deckMain').value;
             const side = document.getElementById('deckSide').value;
-            const format = document.getElementById('deckFormat').value; // Get the selected format
+            const commander = document.getElementById('deckCommander').value; // NEW: Get Commander
+            const format = document.getElementById('deckFormat').value; 
             const listText = main + '\n' + side;
             const resultsEl = document.getElementById('detail-analysis-results');
             const btn = document.getElementById('validateDeckBtn');
-            if (!listText.trim()) return showToast("Ritual list is empty.", "error");
+            if (!listText.trim() && !commander.trim()) return showToast("Ritual list is empty.", "error");
 
-            // UI preparation
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
             document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Ritual";
+            document.getElementById('detail-commander').innerText = commander.trim() ? `👑 Commander: ${commander}` : ''; // NEW: Commander display update
             document.getElementById('detail-decklist-viewer').classList.remove('hidden');
             document.getElementById('detail-visual-grid').classList.add('hidden');
             analyzeOwnership(listText);
@@ -946,7 +980,14 @@
                 cards: parsedCards
             } = parseDeckList(listText);
 
-            if (parsedCards.length === 0) {
+            // Combine Commander (as 1 card) with the parsed list for resolution
+            const cardsToResolve = [...parsedCards];
+            if (commander.trim()) {
+                // We add the commander to the list to resolve its data (legality, price, pips)
+                cardsToResolve.push({ qty: 1, name: commander }); 
+            }
+
+            if (cardsToResolve.length === 0) {
                 if (btn) {
                     btn.innerText = "✅ Validate & Resolve Ritual";
                     btn.disabled = false;
@@ -955,14 +996,15 @@
                 return showToast("No valid ritual lines found.", "error");
             }
 
-            const identifiers = parsedCards.map(c => ({
+            const identifiers = cardsToResolve.map(c => ({
                 name: c.name
             }));
             const chunkSize = 75;
             const totalChunks = Math.ceil(identifiers.length / chunkSize);
             let allMatchedCards = [];
             let allUnmatched = [];
-            let legalityErrors = []; // New array for legality errors
+            let legalityErrors = []; 
+            let commanderCardData = null; // NEW: Store Commander data
 
             try {
                 for (let i = 0; i < totalChunks; i++) {
@@ -982,11 +1024,38 @@
                     if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
                 }
 
-                // --- NEW LEGALITY CHECK LOGIC (V3.5.2) ---
+                // --- LEGALITY CHECK LOGIC ---
                 const formatKey = format.toLowerCase().replace(/[^a-z]/g, '');
 
+                // Find Commander Data
+                if (commander.trim()) {
+                    commanderCardData = allMatchedCards.find(c => c.name.toLowerCase() === commander.toLowerCase());
+                    if (commanderCardData) {
+                        // Remove commander from the general list if it was a main deck card for separate handling
+                        allMatchedCards = allMatchedCards.filter(c => c.name.toLowerCase() !== commander.toLowerCase());
+                    } else {
+                        // Commander name was matched but not resolved (unlikely if in allMatchedCards)
+                    }
+                }
+                
+                // Check commander legality
+                if (commanderCardData) {
+                    const legalityStatus = commanderCardData.legalities?.[formatKey];
+                    const isLegalCommander = format === 'Commander' ? legalityStatus === 'commander' : true; // Commander must be designated 'commander' in EDH
+                    
+                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal' || !isLegalCommander) {
+                         // Only mark as error if it's the Commander format and the card is illegal/banned/not a commander.
+                        legalityErrors.push({
+                            name: commanderCardData.name + " (Commander)",
+                            status: legalityStatus || 'Not Legal',
+                            format: format,
+                            qty: 1
+                        });
+                    }
+                }
+                
+                // Check deck card legality
                 allMatchedCards.forEach(cardData => {
-                    // Check if the format legality exists and is "not_legal" or "banned"
                     const legalityStatus = cardData.legalities?.[formatKey];
 
                     if (legalityStatus === 'banned' || legalityStatus === 'not_legal') {
@@ -1000,16 +1069,22 @@
                     }
                 });
 
-                // --- STATS GENERATION (EXISTING LOGIC) ---
+
+                // --- STATS GENERATION ---
                 const typeAgg = {};
                 const cmcAgg = {};
                 let totalDeckPrice = 0;
                 window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
                 currentDeckCache = [];
+                
+                // Process matched cards (including Commander data if available)
+                const cardsForStats = commanderCardData ? [commanderCardData, ...allMatchedCards] : allMatchedCards;
 
-                allMatchedCards.forEach(cardData => {
-                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
-                    const quantity = deckCard ? deckCard.qty : 1;
+                cardsForStats.forEach(cardData => {
+                    const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase()) || (cardData.name.toLowerCase() === commander.toLowerCase() ? {qty: 1, name: cardData.name} : null);
+                    if (!deckCard) return; 
+
+                    const quantity = deckCard.qty;
                     currentDeckCache.push({ ...cardData, quantity: quantity });
                     const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
                     typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
@@ -1033,13 +1108,13 @@
                 document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
 
                 // --- RENDER RESULTS (UPDATED) ---
-                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`;
+                let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount + (commander.trim() ? 1 : 0)}</p>`;
                 output += `<p>Format Selected: <strong>${format}</strong></p>`;
 
                 if (legalityErrors.length > 0) {
                     output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${legalityErrors.length} Relics Illegal in ${format}:</p><ul>`;
                     legalityErrors.forEach(e => {
-                        const status = e.status === 'banned' ? 'BANNED' : 'Not Legal';
+                        const status = e.status === 'banned' ? 'BANNED' : (e.status === 'not_legal' ? 'Not Legal' : 'Illegal Slot');
                         output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (<strong style="color:var(--red);">${status}</strong>)</li>`;
                     });
                     output += `</ul>`;
@@ -1077,430 +1152,27 @@
                 }
             }
         }
-
-        function toggleDeckView() {
-            const textView = document.getElementById('detail-decklist-viewer');
-            const visualView = document.getElementById('detail-visual-grid');
-            if (textView.classList.contains('hidden')) {
-                textView.classList.remove('hidden');
-                visualView.classList.add('hidden');
-            } else {
-                if (currentDeckCache.length === 0) return showToast("Resolve deck first to see visuals.", "error");
-                renderDeckVisuals();
-                textView.classList.add('hidden');
-                visualView.classList.remove('hidden');
-            }
+        
+        function viewRitualDetails(id) {
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            currentViewedDeckId = id;
+            const d = window.myDecks.find(x => x.id == id);
+            if (!d) return showToast("Ritual not found in local cache.", "error");
+            
+            // Load data into editor fields
+            document.getElementById('deckName').value = d.name;
+            document.getElementById('deckCommander').value = d.commander || ''; 
+            document.getElementById('detail-commander').innerText = d.commander ? `👑 Commander: ${d.commander}` : ''; 
+            
+            const parts = (d.card_list || '').split('// Sideboard');
+            document.getElementById('deckMain').value = parts[0].trim();
+            document.getElementById('deckSide').value = parts[1] ? parts[1].trim() : '';
+            document.getElementById('deckFormat').value = d.format || 'Casual';
+            currentDeckCoverUrl = d.cover_url;
+            validateDeck();
         }
 
-        function renderDeckVisuals() {
-            const container = document.getElementById('detail-visual-grid');
-            container.innerHTML = '';
-            const groups = {};
-            currentDeckCache.forEach(card => {
-                const type = card.type_line.split('—')[0].trim();
-                if (!groups[type]) groups[type] = [];
-                groups[type].push(card);
-            });
-            const typeOrder = ["Creature", "Planeswalker", "Instant", "Sorcery", "Artifact", "Enchantment", "Land"];
-            typeOrder.forEach(type => {
-                if (groups[type]) {
-                    renderSection(container, type, groups[type]);
-                    delete groups[type];
-                }
-            });
-            for (const type in groups) {
-                renderSection(container, type, groups[type]);
-            }
-        }
-
-        function renderSection(container, title, cards) {
-            const section = document.createElement('div');
-            section.className = 'visual-section';
-            const count = cards.reduce((a, c) => a + c.quantity, 0);
-            section.innerHTML = `<div class="visual-header">${title} (${count})</div>`;
-            const grid = document.createElement('div');
-            grid.className = 'visual-card-grid';
-            cards.forEach(card => {
-                const imgUrl = getCardImage(card);
-                const price = card.prices.usd || card.prices.usd_foil || 'N/A';
-                const isCover = (currentDeckCoverUrl === imgUrl);
-                const activeClass = isCover ? 'is-cover-card' : '';
-                const starColor = isCover ? 'var(--yellow)' : 'var(--subtext)';
-                const item = document.createElement('div');
-                item.className = `visual-card ${activeClass}`;
-                item.innerHTML = ` <button class="cover-btn" style="color:${starColor}" onclick="setDeckCover('${imgUrl}'); event.stopPropagation();">★</button> <img src="${imgUrl}" loading="lazy" onclick="openCodex('${card.set}', '${card.collector_number}')"> <div class="visual-badge">${card.quantity}x</div> `;
-                item.title = `${card.name} ($${price})`;
-                grid.appendChild(item);
-            });
-            section.appendChild(grid);
-            container.appendChild(section);
-        }
-
-        function copyMissing() {
-            const missingLines = [];
-            document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => {
-                const needed = parseInt(el.getAttribute('data-qty-needed'));
-                const owned = parseInt(el.getAttribute('data-qty-owned'));
-                const name = el.getAttribute('data-name');
-                const toBuy = needed - owned;
-                if (toBuy > 0) missingLines.push(`${toBuy} ${name}`);
-            });
-            if (missingLines.length === 0) return showToast("You own all these relics!", "success");
-            navigator.clipboard.writeText(missingLines.join('\n')).then(() => {
-                showToast("📋 Missing relics copied to clipboard!", "success");
-            }).catch(() => showToast("Failed to copy.", "error"));
-        }
-
-        function buyDeck() {
-            const buyLines = [];
-            document.querySelectorAll('.deck-line.is-missing, .deck-line.is-partial').forEach(el => {
-                const needed = parseInt(el.getAttribute('data-qty-needed'));
-                const owned = parseInt(el.getAttribute('data-qty-owned'));
-                const name = el.getAttribute('data-name');
-                const toBuy = needed - owned;
-                if (toBuy > 0) buyLines.push(`${toBuy} ${name}`);
-            });
-            if (buyLines.length === 0) return showToast("You own all these relics! Nothing to buy.", "success");
-            const queryParam = buyLines.map(line => line.replace(' ', ' ')).join('||');
-            const url = `https://www.tcgplayer.com/massentry?c=${encodeURIComponent(queryParam)}&utm_source=TheGrimoire&utm_medium=decklist&utm_campaign=affiliate`;
-            window.open(url, '_blank');
-        }
-
-        function clearCharts() {
-            if (typeChartInstance) {
-                typeChartInstance.destroy();
-                typeChartInstance = null;
-            }
-            if (manaCurveInstance) {
-                manaCurveInstance.destroy();
-                manaCurveInstance = null;
-            }
-            if (colorChartInstance) {
-                colorChartInstance.destroy();
-                colorChartInstance = null;
-            }
-            document.getElementById('deck-charts').classList.add('hidden');
-        }
-
-        function renderTypeChart(typeData) {
-            if (typeChartInstance) typeChartInstance.destroy();
-            const ctx = document.getElementById('typeChart').getContext('2d');
-            typeChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(typeData),
-                    datasets: [{
-                        data: Object.values(typeData),
-                        backgroundColor: CHART_COLORS,
-                        borderColor: 'rgba(0, 0, 0, 0.4)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: '#a1a1aa'
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Card Type Breakdown',
-                            color: 'white'
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderManaCurve(cmcData) {
-            if (manaCurveInstance) manaCurveInstance.destroy();
-            const ctx = document.getElementById('manaCurve').getContext('2d');
-            const maxCmc = Math.max(...Object.keys(cmcData).map(Number));
-            const labels = [];
-            const data = [];
-            for (let i = 0; i <= Math.min(maxCmc, 6); i++) {
-                labels.push(i.toString());
-                data.push(cmcData[i] || 0);
-            }
-            let cmcSevenPlus = 0;
-            for (let i = 7; i <= maxCmc; i++) {
-                cmcSevenPlus += (cmcData[i] || 0);
-            }
-            if (maxCmc >= 7 || maxCmc === 0) {
-                labels.push('7+');
-                data.push(cmcSevenPlus);
-            }
-            manaCurveInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Card Count',
-                        data: data,
-                        backgroundColor: '#a78bfa',
-                        borderColor: 'rgba(167, 139, 250, 0.2)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: 'Mana Value (CMC) Curve',
-                            color: 'white'
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: '#a1a1aa'
-                            },
-                            grid: {
-                                color: 'rgba(255,255,255,0.05)'
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                color: '#a1a1aa',
-                                stepSize: 1
-                            },
-                            grid: {
-                                color: 'rgba(255,255,255,0.05)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        function renderColorChart(colors) {
-            if (colorChartInstance) colorChartInstance.destroy();
-            const ctx = document.getElementById('colorChart').getContext('2d');
-            const colorLabels = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-            const colorData = [colors['W'] || 0, colors['U'] || 0, colors['B'] || 0, colors['R'] || 0, colors['G'] || 0, colors['C'] || 0];
-            const bgColors = ['#f0f2c0', '#b3ceea', '#a69f9d', '#ea9f82', '#c4d3ca', '#d8d8d8'];
-            colorChartInstance = new Chart(ctx, {
-                type: 'polarArea',
-                data: {
-                    labels: colorLabels,
-                    datasets: [{
-                        data: colorData,
-                        backgroundColor: bgColors,
-                        borderColor: 'rgba(0,0,0,0.5)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                color: '#a1a1aa'
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Mana Symbol Breakdown',
-                            color: 'white'
-                        }
-                    },
-                    scales: {
-                        r: {
-                            ticks: {
-                                display: false
-                            },
-                            grid: {
-                                color: 'rgba(255,255,255,0.1)'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // --- BATTLEFIELD (V3.0.0) ---
-        function initBattlefield() {
-            if (!currentDeckCache.length) return showToast("Resolve deck first!", "error");
-            document.getElementById('view-decks').classList.add('hidden');
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.add('hidden');
-            gameState = {
-                lib: [],
-                hand: [],
-                field: [],
-                grave: [],
-                exile: [],
-                life: 20,
-                turn: 1
-            };
-            currentDeckCache.forEach(c => {
-                for (let i = 0; i < c.quantity; i++) gameState.lib.push({
-                    uid: Math.random().toString(36),
-                    ...c,
-                    tapped: false
-                });
-            });
-            for (let i = gameState.lib.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [gameState.lib[i], gameState.lib[j]] = [gameState.lib[j], gameState.lib[i]];
-            }
-            for (let i = 0; i < 7; i++) gameState.hand.push(gameState.lib.pop());
-            renderBF();
-            showToast("Hotkeys: D=Draw, U=Untap, L=Life");
-        }
-
-        function createToken() {
-            const name = prompt("Token Name (e.g. Soldier):", "Token");
-            if (name) {
-                gameState.field.push({
-                    uid: Math.random().toString(36),
-                    name: name,
-                    type_line: 'Token',
-                    tapped: false,
-                    isToken: true
-                });
-                renderBF();
-            }
-        }
-
-        function renderBF() {
-            document.getElementById('bf-life').innerText = gameState.life;
-            document.getElementById('bf-turn').innerText = gameState.turn;
-            document.getElementById('bf-lib-count').innerText = gameState.lib.length;
-            document.getElementById('bf-grave-count').innerText = gameState.grave.length;
-            document.getElementById('bf-exile-count').innerText = gameState.exile.length;
-            document.getElementById('bf-hand').innerHTML = gameState.hand.map(c => `<div class="bf-card" onclick="playCard('${c.uid}')"><img src="${getCardImage(c)}"></div>`).join('');
-            const cardHTML = (c) => {
-                const img = c.isToken ? `<div class="token-card" style="width:100%; height:100%; border-radius:8px;">${c.name}</div>` : `<img src="${getCardImage(c)}">`;
-                const counters = c.counters ? `<div class="counter-badge" onclick="event.stopPropagation(); addCounter('${c.uid}', 1)" oncontextmenu="event.preventDefault(); event.stopPropagation(); addCounter('${c.uid}', -1)">${c.counters}</div>` : `<div class="counter-badge" onclick="event.stopPropagation(); addCounter('${c.uid}', 1)" style="opacity:0.3; background:black;">+</div>`;
-                return `<div class="bf-card ${c.tapped?'bf-tapped':''}" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}',event)"><div class="tap-icon">⤵</div>${counters}${img}</div>`;
-            };
-            const front = gameState.field.filter(c => !c.type_line.includes('Land') || c.isToken);
-            const back = gameState.field.filter(c => c.type_line.includes('Land') && !c.isToken);
-            document.getElementById('bf-frontline').innerHTML = '<div class="bf-row-label">Combat / Spells</div>' + front.map(cardHTML).join('');
-            document.getElementById('bf-backline').innerHTML = '<div class="bf-row-label">Lands / Mana</div>' + back.map(cardHTML).join('');
-        }
-
-        function drawCard() {
-            if (gameState.lib.length) gameState.hand.push(gameState.lib.pop());
-            renderBF();
-        }
-
-        function playCard(uid) {
-            const i = gameState.hand.findIndex(c => c.uid === uid);
-            if (i > -1) gameState.field.push(gameState.hand.splice(i, 1)[0]);
-            renderBF();
-        }
-
-        function tapCard(uid) {
-            const c = gameState.field.find(c => c.uid === uid);
-            if (c) c.tapped = !c.tapped;
-            renderBF();
-        }
-
-        function addCounter(uid, n) {
-            const c = gameState.field.find(c => c.uid === uid);
-            if (c) {
-                c.counters = (c.counters || 0) + n;
-                if (c.counters <= 0) delete c.counters;
-                renderBF();
-            }
-        }
-
-        function killCard(uid, e) {
-            e.preventDefault();
-            const i = gameState.field.findIndex(c => c.uid === uid);
-            if (i > -1) {
-                const c = gameState.field.splice(i, 1)[0];
-                c.tapped = false;
-                c.counters = 0;
-                gameState.grave.push(c);
-            }
-            renderBF();
-        }
-
-        function nextTurn() {
-            gameState.turn++;
-            gameState.field.forEach(c => c.tapped = false);
-            drawCard();
-            showToast("Untap, Upkeep, Draw.");
-        }
-
-        function updateLife(n) {
-            gameState.life += n;
-            renderBF();
-        }
-
-        function exitBattlefield() {
-            document.getElementById('view-battlefield').classList.add('hidden');
-            document.getElementById('view-decks').classList.remove('hidden');
-            document.querySelector('.sidebar').classList.remove('hidden');
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (document.getElementById('view-battlefield').classList.contains('hidden')) return;
-            if (e.key === 'd' || e.key === 'D') drawCard();
-            if (e.key === 'u' || e.key === 'U') {
-                gameState.field.forEach(c => c.tapped = false);
-                renderBF();
-                showToast("All Untapped");
-            }
-            if (e.key === 'l') updateLife(1);
-            if (e.key === 'L') updateLife(-1);
-        });
-
-        // V3.3.0 GEOMANCER (MANA CALCULATOR)
-        function openLandCalculator() {
-            if(!window.currentDeckStats) return showToast("Resolve deck first.", "error");
-            document.getElementById('land-modal').classList.remove('hidden');
-            recalcLands();
-        }
-        function recalcLands() {
-            const target = parseInt(document.getElementById('target-land-count').value) || 24;
-            const stats = window.currentDeckStats;
-            const totalPips = stats.W + stats.U + stats.B + stats.R + stats.G;
-            if(totalPips === 0) { document.getElementById('land-results').innerHTML = "<p style='color:var(--subtext)'>No colored symbols found in Mainboard.</p>"; return; }
-            suggestedLands = [];
-            const lands = [
-                { type: 'Plains', pips: stats.W, color: 'pip-w' },
-                { type: 'Island', pips: stats.U, color: 'pip-u' },
-                { type: 'Swamp', pips: stats.B, color: 'pip-b' },
-                { type: 'Mountain', pips: stats.R, color: 'pip-r' },
-                { type: 'Forest', pips: stats.G, color: 'pip-g' }
-            ];
-            let html = '';
-            lands.forEach(l => {
-                if(l.pips > 0) {
-                    const count = Math.round((l.pips / totalPips) * target);
-                    if(count > 0) {
-                        suggestedLands.push({ name: l.type, qty: count });
-                        html += `<div class="mana-row"> <div><span class="mana-pip ${l.color}"></span> ${l.type}</div> <div style="font-weight:700;">${count}</div> </div>`;
-                    }
-                }
-            });
-            document.getElementById('land-results').innerHTML = html;
-        }
-        function applyLands() {
-            if(suggestedLands.length === 0) return;
-            const mainInput = document.getElementById('deckMain');
-            let currentText = mainInput.value.trim();
-            if(currentText.length > 0) currentText += '\n';
-            suggestedLands.forEach(l => { currentText += `${l.qty} ${l.name}\n`; });
-            mainInput.value = currentText;
-            document.getElementById('land-modal').classList.add('hidden');
-            showToast("Lands added to deck list. Click Validate to resolve.", "success");
-        }
 
         sb.auth.getSession().then(({
             data: {
