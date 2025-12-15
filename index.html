@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.0.0</title>
+    <title>The Grimoire | v3.0.1</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -140,7 +140,7 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
-        /* BATTLEFIELD 2.0 (V3.0.0) */
+        /* BATTLEFIELD 2.0 */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
@@ -158,7 +158,6 @@
         .tap-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 40px; color: white; text-shadow: 0 0 10px black; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .bf-tapped .tap-icon { opacity: 1; }
         
-        /* NEW: COUNTERS & TOKENS (V3.0.0) */
         .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #0f0a1c; z-index: 20; box-shadow: 0 2px 5px black; }
         .token-card { background: #1e1e1e; border: 2px dashed var(--subtext); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; text-align: center; font-size: 12px; }
 
@@ -287,7 +286,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.0.0</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.0.1</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -467,6 +466,7 @@
         }
 
         function getCardImage(c) {
+            if(!c) return '';
             if(c.image_url) return c.image_url;
             if(c.image_uris && c.image_uris.normal) return c.image_uris.normal;
             if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) return c.card_faces[0].image_uris.normal;
@@ -662,16 +662,15 @@
         async function setDeckCover(url) { if(!currentViewedDeckId) return showToast("Save deck first.", "error"); await sb.from('decks').update({ cover_url: url }).eq('id', currentViewedDeckId); currentDeckCoverUrl = url; renderDeckVisuals(); showToast("Cover art updated!", "success"); }
         function exportDeck() { const main = document.getElementById('deckMain').value; const side = document.getElementById('deckSide').value; let exportText = main; if (side.trim().length > 0) { exportText += '\n\n// Sideboard\n' + side; } navigator.clipboard.writeText(exportText).then(() => { showToast("📋 Deck exported to clipboard!", "success"); }); }
         
-        // V3.0.0 PROXY PRINTER
+        // V3.0.1 PATCH: FIXED PROXY PRINTER
         function printProxies() {
             if(!currentDeckCache || currentDeckCache.length === 0) return showToast("No cards to print!", "error");
-            
-            // Generate Print Window
             const printWindow = window.open('', '_blank');
             let html = `<html><head><title>Grimoire Proxy Sheet</title><style>
                 body { margin: 0; padding: 10px; font-family: sans-serif; background: white; }
                 .print-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 7.44in; margin: 0 auto; }
-                .card-img { width: 2.48in; height: 3.46in; border-radius: 9px; }
+                .card-wrapper { width: 2.48in; height: 3.46in; border-radius: 9px; overflow: hidden; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #333; text-align: center; }
+                .card-img { width: 100%; height: 100%; object-fit: cover; }
                 @media print { body { -webkit-print-color-adjust: exact; } .no-print { display: none; } }
             </style></head><body>
             <div class="no-print" style="text-align:center; padding:20px; background:#eee; margin-bottom:20px;">
@@ -679,14 +678,17 @@
                 <p>Press Ctrl+P (Cmd+P) to print. Ensure scale is 100%.</p>
             </div>
             <div class="print-grid">`;
-            
-            // Loop through deck and multiply by quantity
             currentDeckCache.forEach(c => {
                 for(let i=0; i<c.quantity; i++) {
-                    html += `<img class="card-img" src="${getCardImage(c)}" crossorigin="anonymous">`;
+                    const imgUrl = getCardImage(c);
+                    // No crossorigin, added loading=eager, added fallback alt text
+                    if(imgUrl) {
+                        html += `<div class="card-wrapper"><img class="card-img" src="${imgUrl}" loading="eager" alt="${c.name}" onerror="this.style.display='none'; this.parentElement.innerText='${c.name}'"></div>`;
+                    } else {
+                        html += `<div class="card-wrapper">${c.name}</div>`;
+                    }
                 }
             });
-            
             html += `</div></body></html>`;
             printWindow.document.write(html);
             printWindow.document.close();
