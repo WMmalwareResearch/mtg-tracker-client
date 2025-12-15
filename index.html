@@ -826,6 +826,21 @@
                 market_price: price 
             }; 
 
+            // V4.0.3: RESTORATION - Collection Management requires NO deck limits.
+            const qtyInput = document.getElementById('qty');
+            const costGroup = document.querySelector('.input-group.quantity-group:nth-child(2)');
+            const tagsGroup = document.querySelector('.input-group.quantity-group:nth-child(3)');
+            
+            // 1. Ensure all inputs are visible (Default Collection Management UX)
+            costGroup.classList.remove('hidden');
+            tagsGroup.classList.remove('hidden');
+
+            // 2. Remove all limits/locks on Quantity input
+            qtyInput.value = 1;
+            qtyInput.max = 999; // Set a high arbitrary max, effectively unlimited
+            qtyInput.readOnly = false;
+        }
+
             // V4.0.2: DYNAMIC FORM LOGIC
             const qtyInput = document.getElementById('qty');
             const costGroup = document.querySelector('.input-group.quantity-group:nth-child(2)');
@@ -1864,3 +1879,4 @@
     </script>
 </body>
 </html>
+
