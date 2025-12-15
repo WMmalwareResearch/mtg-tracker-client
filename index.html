@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v5.6 (Deck UI Cleanup & Final Baseline)</title>
+    <title>The Grimoire | v6.1 (Settings & Tags)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -31,7 +31,7 @@
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* V4.0.14: LOGIN SCREEN AESTHETIC */
+        /* LOGIN SCREEN AESTHETIC */
         #auth-screen { 
             display: flex;
             align-items: center;
@@ -52,9 +52,8 @@
             text-align: center;
             border: 1px solid var(--border);
         }
-        /* End Login Aesthetic */
         
-        /* V4.0.17: Toast Style */
+        /* Toast Style */
         .toast {
             background: var(--card-bg);
             border: 1px solid var(--primary);
@@ -75,15 +74,14 @@
         }
         .toast.error { border-color: var(--red); color: var(--red); }
         .toast.success { border-color: var(--green); color: var(--green); }
-        /* End Toast Style */
 
 
-        /* --- LAYOUT & NAV FIX V3.4.4 --- */
+        /* --- LAYOUT & NAV --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
         .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
-        .bottom-nav { display: none; } /* Default: Hidden on Desktop */
+        .bottom-nav { display: none; } 
 
-        /* V4.0.16: Mobile Overrides */
+        /* Mobile Overrides */
         @media (max-width: 768px) { 
             .app-container { 
                 grid-template-columns: 1fr; 
@@ -106,16 +104,14 @@
                 backdrop-filter: blur(10px); 
             }
             .main {
-                padding: 20px 15px; /* Reduced padding on mobile */
+                padding: 20px 15px; 
             }
-            /* Stack Dashboard Grids */
             .stat-grid {
-                grid-template-columns: repeat(2, 1fr); /* 2 columns for stats */
+                grid-template-columns: repeat(2, 1fr); 
             }
             .dashboard-split {
-                grid-template-columns: 1fr; /* Single column stack */
+                grid-template-columns: 1fr; 
             }
-            /* Expand Add Card and Settings modals */
             #view-add .card-box, #view-settings .card-box {
                 max-width: 100%;
                 margin: 0;
@@ -133,7 +129,6 @@
         .b-item.active { color: var(--primary); }
 
         /* --- COMPONENTS --- */
-        /* --- V3.5.5 SKELETON STYLES --- */
         .skeleton {
             background-color: var(--card-bg);
             background-image: linear-gradient(90deg, 
@@ -145,14 +140,10 @@
             animation: shimmer 1.5s infinite linear;
             border-radius: 4px;
         }
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-text { height: 1em; width: 100%; margin-bottom: 0.5em; }
         .skeleton-text-small { height: 0.7em; width: 60%; margin: 0 auto 0.5em; }
         .skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; }
-        /* --- END SKELETON STYLES --- */
 
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
         h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
@@ -472,7 +463,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v5.6</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v6.1</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -496,8 +487,7 @@
                         <div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div>
                     </div></div>
                 </div>
-                
-                </div>
+            </div>
 
             <div id="view-settings" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
@@ -522,16 +512,24 @@
                     </div>
 
                     <h3 style="border-top:1px solid var(--border); padding-top:20px;">💵 Default Price Source</h3>
-<div class="input-group" style="padding-left: 0; margin-bottom: 30px;">
-    <span class="input-icon">💰</span>
-    <select id="settingsPriceSource" style="padding-left: 40px; margin-bottom: 0;">
-        <option value="usd">USD (TCGplayer Market)</option>
-        <option value="usd_foil">USD Foil (TCGplayer Market)</option>
-        <option value="eur">EUR (Cardmarket)</option>
-        <option value="tix">TIX (MTGO)</option>
-    </select>
-</div>
-<button onclick="savePrefs()" style="margin-bottom:30px; background:var(--green);">💾 Save Preferences</button>
+                    <div class="input-group" style="padding-left: 0; margin-bottom: 30px;">
+                        <span class="input-icon">💰</span>
+                        <select id="settingsPriceSource" style="padding-left: 40px; margin-bottom: 0;">
+                            <option value="usd">USD (TCGplayer Market)</option>
+                            <option value="usd_foil">USD Foil (TCGplayer Market)</option>
+                            <option value="eur">EUR (Cardmarket)</option>
+                            <option value="tix">TIX (MTGO)</option>
+                        </select>
+                    </div>
+                    <button onclick="savePrefs()" style="margin-bottom:30px; background:var(--green);">💾 Save Preferences</button>
+
+                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🏷️ Collection Tags</h3>
+                    <p style="color:var(--subtext); font-size:12px; margin-bottom:10px;">Define tags for quick access.</p>
+                    <div class="input-group">
+                        <input type="text" id="new-tag-input" placeholder="New Tag Name (e.g. Foil)...">
+                        <button class="secondary" onclick="addCustomTag()" style="width:auto; margin-left:10px; padding: 10px 20px;">Add</button>
+                    </div>
+                    <div id="settings-tags-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:30px;"></div>
 
                     <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔐 Security</h3>
                     <div class="input-group"><span class="input-icon">🔑</span><input type="password" id="new-password" placeholder="New Password"></div>
@@ -561,15 +559,19 @@
                         <span class="input-icon">🏷️</span>
                         <input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;">
                     </div>
+                    
+                    <div id="quick-tags-area" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;"></div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
-                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span><select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;">
-    <option value="usd">🇺🇸 USD (TCG Market)</option>
-    <option value="usd_foil">✨ USD Foil (TCG Market)</option>
-    <option value="eur">🇪🇺 EUR (Cardmarket)</option>
-    <option value="tix">💻 TIX (MTGO)</option>
-    <option value="global">🌎 Global Avg (US+EU)</option>
-                        </select></div>
+                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span>
+                            <select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;">
+                                <option value="usd">🇺🇸 USD (TCG Market)</option>
+                                <option value="usd_foil">✨ USD Foil (TCG Market)</option>
+                                <option value="eur">🇪🇺 EUR (Cardmarket)</option>
+                                <option value="tix">💻 TIX (MTGO)</option>
+                                <option value="global">🌎 Global Avg (US+EU)</option>
+                            </select>
+                        </div>
                         <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
                     </div>
                     <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
@@ -751,10 +753,8 @@
         function closeUserOptionsModal() {
             document.getElementById('user-options-modal').classList.add('hidden');
         }
-        // =========================================================================
-// V6.0: savePrefs Update - BEGIN CHUNK
-// =========================================================================
-
+        
+        // V6.0: savePrefs Update
         function savePrefs() { 
             localStorage.setItem('grimoire_view', vaultViewMode); 
             localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); 
@@ -770,10 +770,8 @@
             
             showToast("Preferences saved!", "success");
         }
-        // =========================================================================
-        // V6.0: loadPrefs Update - BEGIN CHUNK
-        // =========================================================================
 
+        // V6.0: loadPrefs Update
         function loadPrefs() { 
             const defaultPriceSource = localStorage.getItem('grimoire_default_price_source') || 'usd';
 
@@ -791,9 +789,69 @@
             toggleVaultView(vaultViewMode); 
         }
 
-// =========================================================================
-// V6.0: loadPrefs Update - END CHUNK
-// =========================================================================
+        // V6.1: Custom Tag Logic
+        let customTags = JSON.parse(localStorage.getItem('grimoire_custom_tags')) || ['Foil', 'Trade', 'Damaged', 'Signed'];
+
+        function saveCustomTags() {
+            localStorage.setItem('grimoire_custom_tags', JSON.stringify(customTags));
+            renderTagManager();
+            renderQuickTags();
+        }
+
+        function addCustomTag() {
+            const input = document.getElementById('new-tag-input');
+            const val = input.value.trim();
+            if (val && !customTags.includes(val)) {
+                customTags.push(val);
+                saveCustomTags();
+                input.value = '';
+            }
+        }
+
+        function removeCustomTag(tag) {
+            customTags = customTags.filter(t => t !== tag);
+            saveCustomTags();
+        }
+
+        function renderTagManager() {
+            const container = document.getElementById('settings-tags-list');
+            if (!container) return;
+            container.innerHTML = customTags.map(tag => 
+                `<div class="tag-pill" style="font-size:12px; padding:6px 12px; cursor:default;">
+                    ${tag} <span onclick="removeCustomTag('${tag}')" style="margin-left:8px; cursor:pointer; opacity:0.6;">✕</span>
+                </div>`
+            ).join('');
+        }
+
+        function renderQuickTags() {
+            const container = document.getElementById('quick-tags-area');
+            if (!container) return;
+            const currentVal = document.getElementById('add-tags').value;
+            
+            container.innerHTML = customTags.map(tag => {
+                const isActive = currentVal.includes(tag);
+                const bg = isActive ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+                return `<div class="tag-pill" onclick="toggleQuickTag('${tag}')" style="background:${bg}; font-size:10px; padding:4px 10px; cursor:pointer; border:1px solid var(--border);">
+                    ${tag}
+                </div>`;
+            }).join('');
+        }
+
+        function toggleQuickTag(tag) {
+            const input = document.getElementById('add-tags');
+            let val = input.value;
+            let tags = val.split(',').map(t => t.trim()).filter(t => t.length > 0);
+            
+            if (tags.includes(tag)) {
+                tags = tags.filter(t => t !== tag);
+            } else {
+                tags.push(tag);
+            }
+            
+            input.value = tags.join(', ');
+            renderQuickTags(); // Re-render to update active state styling
+        }
+
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '167, 139, 250';
@@ -858,7 +916,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v5.6',
+                app_version: 'v6.1',
                 browser_info: navigator.userAgent
             };
 
@@ -940,7 +998,10 @@
             } 
             if(v==='collection') loadCollection(); 
             if(v==='oracle') loadOracle(); 
-            if(v==='settings') {} 
+            
+            // V6.1: Render tags when entering relevant screens
+            if(v==='settings') renderTagManager();
+            if(v==='add') renderQuickTags();
         }
         function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(fetchCardMeta,500); }
 
@@ -1015,10 +1076,7 @@
             } 
         }
         
-        // =========================================================================
-// V6.0: updateSelectedVersion Update - BEGIN CHUNK
-// =========================================================================
-
+        // V6.0: updateSelectedVersion Update (Use Saved Default)
         function updateSelectedVersion(){ 
             const index = document.getElementById('versionSelect').value;
             const v = allVersions[index];
@@ -1063,13 +1121,6 @@
                 // V6.0: Store the raw price value (which might be the selected source or the fallback USD)
                 market_price: parseFloat(rawPrice) 
             }; 
-
-            // ... (rest of the function remains the same)
-// ...
-
-// =========================================================================
-// V6.0: updateSelectedVersion Update - END CHUNK
-// =========================================================================
 
             // V4.0.3: RESTORATION - Collection Management requires NO deck limits.
             const qtyInput = document.getElementById('qty');
@@ -1133,6 +1184,10 @@
                 document.getElementById('set').value = ''; 
                 document.getElementById('num').value = ''; 
                 document.getElementById('marketPrice').innerText = '--'; 
+                
+                // V6.1: Refresh quick tags state
+                renderQuickTags();
+                
                 tempCardData = null; 
                 
                 loadData(); 
@@ -2460,4 +2515,3 @@
     </script>
 </body>
 </html>
-
