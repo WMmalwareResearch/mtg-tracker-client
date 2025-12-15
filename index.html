@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v2.8.3</title>
+    <title>The Grimoire | v2.9.0</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -93,6 +93,10 @@
         .new-deck-card:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,255,255,0.02); }
         .new-deck-card::after { display: none; }
         
+        .deck-area-edit { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        
         /* EDITOR UI */
         .editor-header { display: flex; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid var(--border); align-items: center; }
         .editor-split { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; height: 60vh; }
@@ -100,7 +104,7 @@
         .editor-label { color: var(--subtext); font-size: 12px; text-transform: uppercase; margin-bottom: 8px; font-weight: 600; display: flex; justify-content: space-between; }
         .deck-area-edit { display: block; } 
 
-        /* VISUAL DECK GRID */
+        /* VISUAL DECK GRID & SET COVER (V2.9.0 FIX) */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-section { margin-bottom: 20px; }
         .visual-header { font-size: 12px; text-transform: uppercase; color: var(--subtext); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; padding-bottom: 5px; font-weight: 700; }
@@ -109,11 +113,19 @@
         .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
-        .cover-btn { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--subtext); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 20; font-size: 14px; }
-        .visual-card:hover .cover-btn { opacity: 1; }
-        .cover-btn:hover { background: var(--yellow); color: black; }
-        .is-cover-card { border: 2px solid var(--yellow); }
-        .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); }
+        
+        /* THE STAR BUTTON - FIXED VISIBILITY */
+        .cover-btn { 
+            position: absolute; top: 5px; right: 5px; 
+            background: rgba(0,0,0,0.8); color: rgba(255,255,255,0.7); 
+            border: none; border-radius: 50%; width: 28px; height: 28px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; 
+            opacity: 0.7; /* Always visible */
+            transition: all 0.2s; z-index: 100; font-size: 16px; 
+        }
+        .cover-btn:hover { background: var(--yellow); color: black; opacity: 1; transform: scale(1.1); }
+        .is-cover-card { border: 2px solid var(--yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.4); }
+        .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); background: black; }
 
         #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
         #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
@@ -272,7 +284,7 @@
             <div style="flex-grow:1;"></div>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
                 <div id="user-email" style="font-size:11px; color:var(--subtext); margin-bottom:10px; overflow:hidden; text-overflow:ellipsis;"></div>
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.8.3</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v2.9.0</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -767,7 +779,7 @@
                 // CHECK IF COVER
                 const isCover = (currentDeckCoverUrl === imgUrl);
                 const activeClass = isCover ? 'is-cover-card' : '';
-                const starColor = isCover ? 'var(--yellow)' : 'var(--subtext)';
+                const starColor = isCover ? 'var(--yellow)' : 'rgba(255,255,255,0.7)';
                 
                 const item = document.createElement('div'); item.className = `visual-card ${activeClass}`; 
                 
