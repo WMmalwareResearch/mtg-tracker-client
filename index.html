@@ -626,14 +626,26 @@
                     
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                                <div style="flex-grow:1; display:flex; gap: 20px; align-items: flex-start;">
-                                    <img id="detail-commander-img" style="width: 70px; height: 98px; border-radius: 6px; box-shadow: var(--shadow); display: none;">
-                                <div>
-                                    <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
-                                    <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
-                                    <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div>
-                                </div>
+                            <div style="display:flex; gap:10px;">
+    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
+    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
+
+    <div class="input-group" style="width: auto; margin: 0; position: relative;">
+        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width: 100%; padding: 8px 14px; padding-left: 40px; font-size: 12px; height: 35px; background: rgba(255, 255, 255, 0.1); color: white;">
+            <option value="">⚙️ Tools & Export</option>
+            <option value="edit">✍️ Edit Decklist</option>
+            <option value="view_toggle">👁️ Toggle Visual/Text View</option>
+            <option disabled>––––––––––––––––––––––</option>
+            <option value="copy_missing">📋 Copy Missing Cards</option>
+            <option value="buy">🛒 Buy Missing Cards (TCGPlayer)</option>
+            <option value="print">🖨️ Print Proxies</option>
+            <option disabled>––––––––––––––––––––––</option>
+            <option value="export_arena">🎮 Export MTG Arena</option>
+            <option value="export_text">📤 Export Text List</option>
+        </select>
+        <span class="input-icon" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px;">⚙️</span>
+    </div>
+</div>
                             </div>
                                 <div style="display:flex; gap:10px;">
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
@@ -643,8 +655,6 @@
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--subtext);" onclick="copyMissing()">📋 Copy Missing</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:#4f46e5; color:white;" onclick="exportArena()">🎮 Arena Export</button>
                                     <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--blue); color:white;" onclick="exportDeck()">📤 Text Export</button>
-                                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="showRitualEditor(true)">✍️ Edit</button>
-                                    <button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="toggleDeckView()">👁️ / 📝</button>
                                 </div>
                             </div>
                             <div id="detail-visual-grid" class="hidden visual-grid-container"></div>
@@ -2374,6 +2384,45 @@
             showToast("Lands added to decklist. Click Validate to resolve.", "success");
         }
 
+        // =========================================================================
+// V5.6: Deck Tool Handler - BEGIN CHUNK
+// =========================================================================
+
+        function handleDeckTool(action) {
+            // Reset the dropdown immediately after selection
+            document.getElementById('tools-dropdown').value = '';
+
+            switch (action) {
+                case 'edit':
+                    showRitualEditor(true);
+                    break;
+                case 'view_toggle':
+                    toggleDeckView();
+                    break;
+                case 'copy_missing':
+                    copyMissing();
+                    break;
+                case 'buy':
+                    buyDeck();
+                    break;
+                case 'print':
+                    printProxies();
+                    break;
+                case 'export_arena':
+                    exportArena();
+                    break;
+                case 'export_text':
+                    exportDeck();
+                    break;
+                default:
+                    return;
+            }
+        }
+
+// =========================================================================
+// V5.6: Deck Tool Handler - END CHUNK
+// =========================================================================
+
         sb.auth.getSession().then(({
             data: {
                 session: s
@@ -2390,5 +2439,6 @@
     </script>
 </body>
 </html>
+
 
 
