@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v3.5.1</title>
+    <title>The Grimoire | v3.5.2</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -362,7 +362,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v3.5.2</div>
                 <button class="secondary" onclick="handleLogout()">Break Pact</button>
             </div>
         </div>
@@ -550,7 +550,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co", SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
         
-        // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN!)
+         // V3.5.0: EMAILJS KEYS (REPLACE WITH YOUR OWN!)
         const EMAILJS_SERVICE_ID = 'service_n9utr47'; // PASTE YOUR SERVICE ID HERE
         const EMAILJS_TEMPLATE_ID = 'template_xtth5gu'; // e.g. template_1w9s54k
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf'; // e.g. Uq6H-Qz3d9Nq7T7bF
@@ -596,7 +596,7 @@
 
             if (EMAILJS_SERVICE_ID === 'YOUR_SERVICE_ID' || EMAILJS_PUBLIC_KEY === 'YOUR_PUBLIC_KEY') {
                 document.getElementById('report-modal').classList.add('hidden');
-                return showToast("Bug reporting is not set up. Check README for EmailJS configuration.", "error");
+                return showToast("Bug reporting is not set up. Check configuration keys.", "error");
             }
             
             emailjs.init(EMAILJS_PUBLIC_KEY);
@@ -604,7 +604,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v3.5.1',
+                app_version: 'v3.5.2',
                 browser_info: navigator.userAgent
             };
 
@@ -920,10 +920,13 @@
         async function validateDeck() {
             const main = document.getElementById('deckMain').value;
             const side = document.getElementById('deckSide').value;
+            const format = document.getElementById('deckFormat').value; // Get the selected format
             const listText = main + '\n' + side;
             const resultsEl = document.getElementById('detail-analysis-results');
             const btn = document.getElementById('validateDeckBtn');
             if (!listText.trim()) return showToast("Ritual list is empty.", "error");
+
+            // UI preparation
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
@@ -937,10 +940,12 @@
                 btn.innerText = "Resolving...";
                 btn.disabled = true;
             }
+
             const {
                 totalCount,
                 cards: parsedCards
             } = parseDeckList(listText);
+
             if (parsedCards.length === 0) {
                 if (btn) {
                     btn.innerText = "✅ Validate & Resolve Ritual";
@@ -949,6 +954,7 @@
                 resultsEl.innerHTML = '<p style="color:var(--red);">No valid relic lines found.</p>';
                 return showToast("No valid ritual lines found.", "error");
             }
+
             const identifiers = parsedCards.map(c => ({
                 name: c.name
             }));
@@ -956,6 +962,8 @@
             const totalChunks = Math.ceil(identifiers.length / chunkSize);
             let allMatchedCards = [];
             let allUnmatched = [];
+            let legalityErrors = []; // New array for legality errors
+
             try {
                 for (let i = 0; i < totalChunks; i++) {
                     const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize);
@@ -973,24 +981,36 @@
                     allMatchedCards = allMatchedCards.concat(data.data);
                     if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
                 }
+
+                // --- NEW LEGALITY CHECK LOGIC (V3.5.2) ---
+                const formatKey = format.toLowerCase().replace(/[^a-z]/g, '');
+
+                allMatchedCards.forEach(cardData => {
+                    // Check if the format legality exists and is "not_legal" or "banned"
+                    const legalityStatus = cardData.legalities?.[formatKey];
+
+                    if (legalityStatus === 'banned' || legalityStatus === 'not_legal') {
+                        const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
+                        legalityErrors.push({
+                            name: cardData.name,
+                            status: legalityStatus,
+                            format: format,
+                            qty: deckCard.qty
+                        });
+                    }
+                });
+
+                // --- STATS GENERATION (EXISTING LOGIC) ---
                 const typeAgg = {};
                 const cmcAgg = {};
                 let totalDeckPrice = 0;
-                window.currentDeckStats = {
-                    W: 0,
-                    U: 0,
-                    B: 0,
-                    R: 0,
-                    G: 0,
-                    C: 0
-                };
+                window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
                 currentDeckCache = [];
+
                 allMatchedCards.forEach(cardData => {
                     const deckCard = parsedCards.find(c => c.name.toLowerCase() === cardData.name.toLowerCase());
                     const quantity = deckCard ? deckCard.qty : 1;
-                    currentDeckCache.push({ ...cardData,
-                        quantity: quantity
-                    });
+                    currentDeckCache.push({ ...cardData, quantity: quantity });
                     const primaryType = cardData.type_line ? cardData.type_line.split('—')[0].split(' ')[0].trim() : 'Unknown';
                     typeAgg[primaryType] = (typeAgg[primaryType] || 0) + quantity;
                     if (!cardData.type_line.toLowerCase().includes('land')) {
@@ -1009,25 +1029,44 @@
                         window.currentDeckStats['C'] += (cost.match(/{C}/g) || []).length * quantity;
                     }
                 });
+
                 document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
+
+                // --- RENDER RESULTS (UPDATED) ---
                 let output = `<p style="color:var(--green); font-weight: 600;">✅ Resolution Complete! Total Relics: ${totalCount}</p>`;
-                output += `<p>Found **${allMatchedCards.length}** unique relic definitions.</p>`;
+                output += `<p>Format Selected: <strong>${format}</strong></p>`;
+
+                if (legalityErrors.length > 0) {
+                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${legalityErrors.length} Relics Illegal in ${format}:</p><ul>`;
+                    legalityErrors.forEach(e => {
+                        const status = e.status === 'banned' ? 'BANNED' : 'Not Legal';
+                        output += `<li style="margin-left: -20px;">* ${e.qty}x ${e.name} (<strong style="color:var(--red);">${status}</strong>)</li>`;
+                    });
+                    output += `</ul>`;
+                    showToast(`Deck is illegal in ${format}.`, "error");
+                }
+                
                 if (allUnmatched.length > 0) {
-                    output += `<p style="color:var(--red); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched:</p><ul>`;
-                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'} (Typo?)</li>`);
-                    output += `</ul><p>Please fix these names in the editor.</p>`;
-                    showToast(`Validation failed: ${allUnmatched.length} unmatched.`, "error");
-                } else {
-                    output += `<p style="color:var(--green);">All unique relic names resolved!</p>`;
+                    output += `<p style="color:var(--yellow); font-weight: 600;">⚠️ ${allUnmatched.length} Relic Names Unmatched (Typo?):</p><ul>`;
+                    allUnmatched.forEach(u => output += `<li style="margin-left: -20px;">* ${u.name || 'Unknown'}</li>`);
+                    output += `</ul>`;
+                    if (legalityErrors.length === 0) showToast(`Validation complete with ${allUnmatched.length} unmatched names.`, "info");
+                }
+
+                if (legalityErrors.length === 0 && allUnmatched.length === 0) {
+                    output += `<p style="color:var(--green);">All relics resolved and legal in ${format}!</p>`;
                     showToast(`Ritual successfully resolved!`, "success");
                 }
+
                 resultsEl.innerHTML = output;
+
                 if (allUnmatched.length === 0) {
                     document.getElementById('deck-charts').classList.remove('hidden');
                     renderTypeChart(typeAgg);
                     renderManaCurve(cmcAgg);
                     renderColorChart(window.currentDeckStats);
                 }
+
             } catch (error) {
                 resultsEl.innerHTML = `<p style="color:var(--red);">Error: ${error.message}</p>`;
                 showToast("Validation Error.", "error");
@@ -1479,4 +1518,3 @@
     </script>
 </body>
 </html>
-
