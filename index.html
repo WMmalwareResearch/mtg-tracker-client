@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.1 (The Architect)</title>
+    <title>The Grimoire | v9.2 (Refined)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -36,60 +36,52 @@
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .flex-col { display: flex; flex-direction: column; }
         .gap-5 { gap: 5px; } .gap-10 { gap: 10px; } .gap-20 { gap: 20px; }
-        .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; } .mt-20 { margin-top: 20px; }
+        .mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; } .mt-20 { margin-top: 20px; }
         .mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; } .mb-15 { margin-bottom: 15px; } .mb-20 { margin-bottom: 20px; }
         
         .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
         .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
+        .w-full { width: 100%; }
         
         .text-sub { font-size: 12px; color: var(--subtext); }
         .text-bold { font-weight: 700; }
         .text-green { color: var(--green); } .text-red { color: var(--red); }
 
-        /* LOGIN SCREEN AESTHETIC */
-        #auth-screen { 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            width: 100%;
-            background: linear-gradient(135deg, var(--bg-dark) 0%, #000 100%);
+        /* --- UI POLISH (V9.2) --- */
+        /* Ripple Effect for Buttons */
+        button {
             position: relative;
+            overflow: hidden;
+            transform: translate3d(0, 0, 0);
         }
-        .auth-box {
-            background: var(--card-bg);
-            backdrop-filter: blur(15px);
-            padding: 40px;
-            border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            max-width: 380px;
-            width: 90%;
-            text-align: center;
-            border: 1px solid var(--border);
+        button:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        button:active:after {
+            transform: scale(0, 0);
+            opacity: .2;
+            transition: 0s;
         }
         
-        /* Toast Style */
-        .toast {
-            background: var(--card-bg);
-            border: 1px solid var(--primary);
-            color: var(--text);
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            opacity: 1;
-            transition: opacity 0.3s, transform 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
+        /* Consistent Inputs */
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
         }
-        .toast.hiding {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .toast.error { border-color: var(--red); color: var(--red); }
-        .toast.success { border-color: var(--green); color: var(--green); }
-
 
         /* --- LAYOUT & NAV --- */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
@@ -98,39 +90,13 @@
 
         /* Mobile Overrides */
         @media (max-width: 768px) { 
-            .app-container { 
-                grid-template-columns: 1fr; 
-                padding-bottom: 80px; 
-            } 
-            .sidebar { 
-                display: none; 
-            } 
-            .bottom-nav { 
-                display: flex; 
-                position: fixed; 
-                bottom: 0; 
-                left: 0; 
-                width: 100%; 
-                background: rgba(15, 10, 28, 0.95); 
-                border-top: 1px solid var(--border); 
-                padding: 10px 0; 
-                justify-content: space-around; 
-                z-index: 20; 
-                backdrop-filter: blur(10px); 
-            }
-            .main {
-                padding: 20px 15px; 
-            }
-            .stat-grid {
-                grid-template-columns: repeat(2, 1fr); 
-            }
-            .dashboard-split {
-                grid-template-columns: 1fr; 
-            }
-            #view-add .card-box, #view-settings .card-box {
-                max-width: 100%;
-                margin: 0;
-            }
+            .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
+            .sidebar { display: none; } 
+            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+            .main { padding: 20px 15px; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-split { grid-template-columns: 1fr; }
+            #view-add .card-box, #view-settings .card-box { max-width: 100%; margin: 0; }
         }
 
         .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
@@ -144,23 +110,15 @@
         .b-item.active { color: var(--primary); }
 
         /* --- COMPONENTS --- */
-        /* V8.2: Enhanced Skeleton Shimmer */
         .skeleton {
             background-color: rgba(255, 255, 255, 0.05);
-            background-image: linear-gradient(
-                90deg, 
-                rgba(255, 255, 255, 0.05) 0%, 
-                rgba(255, 255, 255, 0.15) 20%, 
-                rgba(255, 255, 255, 0.05) 40%, 
-                rgba(255, 255, 255, 0.05) 100%
-            );
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.15) 20%, rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0.05) 100%);
             background-size: 200% 100%;
             animation: shimmer 1.2s infinite linear;
             border-radius: 6px;
         }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .skeleton-text { height: 1em; width: 100%; margin-bottom: 0.5em; }
-        .skeleton-text-small { height: 0.7em; width: 60%; margin: 0 auto 0.5em; }
         .skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; }
 
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
@@ -173,7 +131,6 @@
         button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s, background 0.3s; }
         button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
-        .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
         
         /* THEME PICKER */
         .theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -181,7 +138,7 @@
         .theme-btn:hover { transform: scale(1.1); }
         .theme-btn.active-theme { border-color: white; box-shadow: 0 0 10px white; }
 
-        /* DASHBOARD & AVATAR */
+        /* DASHBOARD */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
@@ -352,7 +309,7 @@
         .mana-pip { width:20px; height:20px; border-radius:50%; display:inline-block; margin-right:8px; vertical-align:middle; text-align: center; line-height: 20px; font-size: 12px; color:black; font-weight:700; }
         .pip-w { background:#f0f2c0; } .pip-u { background:#b3ceea; } .pip-b { background:#a69f9d; } .pip-r { background:#ea9f82; } .pip-g { background:#c4d3ca; }
 
-        /* MODALS FIX V3.5.1 */
+        /* MODALS FIX V3.5.1 + V9.2 Click-Away */
         .modal-overlay { 
             position: fixed; 
             top: 0; 
@@ -382,7 +339,7 @@
 
     <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
-    <div id="report-modal" class="modal-overlay hidden">
+    <div id="report-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--red);">🪲 Submit Bug Report</h2>
             <p style="color:var(--subtext);">Tell us what broke, and we will crush the insect.</p>
@@ -394,7 +351,7 @@
         </div>
     </div>
 
-    <div id="land-modal" class="modal-overlay hidden">
+    <div id="land-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);">The Geomancer</h2>
             <p style="color:var(--subtext);">Recommended basic land balance based on your spell symbols.</p>
@@ -410,7 +367,7 @@
         </div>
     </div>
 
-    <div id="avatar-modal" class="modal-overlay hidden">
+    <div id="avatar-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box">
             <h2 style="color:var(--primary);">Choose Your Avatar</h2>
             <p style="color:var(--subtext);">Select a card from your Collection to represent you.</p>
@@ -428,7 +385,7 @@
         </div>
     </div>
 
-    <div id="bulk-modal" class="modal-overlay hidden">
+    <div id="bulk-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeBulkModal()">
         <div class="modal-content card-box">
             <h2 style="color:var(--primary);">The Scribe (Bulk Import)</h2>
             <p style="color:var(--subtext); margin-bottom: 20px;">Paste a list of cards to bind them all at once.<br>Format: <code>Quantity Name</code> (e.g., "4 Sol Ring")</p>
@@ -437,7 +394,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span style="font-size:12px; color:var(--subtext);">Import from CSV (Moxfield, ManaBox, TCGPlayer)</span>
                     <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleCSVUpload(this)">
-                    <button class="secondary" onclick="document.getElementById('csvFile').click()" style="width:auto; padding:6px 12px; font-size:11px;">📂 Select File</button>
+                    <button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">📂 Select File</button>
                 </div>
                 <div id="csv-status" style="font-size:11px; color:var(--primary); margin-top:5px; text-align:right;"></div>
             </div>
@@ -448,7 +405,7 @@
         </div>
     </div>
 
-    <div id="delete-modal" class="modal-overlay hidden">
+    <div id="delete-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeDeleteModal()">
         <div class="modal-content card-box" style="max-width: 400px; border-color: var(--red);">
             <h2 style="color:var(--red);">Sacrifice Decklist?</h2>
             <p style="color:var(--subtext); margin-bottom:20px;">Are you sure you want to destroy <b id="delete-target-name" style="color:white;">this decklist</b>?<br>This action cannot be undone.</p>
@@ -459,7 +416,7 @@
         </div>
     </div>
 
-    <div id="edit-modal" class="modal-overlay hidden">
+    <div id="edit-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);" id="edit-card-name">Edit Card</h2>
             <input type="hidden" id="edit-card-id">
@@ -470,7 +427,7 @@
         </div>
     </div>
 
-    <div id="codex-modal" class="modal-overlay hidden">
+    <div id="codex-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 800px;">
             <div id="codex-loading" style="padding: 40px; color: var(--subtext);">Consulting the archives...</div>
             <div id="codex-content" class="codex-layout hidden">
@@ -487,7 +444,7 @@
         </div>
     </div>
 
-    <div id="prophecy-modal" class="modal-overlay hidden">
+    <div id="prophecy-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeProphecy()">
         <div class="prophecy-content">
             <h2 style="color:var(--primary); text-shadow: 0 0 10px var(--primary); margin-bottom: 10px;">🔮 The Prophecy</h2>
             <p style="color:var(--subtext); margin-bottom: 20px;">Divining a starting hand from the ether...</p>
@@ -536,7 +493,7 @@
             <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
 
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.1</div>
+                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.2</div>
                 <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
             </div>
         </div>
@@ -558,48 +515,6 @@
                     <div class="card-box"><h3>🏆 Top 5 High-Value Assets</h3><div id="top-assets-list"></div></div>
                     <div class="card-box"><h3>Recent Acquisitions</h3><div class="collection-grid" id="recent-grid"></div></div>
                 </div>
-            </div>
-
-            <div id="view-collection" class="hidden">
-                <div class="flex-between mb-20">
-                    <h2>Card Collection</h2>
-                    <div class="flex-row">
-                        <button id="btn-appraise" class="secondary btn-md" style="background:var(--green); color:white;" onclick="appraiseCollection()">🔄 Appraise</button>
-                        <button class="secondary btn-md" onclick="loadCollection()">Refresh</button>
-                    </div>
-                </div>
-                <div id="appraisal-status" class="hidden mb-15 text-sub"></div>
-                
-                <div class="mb-20">
-                    <div class="input-group mb-10">
-                        <span class="input-icon">🔍</span>
-                        <input id="vaultSearch" placeholder="Search Names or Tags..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;">
-                    </div>
-                    
-                    <div class="flex-row" style="flex-wrap:wrap;">
-                        <select id="filterColor" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🎨 Color (All)</option><option value="W">⚪ White</option><option value="U">🔵 Blue</option><option value="B">⚫ Black</option><option value="R">🔴 Red</option><option value="G">🟢 Green</option><option value="C">🌐 Colorless</option><option value="M">🌈 Multicolor</option>
-                        </select>
-                        <select id="filterRarity" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">💎 Rarity (All)</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="mythic">Mythic</option>
-                        </select>
-                        <select id="filterType" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🃏 Type (All)</option><option value="Creature">Creature</option><option value="Instant">Instant</option><option value="Sorcery">Sorcery</option><option value="Artifact">Artifact</option><option value="Enchantment">Enchantment</option><option value="Land">Land</option><option value="Planeswalker">Planeswalker</option>
-                        </select>
-                    </div>
-
-                    <div class="flex-between mt-10">
-                        <select id="vaultSort" onchange="filterVault(); savePrefs();" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;">
-                            <option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option>
-                        </select>
-                        <div class="view-toggle">
-                            <div id="view-grid-btn" class="view-btn active" onclick="toggleVaultView('grid')">Grid</div>
-                            <div id="view-list-btn" class="view-btn" onclick="toggleVaultView('list')">List</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="collection-grid" class="collection-grid"></div>
             </div>
 
             <div id="view-settings" class="hidden">
@@ -658,12 +573,15 @@
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width:500px; margin:0 auto;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;"><h2 style="margin:0;">Add Card</h2><button class="secondary" style="width:auto; font-size:12px; padding: 8px 12px; height: auto;" onclick="openBulkModal()">📜 Bulk Import</button></div>
+                    <div class="flex-between mb-20">
+                        <h2 style="margin:0;">Add Card</h2>
+                        <button class="secondary btn-sm" onclick="openBulkModal()">📜 Bulk Import</button>
+                    </div>
                     <div class="input-group"><span class="input-icon">🔍</span><input type="text" id="search" placeholder="Search Card Name, or SET XXX (e.g., KTK 16)" oninput="debounceSearch()"></div>
-                    <div style="margin-bottom:15px; font-size:12px; color:var(--primary); font-weight:600; min-height:15px;" id="search-status"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" style="margin-bottom:15px; padding-left: 14px;"></select>
+                    <div class="mb-15 text-bold" style="font-size:12px; color:var(--primary); min-height:15px;" id="search-status"></div>
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-15" style="padding-left: 14px;"></select>
                     
-                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
+                    <div class="flex-row mb-15">
                         <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
                         <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
                         <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;">
@@ -679,10 +597,10 @@
                         <input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;">
                     </div>
                     
-                    <div id="quick-tags-area" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:15px;"></div>
+                    <div id="quick-tags-area" class="flex-row" style="flex-wrap:wrap; gap:5px; margin-bottom:15px;"></div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; font-size:12px; color:var(--subtext);">
-                        <div style="display:flex; align-items:center; gap:5px;"><span>Price Source:</span>
+                    <div class="flex-between mb-15 text-sub">
+                        <div class="flex-row"><span>Price Source:</span>
                             <select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;">
                                 <option value="usd">🇺🇸 USD (TCG Market)</option>
                                 <option value="usd_foil">✨ USD Foil (TCG Market)</option>
@@ -691,60 +609,47 @@
                                 <option value="global">🌎 Global Avg (US+EU)</option>
                             </select>
                         </div>
-                        <span id="marketPrice" style="color:var(--green); font-weight:700;">--</span>
+                        <span id="marketPrice" class="text-green text-bold">--</span>
                     </div>
-                    <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" style="color:var(--subtext); font-size:12px;">Card Preview</span></div>
-                    <div style="display:flex; gap:10px;">
+                    <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" class="text-sub">Card Preview</span></div>
+                    <div class="flex-row">
                         <button onclick="addCard(false)" style="flex:2;">Bind to Collection</button>
-                        <button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Add to Wishlist</button>
+                        <button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Wishlist</button>
                     </div>
                 </div>
             </div>
-                <div id="appraisal-status" class="hidden" style="margin-bottom:15px; font-size:12px; color:var(--subtext);"></div>
+            
+            <div id="view-collection" class="hidden">
+                <div class="flex-between mb-20">
+                    <h2>Card Collection</h2>
+                    <div class="flex-row">
+                        <button id="btn-appraise" class="secondary btn-md" style="background:var(--green); color:white;" onclick="appraiseCollection()">🔄 Appraise</button>
+                        <button class="secondary btn-md" onclick="loadCollection()">Refresh</button>
+                    </div>
+                </div>
+                <div id="appraisal-status" class="hidden mb-15 text-sub"></div>
                 
-                <div style="margin-bottom:20px;">
-                    <div class="input-group" style="margin-bottom:10px;">
+                <div class="mb-20">
+                    <div class="input-group mb-10">
                         <span class="input-icon">🔍</span>
                         <input id="vaultSearch" placeholder="Search Names or Tags..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;">
                     </div>
                     
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items: center;">
+                    <div class="flex-row" style="flex-wrap:wrap;">
                         <select id="filterColor" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🎨 Color (All)</option>
-                            <option value="W">⚪ White</option>
-                            <option value="U">🔵 Blue</option>
-                            <option value="B">⚫ Black</option>
-                            <option value="R">🔴 Red</option>
-                            <option value="G">🟢 Green</option>
-                            <option value="C">🌐 Colorless</option>
-                            <option value="M">🌈 Multicolor</option>
+                            <option value="all">🎨 Color (All)</option><option value="W">⚪ White</option><option value="U">🔵 Blue</option><option value="B">⚫ Black</option><option value="R">🔴 Red</option><option value="G">🟢 Green</option><option value="C">🌐 Colorless</option><option value="M">🌈 Multicolor</option>
                         </select>
-
                         <select id="filterRarity" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">💎 Rarity (All)</option>
-                            <option value="common">Common</option>
-                            <option value="uncommon">Uncommon</option>
-                            <option value="rare">Rare</option>
-                            <option value="mythic">Mythic</option>
+                            <option value="all">💎 Rarity (All)</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="mythic">Mythic</option>
                         </select>
-
                         <select id="filterType" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🃏 Type (All)</option>
-                            <option value="Creature">Creature</option>
-                            <option value="Instant">Instant</option>
-                            <option value="Sorcery">Sorcery</option>
-                            <option value="Artifact">Artifact</option>
-                            <option value="Enchantment">Enchantment</option>
-                            <option value="Land">Land</option>
-                            <option value="Planeswalker">Planeswalker</option>
+                            <option value="all">🃏 Type (All)</option><option value="Creature">Creature</option><option value="Instant">Instant</option><option value="Sorcery">Sorcery</option><option value="Artifact">Artifact</option><option value="Enchantment">Enchantment</option><option value="Land">Land</option><option value="Planeswalker">Planeswalker</option>
                         </select>
                     </div>
 
-                    <div style="display:flex; gap:10px; align-items:center; justify-content: space-between; margin-top: 10px;">
+                    <div class="flex-between mt-10">
                         <select id="vaultSort" onchange="filterVault(); savePrefs();" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;">
-                            <option value="date-new">Date (Newest)</option>
-                            <option value="price-high">Value (High $)</option>
-                            <option value="name">Name (A-Z)</option>
+                            <option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option>
                         </select>
                         <div class="view-toggle">
                             <div id="view-grid-btn" class="view-btn active" onclick="toggleVaultView('grid')">Grid</div>
@@ -759,8 +664,8 @@
             </div>
 
             <div id="view-oracle" class="hidden">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;"><h2 style="color:var(--blue);">👁️ Wishlist</h2><button class="secondary" style="width:auto; padding:8px 16px; font-size:12px;" onclick="loadOracle()">Refresh</button></div>
-                <p style="color:var(--subtext); margin-bottom:20px;">Cards observed in the ether (Quantity: 0).</p>
+                <div class="flex-between mb-20"><h2 style="color:var(--blue);">👁️ Wishlist</h2><button class="secondary btn-md" onclick="loadOracle()">Refresh</button></div>
+                <p class="text-sub mb-20">Cards observed in the ether (Quantity: 0).</p>
                 <div class="collection-grid" id="oracle-grid">
                     <div class="grid-card skeleton"></div><div class="grid-card skeleton" style="opacity:0.7;"></div><div class="grid-card skeleton" style="opacity:0.5;"></div>
                 </div>
@@ -768,7 +673,7 @@
 
             <div id="view-decks" class="hidden">
                 <div id="deck-library">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <div class="flex-between mb-20">
                         <h2 style="margin:0;">Decklist Library</h2>
                         <div class="input-group" style="width:250px; margin:0;"><span class="input-icon">🔍</span><input id="deckSearch" placeholder="Search Decklists..." oninput="filterDecks()" style="margin:0; padding-left: 40px;"></div>
                     </div>
@@ -776,7 +681,7 @@
                 </div>
 
                 <div id="deck-workspace" class="hidden">
-                    <button onclick="closeDeck()" class="secondary" style="width:auto; margin-bottom:15px; padding:8px 15px; font-size:12px;">← Back to Library</button>
+                    <button onclick="closeDeck()" class="secondary btn-sm mb-15">← Back to Library</button>
                     
                     <div id="editor-mode" class="hidden">
                         <div class="card-box">
@@ -793,8 +698,8 @@
                             </div>
                             
                             <div class="card-box" style="padding: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2);">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <span style="font-size: 12px; color: var(--subtext); font-weight: 600; text-transform: uppercase;">⚡ Live Curve (Local Cache)</span>
+                                <div class="flex-between mb-10">
+                                    <span class="text-sub text-bold" style="text-transform: uppercase;">⚡ Live Curve (Local Cache)</span>
                                     <span id="editor-card-count" style="font-size: 12px; color: white;">0 Cards</span>
                                 </div>
                                 <div style="height: 100px; width: 100%;">
@@ -806,7 +711,7 @@
                                 <div class="editor-column"><div class="editor-label">Mainboard</div><textarea id="deckMain" placeholder="1 Sol Ring..."></textarea></div>
                                 <div class="editor-column"><div class="editor-label">Sideboard</div><textarea id="deckSide" placeholder="15 Island..."></textarea></div>
                             </div>
-                            <div style="display:flex; gap:10px; margin-top:15px;">
+                            <div class="flex-row mt-15">
                                 <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve</button>
                                 <button onclick="saveDeck()" style="background:var(--green);">💾 Save Decklist</button>
                             </div>
@@ -815,18 +720,31 @@
                     
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <div class="flex-between mb-15">
                                 <div style="flex-grow:1; display:flex; gap: 20px; align-items: flex-start;">
                                     <img id="detail-commander-img" style="width: 70px; height: 98px; border-radius: 6px; box-shadow: var(--shadow); display: none;">
                                     <div>
                                         <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
                                         <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
-                                        <div style="font-size:11px; color:var(--subtext); margin-top:5px; display:flex; align-items:center; gap:8px;">OWNERSHIP: <span id="detail-owned-percent">0%</span><div class="progress-bg" style="width:100px; height:6px; margin:0;"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div></div>
+                                        
+                                        <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-top: 10px;">
+                                            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px; color:var(--subtext);">
+                                                <span>OWNERSHIP: <span id="detail-owned-percent" class="text-bold text-white">0%</span></span>
+                                                <span>MISSING VALUE: <span id="detail-missing-cost" class="text-bold text-red">$0.00</span></span>
+                                            </div>
+                                            <div class="progress-bg" style="width:100%; height:8px; margin:0;">
+                                                <div id="detail-owned-bar" class="progress-fill" style="width:0%"></div>
+                                            </div>
+                                            <div style="text-align: right; font-size: 10px; color: var(--subtext); margin-top: 4px;">
+                                                <span id="detail-total-value">Total Value: $0.00</span>
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
-                                <div style="display:flex; gap:10px;">
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
-                                    <button style="width:auto; padding:8px 16px; font-size:12px; background:var(--green);" onclick="saveDeck()">💾 Save</button>
+                                <div class="flex-row">
+                                    <button class="btn-md" style="background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
+                                    <button class="btn-md" style="background:var(--green);" onclick="saveDeck()">💾 Save</button>
 
                                     <div class="input-group" style="width: auto; margin: 0; position: relative;">
                                         <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width: 100%; padding: 8px 14px; padding-left: 40px; font-size: 12px; height: 35px; background: rgba(255, 255, 255, 0.1); color: white;">
@@ -850,12 +768,12 @@
                         </div>
                         <div class="card-box">
                             <h3>Deck Analysis</h3>
-                            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; margin-bottom:15px; display:flex; align-items:center; justify-content:space-between;">
-                                <span style="font-size:12px; color:var(--subtext); font-weight:600; text-transform:uppercase;">Estimated Value</span>
-                                <span id="detail-deck-price" style="font-size:18px; font-weight:700; color:var(--green);">$0.00</span>
+                            <div class="flex-between mb-15" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
+                                <span class="text-sub text-bold" style="text-transform:uppercase;">Estimated Value</span>
+                                <span id="detail-deck-price" class="text-green text-bold" style="font-size:18px;">$0.00</span>
                             </div>
-                            <div style="margin-bottom:15px;">
-                                <button onclick="openLandCalculator()" class="secondary" style="width:100%; border:1px dashed var(--primary); color:var(--primary);">🏔️ The Geomancer (Mana Calc)</button>
+                            <div class="mb-15">
+                                <button onclick="openLandCalculator()" class="secondary w-full" style="border:1px dashed var(--primary); color:var(--primary);">🏔️ The Geomancer (Mana Calc)</button>
                             </div>
                             
                             <div id="deck-advisor" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
@@ -867,7 +785,7 @@
                                 </div>
                             </div>
 
-                            <div id="detail-analysis-results" style="font-size:13px; color:var(--subtext); margin-top: 15px;">Metrics will appear here.</div>
+                            <div id="detail-analysis-results" class="text-sub mt-15" style="font-size:13px;">Metrics will appear here.</div>
                             <div id="deck-charts" class="hidden"><div style="position:relative;"><canvas id="colorChart"></canvas></div><div style="position:relative;"><canvas id="typeChart"></canvas></div><div style="position:relative;"><canvas id="manaCurve"></canvas></div></div>
                         </div>
                     </div>
@@ -1123,7 +1041,7 @@
             const templateParams = {
                 bug_description: description,
                 user_email: session?.user?.email || 'Anonymous/Logged Out',
-                app_version: 'v9.1',
+                app_version: 'v9.2',
                 browser_info: navigator.userAgent
             };
 
@@ -1500,6 +1418,7 @@
                                 quantity: originalInput.qty, 
                                 market_price_usd: parseFloat(price), 
                                 last_price_update: new Date().toISOString(),
+                                // V7.2: Metadata Capture for Filtering
                                 type_line: scryCard.type_line,
                                 rarity: scryCard.rarity,
                                 colors: scryCard.colors || [],
@@ -1638,6 +1557,7 @@
         function showPreview(url, e) { const el = document.getElementById('hover-preview'); if(!url) return; el.src = url; el.style.display = 'block'; el.style.left = (e.clientX + 20) + 'px'; el.style.top = e.clientY + 'px'; }
         function hidePreview() { document.getElementById('hover-preview').style.display = 'none'; }
         
+        // V7.0: filterVault Update (The Prism)
         function filterVault() {
             const search = document.getElementById('vaultSearch').value.toLowerCase();
             const sort = document.getElementById('vaultSort').value;
@@ -1660,11 +1580,11 @@
 
                 // 2. Color Filter
                 if (fColor !== 'all') {
-                    if (!c.colors) return false; 
+                    if (!c.colors) return false; // If old card data without colors, hide it when filtering
                     if (fColor === 'C') {
-                        if (c.colors.length > 0) return false; 
+                        if (c.colors.length > 0) return false; // Colorless means empty color array
                     } else if (fColor === 'M') {
-                        if (c.colors.length < 2) return false; 
+                        if (c.colors.length < 2) return false; // Multicolor means 2+ colors
                     } else {
                         if (!c.colors.includes(fColor)) return false;
                     }
@@ -1717,6 +1637,7 @@
                     if (c.tags && c.tags.length > 0) {
                         tagHtml = `<div class="tag-container">${c.tags.map(tag => `<div class="tag-pill">${tag}</div>`).join('')}</div>`;
                     }
+                    // V8.2: Added animate-in class
                     return `<div class="grid-card animate-in" id="card-${c.id}">${badge}${tagHtml}<div class="overlay"><button onclick="openEditModal('${c.id}',event)">✎</button><button onclick="deleteCard('${c.id}',event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onload="this.style.opacity=1" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')"></div>`
                 }).join('');
             }
@@ -2139,46 +2060,64 @@
             updateLiveEditorStats();
         }
 
-        // V5.1: Ownership Analysis updated to use structured data
+        // V5.1: Ownership Analysis updated to use structured data (V9.2 Accountant update)
         function analyzeOwnership(t) { 
-            // V5.1: Use the global vaultLookup map populated in loadData()
-            
             const lines = t.split('\n');
             let html = '';
             let totalCards = 0;
             let totalOwned = 0;
-            const regex = /^(\d+)\s+(.+)/;
+            let missingValue = 0;
+            let totalValue = 0;
             
-            // --- V5.1: Check if structured data exists (meaning it was recently validated/saved) ---
+            // 1. Use Structured Data if available (Contains Prices)
             if (window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
+                
                 const structuredHtml = window.currentDeckStructuredList.map(c => {
                     const qtyNeeded = c.qty;
-                    // V5.1: Create the lookup key based on structured card data
                     const lookupKey = `${c.name.toLowerCase().trim()}_${c.set}_${c.num}`;
+                    
+                    // Check ownership
                     let qtyOwned = vaultLookup[lookupKey] || 0;
                     
-                    // Simple basic land check (assuming basic lands are always owned)
-                    const isBasicLand = ['plains', 'island', 'swamp', 'mountain', 'forest'].some(name => c.name.toLowerCase().includes(name));
+                    // Basic Land Check
+                    const isBasicLand = ['plains', 'island', 'swamp', 'mountain', 'forest', 'wastes'].some(name => c.name.toLowerCase().includes(name));
+                    if (isBasicLand) qtyOwned = qtyNeeded;
 
-                    if (isBasicLand) {
-                        qtyOwned = qtyNeeded;
-                    }
-
+                    // Math
                     const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
+                    const missingForThisLine = qtyNeeded - ownedForThisLine;
+                    
                     totalCards += qtyNeeded;
                     totalOwned += ownedForThisLine;
                     
+                    // Financials
+                    const price = c.price || 0;
+                    totalValue += (price * qtyNeeded);
+                    if (missingForThisLine > 0) {
+                        missingValue += (price * missingForThisLine);
+                    }
+                    
+                    // Styling
                     let statusClass = 'is-missing';
                     if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
                     else if (qtyOwned > 0) statusClass = 'is-partial';
                     
-                    return `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${c.name}"><strong>${qtyNeeded}</strong> ${c.name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
+                    return `<div class="deck-line ${statusClass}" 
+                                data-qty-needed="${qtyNeeded}" 
+                                data-qty-owned="${qtyOwned}" 
+                                data-name="${c.name}">
+                                <strong>${qtyNeeded}</strong> ${c.name} 
+                                <span style="float:right; font-size:10px; opacity:0.7;">
+                                    $${price.toFixed(2)} ${qtyOwned}/${qtyNeeded}
+                                </span>
+                            </div>`;
                 }).join('');
                 
                 html = structuredHtml;
                 
             } else {
-                // --- Fallback to simple name matching (pre-V5.0 logic) if no structured data is available ---
+                // Fallback Logic (Keep existing logic for text-only parsing)
+                const regex = /^(\d+)\s+(.+)/;
                 const vaultMapFallback = {};
                 cardsCache.forEach(c => { vaultMapFallback[c.name.toLowerCase().trim()] = (vaultMapFallback[c.name.toLowerCase().trim()] || 0) + c.quantity; });
                 
@@ -2190,14 +2129,9 @@
                         const key = name.toLowerCase();
                         let qtyOwned = 0;
                         
-                        // Simple Basic Land Check (fallback mode)
                         const isBasicLand = ['plains', 'island', 'swamp', 'mountain', 'forest'].some(n => key.includes(n));
-                        
-                        if (isBasicLand) {
-                           qtyOwned = qtyNeeded; // Assume owned if basic land in fallback mode
-                        } else {
-                           qtyOwned = vaultMapFallback[key] || 0;
-                        }
+                        if (isBasicLand) qtyOwned = qtyNeeded;
+                        else qtyOwned = vaultMapFallback[key] || 0;
 
                         const ownedForThisLine = Math.min(qtyOwned, qtyNeeded);
                         totalCards += qtyNeeded;
@@ -2207,23 +2141,41 @@
                         if (qtyOwned >= qtyNeeded) statusClass = 'is-owned';
                         else if (qtyOwned > 0) statusClass = 'is-partial';
                         
-                        html += `<div class="deck-line ${statusClass}" data-qty-needed="${qtyNeeded}" data-qty-owned="${qtyOwned}" data-name="${name}"><strong>${qtyNeeded}</strong> ${name} <span style="float:right; font-size:10px; opacity:0.7;">(Own: ${qtyOwned})</span></div>`;
+                        html += `<div class="deck-line ${statusClass}"><strong>${qtyNeeded}</strong> ${name}</div>`;
                     } else if (line.trim().length > 0) {
                         html += `<div class="deck-line" style="opacity:0.5; font-size:11px;">${line}</div>`;
                     }
                 });
             }
 
-            const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0;
+            // Render List
             const viewer = document.getElementById('detail-decklist-viewer');
             viewer.innerHTML = html;
             viewer.classList.remove('hidden');
+
+            // Render Stats
+            const percent = totalCards > 0 ? Math.round((totalOwned / totalCards) * 100) : 0;
+            
             document.getElementById('detail-owned-percent').innerText = `${percent}%`;
             document.getElementById('detail-owned-bar').style.width = `${percent}%`;
+            
+            // V9.2: Render Financials
+            document.getElementById('detail-missing-cost').innerText = `$${missingValue.toFixed(2)}`;
+            document.getElementById('detail-total-value').innerText = `Total Value: $${totalValue.toFixed(2)}`;
+            
+            // Colors
             const bar = document.getElementById('detail-owned-bar');
-            if (percent === 100) bar.style.backgroundColor = 'var(--green)';
-            else if (percent > 50) bar.style.backgroundColor = 'var(--primary)';
-            else bar.style.backgroundColor = 'var(--red)';
+            if (percent === 100) {
+                bar.style.backgroundColor = 'var(--green)';
+                document.getElementById('detail-missing-cost').style.color = 'var(--green)';
+                document.getElementById('detail-missing-cost').innerText = "COMPLETE";
+            } else if (percent > 50) {
+                bar.style.backgroundColor = 'var(--primary)';
+                document.getElementById('detail-missing-cost').style.color = 'var(--red)';
+            } else {
+                bar.style.backgroundColor = 'var(--red)';
+                document.getElementById('detail-missing-cost').style.color = 'var(--red)';
+            }
         }
 
         // V5.0 + V5.5: DECK VALIDATION FUNCTION UPDATED (includes structured list creation & image display)
@@ -2508,10 +2460,7 @@
             }
         }
         
-       // =========================================================================
-// V9.1.1: Smarter Heuristic Engine - BEGIN CHUNK
-// =========================================================================
-
+        // V9.1.1: Smarter Heuristic Engine
         function analyzeDeckStructure(deckList) {
             const stats = {
                 lands: { count: 0, target: 36, label: "Lands" },
@@ -2533,8 +2482,6 @@
                 }
 
                 // B. Ramp
-                // 1. "Add {X}" or "Add one mana"
-                // 2. "Search your library" AND ("land" OR "basic") AND ("battlefield" OR "hand")
                 if (
                     (text.includes("add ") && (text.includes("{") || text.includes(" mana"))) ||
                     (text.includes("search your library") && (text.includes("land") || text.includes("basic")) && (text.includes("battlefield") || text.includes("hand")))
@@ -2543,26 +2490,18 @@
                 }
 
                 // C. Draw (Improved)
-                // Matches: "draw a card", "draw two cards", "draw X cards", "draws a card"
-                // Logic: "draw" followed eventually by "card"
-                // Exclude: "draw step" (to avoid false positives on weird enchantments)
                 if (text.includes("draw") && text.includes("card") && !text.includes("draw step")) {
-                    // Check if it's actually drawing (not just "discard a card to draw")
-                    // Simple heuristic: Does it have "draw" before "card"?
                     if(text.indexOf("draw") < text.indexOf("card")) {
                         stats.draw.count += qty;
                     }
                 }
 
                 // D. Removal
-                // Matches: "destroy target", "exile target"
                 if ((text.includes("destroy") || text.includes("exile")) && text.includes("target")) {
                     stats.removal.count += qty;
                 }
 
                 // E. Board Wipes (Improved)
-                // 1. "Destroy all", "Exile all", "Destroy each", "Exile each"
-                // 2. "Deals" + "damage" + ("all" OR "each") + "creature"
                 const isDestructionWipe = (text.includes("destroy") || text.includes("exile")) && (text.includes(" all ") || text.includes(" each "));
                 const isDamageWipe = text.includes("deals") && text.includes("damage") && (text.includes(" all ") || text.includes(" each ")) && text.includes("creature");
                 
@@ -2574,10 +2513,6 @@
             renderAdvisor(stats);
         }
 
-// =========================================================================
-// V9.1.1: Smarter Heuristic Engine - END CHUNK
-// =========================================================================
-
         function renderAdvisor(stats) {
             const grid = document.getElementById('advisor-grid');
             if (!grid) return;
@@ -2587,16 +2522,11 @@
             for (const [key, data] of Object.entries(stats)) {
                 const pct = Math.min(100, (data.count / data.target) * 100);
                 
-                // Color Logic: 
-                // Green if close to target (within +/- 20%)
-                // Yellow if somewhat off
-                // Red if very low
+                // Color Logic
                 let color = 'var(--red)';
                 const ratio = data.count / data.target;
                 if (ratio >= 0.8 && ratio <= 1.2) color = 'var(--green)';
                 else if (ratio >= 0.5) color = 'var(--yellow)';
-                
-                // For lands, being way over is also bad/yellow
                 if (key === 'lands' && ratio > 1.3) color = 'var(--yellow)';
 
                 html += `
@@ -3173,5 +3103,3 @@
     </script>
 </body>
 </html>
-
-
