@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.9.4 (Stabilized)</title>
+    <title>The Grimoire | v9.9.5 (Ironclad)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,39 +17,31 @@
         * { box-sizing: border-box; } .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         
-        /* UI & Buttons */
         button { position: relative; overflow: hidden; transform: translate3d(0, 0, 0); cursor: pointer; user-select: none; transition: 0.1s; }
         button:active { transform: scale(0.98); }
-        button:after { content: ""; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; background-image: radial-gradient(circle, #fff 10%, transparent 10.01%); background-repeat: no-repeat; background-position: 50%; transform: scale(10, 10); opacity: 0; transition: transform .5s, opacity 1s; }
-        button:active:after { transform: scale(0, 0); opacity: .2; transition: 0s; }
         .btn-loading { pointer-events: none; opacity: 0.7; color: transparent !important; }
         .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Layout */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
         .sidebar { background: var(--card-bg); padding: 25px; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
         .main { padding: 30px; overflow-y: auto; flex: 1; position: relative; }
         .bottom-nav { display: none; }
-        
-        /* MOBILE */
         @media (max-width: 768px) { 
             .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
             .sidebar { display: none; position: absolute; top: 0; left: 0; height: 100%; width: 280px; box-shadow: 10px 0 20px rgba(0,0,0,0.5); z-index: 2000; } 
             .sidebar.mobile-open { display: flex; }
-            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-dark); border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 100; backdrop-filter: blur(10px); } 
+            .bottom-nav { display: flex; position: fixed; bottom: 0; width: 100%; background: var(--bg-dark); border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 100; backdrop-filter: blur(10px); } 
             .main { padding: 15px; } 
             .mobile-menu-btn { display: block !important; }
         }
         .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 500; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
 
-        /* Components */
         .card-box { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow); }
         input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 10px; }
         button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; }
         .secondary { background: rgba(255,255,255,0.1); }
         .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
-        .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
         
         .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; background: rgba(0,0,0,0.3); transition: transform 0.2s; }
         .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); }
@@ -61,52 +53,26 @@
         .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); }
         .deck-card-content { position: relative; z-index: 2; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
 
-        /* Utils */
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .text-sub { color: var(--subtext); font-size: 12px; }
         .mb-20 { margin-bottom: 20px; } .mt-20 { margin-top: 20px; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
         
-        /* BATTLEFIELD 2.0 */
         .bf-card { width: 110px; border-radius: 6px; position: relative; cursor: grab; transition: 0.2s; }
         .bf-card img { width: 100%; border-radius: 6px; }
-        .bf-card:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 0 10px var(--primary); }
         .bf-tapped { transform: rotate(5deg) translateY(10px); filter: grayscale(0.5) brightness(0.7); }
         .drag-over { border: 2px dashed var(--primary) !important; background: rgba(167, 139, 250, 0.1); }
-        .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #000; z-index: 20; font-weight: 700; }
         
-        /* VISUAL DECK VIEW */
-        .visual-section { margin-bottom: 20px; }
-        .visual-header { border-bottom: 1px solid var(--border); margin-bottom: 10px; font-size: 12px; color: var(--subtext); font-weight: 700; text-transform: uppercase; }
-        .visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-        
-        /* LINK STYLES */
         .deck-line { padding: 6px 10px; border-radius: 4px; margin-bottom: 2px; font-size: 13px; display: flex; justify-content: space-between; }
         .is-owned { border-left: 3px solid var(--green); background: rgba(217, 70, 239, 0.05); }
         .is-partial { border-left: 3px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
         .is-missing { border-left: 3px solid var(--red); opacity: 0.7; }
         .progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s; }
-        
-        /* FAB */
-        .fab-btn { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 4px 15px rgba(167, 139, 250, 0.6); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: transform 0.2s, box-shadow 0.2s; }
-        .fab-btn:active { transform: scale(0.90); }
-        @media (min-width: 769px) { .fab-btn { display: none; } }
-
-        /* THEME GRID */
-        .theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
-        .theme-btn { width: 100%; aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
-        .theme-btn:hover { transform: scale(1.1); }
-        .theme-btn.active-theme { border-color: white; box-shadow: 0 0 10px white; }
-
-        /* BADGES */
         .gain-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--green); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); display:flex; justify-content: space-between; align-items: flex-end; }
-        
         .empty-state { text-align: center; color: var(--subtext); padding: 40px; border: 2px dashed var(--border); border-radius: 12px; }
-        
-        /* NAV ACTIVE */
         .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
     </style>
 </head>
@@ -127,7 +93,7 @@
     
     <div id="delete-modal" class="modal-overlay hidden">
         <div class="card-box" style="max-width: 400px; border-color: var(--red);">
-            <h2 style="color:var(--red);">Sacrifice Deck?</h2>
+            <h2 style="color:var(--red);">Sacrifice?</h2>
             <p class="text-sub mb-20">Are you sure? This cannot be undone.</p>
             <div class="flex-row" style="justify-content: center;">
                 <button onclick="confirmDelete(this)" style="background:var(--red);">🔥 Destroy</button>
@@ -160,7 +126,7 @@
     <div id="app" class="app-container hidden">
         <div id="sidebar" class="sidebar">
             <div class="flex-between mb-20">
-                <div style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-size:10px;">v9.9.4</span></div>
+                <div style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-size:10px;">v9.9.5</span></div>
                 <div class="text-sub" style="cursor:pointer;" onclick="toggleSidebar()">✕</div>
             </div>
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
@@ -191,7 +157,6 @@
                     <input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()">
                     <div id="search-status" class="text-sub mb-20"></div>
                     <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
-                    
                     <div class="flex-row">
                         <input id="set" readonly placeholder="SET" style="width: 30%;">
                         <input id="num" readonly placeholder="#" style="width: 30%;">
@@ -199,12 +164,10 @@
                     </div>
                     <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
                     <input id="add-tags" placeholder="Tags (foil, trade)...">
-                    
                     <div class="flex-between mb-20 mt-20">
                         <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
                         <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
                     </div>
-
                     <div class="flex-row">
                         <button onclick="addCard(this, false)">Add to Collection</button>
                         <button onclick="addCard(this, true)" class="secondary">Wishlist</button>
@@ -238,13 +201,12 @@
                             <button onclick="initBattlefield()" class="btn-sm" style="background:var(--primary);">⚔️ Play</button>
                         </div>
                     </div>
-                    
                     <div id="editor-mode">
                         <div class="card-box">
                             <div class="flex-row mb-20">
-                                <input id="deckName" placeholder="Deck Name" style="flex:2; padding-left:14px;">
-                                <input id="deckCommander" placeholder="Commander" style="flex:2; padding-left:14px;">
-                                <select id="deckFormat" style="flex:1; padding-left:14px;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
+                                <input id="deckName" placeholder="Deck Name" style="flex:2;">
+                                <input id="deckCommander" placeholder="Commander" style="flex:2;">
+                                <select id="deckFormat" style="flex:1;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
                             </div>
                             <div class="flex-between mb-10"><span class="text-sub text-bold">LIVE CURVE</span><span id="editor-card-count">0</span></div>
                             <div style="height:100px; position:relative;"><canvas id="editorManaChart"></canvas></div>
@@ -258,7 +220,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div id="detail-mode" class="hidden">
                         <div class="deck-area-detail">
                             <div class="card-box">
@@ -280,13 +241,11 @@
                                 <div id="detail-visual-grid" class="hidden"></div>
                                 <div id="detail-decklist-viewer" class="deck-list-viewer"></div>
                             </div>
-                            
                             <div class="card-box">
                                 <h3 class="mb-20">Analysis</h3>
                                 <div class="flex-between mb-10 text-sub"><span>Value</span><span id="detail-deck-price" class="text-green text-bold">$0.00</span></div>
                                 <div class="flex-between mb-10 text-sub"><span>Missing</span><span id="detail-missing-cost" class="text-red text-bold">$0.00</span></div>
                                 <div class="progress-bg mb-20"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
-                                
                                 <div id="deck-advisor" class="mt-20 pt-20" style="border-top:1px solid var(--border);"></div>
                                 <div id="deck-charts" class="mt-20"><canvas id="typeChart"></canvas><canvas id="manaCurve"></canvas></div>
                                 <button class="secondary w-full mt-20" onclick="openLandCalculator()">Geomancer</button>
@@ -327,7 +286,6 @@
                     <h2>Settings</h2>
                     <input id="settings-username" placeholder="Username">
                     <button onclick="saveProfile(this)" class="mb-20">Save Identity</button>
-                    
                     <h3 class="mb-10">Theme</h3>
                     <div class="theme-grid mb-20">
                         <div class="theme-btn" style="background:#a78bfa;" onclick="applyTheme('purple')"></div> 
@@ -379,9 +337,6 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
-        
-        // ERROR TRAP
-        window.onerror = function(msg, url, line) { alert("Error on line " + line + ": " + msg); return false; };
 
         // STATE
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId, pendingDeleteId;
@@ -391,25 +346,21 @@
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
-        // --- HELPERS (Global Scope) ---
+        // --- HELPERS (CRASH PROOF) ---
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
+        function setText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val; }
+        function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
+        function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V9.9.4)
+        // FIXED IMAGE LOADER
         function getCardImage(c) {
             if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
-            // 1. Direct saved URL
             if(c.image_url) return c.image_url;
-            // 2. Scryfall object structure
             if(c.image_uris?.normal) return c.image_uris.normal;
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
-            
-            // 3. Mathematical Fallback (Lens)
-            const set = c.set_code || c.set;
-            const num = c.collector_number || c.num;
-            if(set && num) {
-                 return `https://cards.scryfall.io/normal/front/${set.charAt(0)}/${set.charAt(1)}/${set}/${num}.jpg`;
-            }
+            const set = c.set_code || c.set; const num = c.collector_number || c.num;
+            if(set && num) return `https://cards.scryfall.io/normal/front/${set.charAt(0).toLowerCase()}/${set.charAt(1).toLowerCase()}/${set.toLowerCase()}/${num}.jpg`;
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
@@ -418,20 +369,17 @@
         // --- AUTH ---
         async function handleAuthAction(btn) {
             setLoading(btn, true);
-            const e=document.getElementById('email').value, p=document.getElementById('password').value;
+            const e=getValue('email'), p=getValue('password');
             const { data, error } = await sb.auth.signInWithPassword({ email:e, password:p });
             if(error) {
                 const sup = await sb.auth.signUp({ email:e, password:p });
                 if(!sup.error) showToast("Check email to confirm."); else showToast(sup.error.message);
-            } else {
-                session = data.session;
-                initApp();
-            }
+            } else { session = data.session; initApp(); }
             setLoading(btn, false);
         }
         async function handleLogout(btn) { setLoading(btn, true); await sb.auth.signOut(); window.location.reload(); }
         async function saveProfile(btn) {
-             const u = document.getElementById('settings-username').value;
+             const u = getValue('settings-username');
              if(u) { setLoading(btn,true); await sb.from('profiles').upsert({id:session.user.id, username:u}); setLoading(btn,false); showToast("Saved"); }
         }
         
@@ -444,17 +392,15 @@
         // --- NAVIGATION ---
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
-            document.getElementById('view-'+v).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); 
+            const view = document.getElementById('view-'+v);
+            if(view) view.classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            if(active) active.classList.add('active');
             
-            // Highlight
-            const activeLink = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
-            if(activeLink) activeLink.classList.add('active');
-
             if(v === 'decks') loadDecks();
             if(v === 'collection') loadCollection();
             if(v === 'oracle') loadOracle();
-            // Close mobile menu
             document.getElementById('sidebar').classList.remove('mobile-open');
         }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
@@ -462,7 +408,6 @@
         function openUserOptionsModal() { document.getElementById('user-options-modal').classList.remove('hidden'); }
         function toggleResetMode() { showToast("Not implemented yet"); }
 
-        // --- THEME ---
         function applyTheme(theme) {
             const root = document.documentElement;
             if(theme==='white') { root.style.setProperty('--primary', '#fcd34d'); root.style.setProperty('--bg-dark', '#57534e'); }
@@ -485,48 +430,42 @@
                 vaultLookup[key] = (vaultLookup[key]||0) + c.quantity;
                 if(c.quantity > 0) { count += c.quantity; val += (c.market_price_usd||0)*c.quantity; cost += (c.buy_price||0)*c.quantity; }
             });
-            document.getElementById('stat-count').innerText = count;
-            document.getElementById('stat-value').innerText = "$"+val.toFixed(2);
-            document.getElementById('stat-cost').innerText = "$"+cost.toFixed(2);
+            setText('stat-count', count);
+            setText('stat-value', "$"+val.toFixed(2));
+            setText('stat-cost', "$"+cost.toFixed(2));
             
             const recent = cardsCache.filter(c=>c.quantity>0).slice(0, 5);
-            // EMPTY STATE POLISH (V9.9.3)
             const grid = document.getElementById('recent-grid');
-            if(recent.length === 0) grid.innerHTML = '<div class="empty-state">No cards yet. Click "Add Card".</div>';
-            else grid.innerHTML = recent.map(c => `
+            if(recent.length === 0) setHTML('recent-grid', '<div class="empty-state">No cards yet. Click "Add Card".</div>');
+            else setHTML('recent-grid', recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
                     <img src="${getCardImage(c)}" loading="lazy">
                     <div class="overlay"><span>${c.name}</span></div>
                 </div>
-            `).join('');
+            `).join(''));
         }
 
         function loadCollection() { filterVault(); }
         function loadOracle() {
             const oracle = cardsCache.filter(c => c.quantity === 0);
-            const grid = document.getElementById('oracle-grid');
-            if(oracle.length === 0) grid.innerHTML = '<div class="empty-state">Wishlist is empty.</div>';
-            else grid.innerHTML = oracle.map(c => `
-                <div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy"></div>
-            `).join('');
+            if(oracle.length === 0) setHTML('oracle-grid', '<div class="empty-state">Wishlist is empty.</div>');
+            else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy"></div>`).join(''));
         }
 
         function filterVault() {
-            const search = document.getElementById('vaultSearch').value.toLowerCase();
+            const search = getValue('vaultSearch').toLowerCase();
             const filtered = cardsCache.filter(c => c.quantity > 0 && c.name.toLowerCase().includes(search));
-            const grid = document.getElementById('collection-grid');
-            if(filtered.length === 0) grid.innerHTML = '<div class="empty-state">No cards match filters.</div>';
-            else grid.innerHTML = filtered.map(c => 
+            if(filtered.length === 0) setHTML('collection-grid', '<div class="empty-state">No cards match filters.</div>');
+            else setHTML('collection-grid', filtered.map(c => 
                 `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge">$${c.market_price_usd}</div>
                     <div class="overlay"><button onclick="openEditModal('${c.id}', event)">✎</button><button onclick="deleteCard('${c.id}', event)">🗑️</button></div>
                     <img src="${getCardImage(c)}" loading="lazy">
                 </div>`
-            ).join('');
+            ).join(''));
         }
 
-        // REAL APPRAISAL LOGIC (V9.9.2)
         async function appraiseCollection(btn) {
             setLoading(btn, true);
             const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
@@ -547,7 +486,7 @@
                     }
                 }
                 showToast("Appraisal Complete");
-                loadData(); // REFRESH DASHBOARD
+                loadData();
             } catch(e) { showToast("Error"); }
             setLoading(btn, false);
         }
@@ -567,7 +506,7 @@
             const card = cardsCache.find(c => c.id == id);
             if(card) {
                 document.getElementById('edit-card-id').value = id;
-                document.getElementById('edit-card-name').innerText = card.name;
+                setText('edit-card-name', card.name);
                 document.getElementById('edit-qty').value = card.quantity;
                 document.getElementById('edit-cost').value = card.buy_price;
                 document.getElementById('edit-modal').classList.remove('hidden');
@@ -576,9 +515,9 @@
         
         async function saveEdit(btn) {
             setLoading(btn, true);
-            const id = document.getElementById('edit-card-id').value;
-            const q = document.getElementById('edit-qty').value;
-            const c = document.getElementById('edit-cost').value;
+            const id = getValue('edit-card-id');
+            const q = getValue('edit-qty');
+            const c = getValue('edit-cost');
             await sb.from('cards').update({ quantity:q, buy_price:c }).eq('id', id);
             document.getElementById('edit-modal').classList.add('hidden');
             setLoading(btn, false);
@@ -616,9 +555,9 @@
         // --- ADD CARD ---
         function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(fetchMeta, 500); }
         async function fetchMeta() {
-            const q = document.getElementById('search').value;
+            const q = getValue('search');
             if(q.length < 3) return;
-            document.getElementById('search-status').innerText = "Searching...";
+            setText('search-status', "Searching...");
             
             let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints`;
             const match = q.match(/^([a-z]{3,4})\s*(\d+)$/i);
@@ -628,7 +567,7 @@
                 const res = await fetch(url);
                 const d = await res.json();
                 allVersions = d.data || (d.object === 'card' ? [d] : []);
-                document.getElementById('search-status').innerText = allVersions.length + " found.";
+                setText('search-status', allVersions.length + " found.");
                 
                 const s = document.getElementById('versionSelect');
                 s.innerHTML = '';
@@ -639,15 +578,15 @@
                     s.appendChild(opt);
                 });
                 updateSelectedVersion();
-            } catch(e) { document.getElementById('search-status').innerText = "Error"; }
+            } catch(e) { setText('search-status', "Error"); }
         }
         
         function updateSelectedVersion() {
-            const v = allVersions[document.getElementById('versionSelect').value];
+            const v = allVersions[getValue('versionSelect')];
             if(!v) return;
             document.getElementById('set').value = v.set.toUpperCase();
             document.getElementById('num').value = v.collector_number;
-            document.getElementById('marketPrice').innerText = `$${v.prices.usd||'0.00'}`;
+            setText('marketPrice', `$${v.prices.usd||'0.00'}`);
             document.getElementById('preview').src = getCardImage(v);
             document.getElementById('preview').style.display = 'block';
             tempCardData = v;
@@ -656,9 +595,9 @@
         async function addCard(btn, isWishlist) {
             if(!tempCardData) return showToast("Select card");
             setLoading(btn, true);
-            const qty = isWishlist ? 0 : (parseInt(document.getElementById('qty').value) || 1);
-            const cost = parseFloat(document.getElementById('cost').value) || null;
-            const tags = document.getElementById('add-tags').value.split(',').filter(s=>s);
+            const qty = isWishlist ? 0 : (parseInt(getValue('qty')) || 1);
+            const cost = parseFloat(getValue('cost')) || null;
+            const tags = getValue('add-tags').split(',').filter(s=>s);
             
             const { error } = await sb.from('cards').insert({
                 user_id: session.user.id,
@@ -685,21 +624,17 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                const lines = text.split(/\r\n|\n/).slice(1); // Skip header
+                const lines = text.split(/\r\n|\n/).slice(1);
                 let out = "";
                 lines.forEach(l => {
-                    const cols = l.split(','); // Simplified csv parse
+                    const cols = l.split(',');
                     if(cols.length > 1) {
-                        // Attempt to find Name and Qty columns (rough heuristic)
                         const qty = parseInt(cols.find(c=>!isNaN(parseInt(c)) && c.length<4)) || 1;
                         const name = cols.find(c=>c.length>3 && isNaN(parseInt(c)));
                         if(name) out += `${qty} ${name}\n`;
                     }
                 });
-                // Fallback for simple "Qty Name" text files
                 if(!out) out = text;
-                
-                // V9.9.2: Store this in a hidden area or parse immediately
                 processBulkText(out);
             };
             reader.readAsText(file);
@@ -709,7 +644,6 @@
              const lines = text.split('\n').filter(l=>l.trim());
              const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x);
              
-             // Chunking
              let allCards = [];
              for(let i=0; i<idents.length; i+=75) {
                 const chunk = idents.slice(i, i+75);
@@ -718,7 +652,6 @@
                 if(d.data) allCards = allCards.concat(d.data);
              }
              
-             // Insert
              for(const c of allCards) {
                  await sb.from('cards').insert({
                      user_id:session.user.id, name:c.name, set_code:c.set, collector_number:c.collector_number,
@@ -734,15 +667,15 @@
             const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
-            if(window.myDecks.length === 0) grid.innerHTML = '<div class="empty-state">No decks. Create one!</div>';
-            else grid.innerHTML = window.myDecks.map(d => 
+            if(window.myDecks.length === 0) setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
+            else setHTML('deck-grid-container', window.myDecks.map(d => 
                 `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}');">
                     <div class="deck-card-content">
                         <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)">✕</span></div>
                         <div class="deck-card-meta"><span>${d.card_count} Cards</span><span class="format-badge">${d.format}</span></div>
                     </div>
                 </div>`
-            ).join('');
+            ).join(''));
         }
         
         function showRitualEditor(keep) {
@@ -767,7 +700,7 @@
         function clearDeckEditor() { document.getElementById('deckMain').value = ''; }
         function initEditorListeners() { document.getElementById('deckMain').addEventListener('input', () => setTimeout(updateLiveEditorStats, 500)); }
         function updateLiveEditorStats() {
-            const txt = document.getElementById('deckMain').value; const lines = txt.split('\n');
+            const txt = getValue('deckMain'); const lines = txt.split('\n');
             const data = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0}; let total=0;
             lines.forEach(l => {
                 const m = l.match(/^(\d+)\s+(.+)/);
@@ -777,11 +710,10 @@
                     if(c && c.cmc !== undefined) { let b=Math.floor(c.cmc); if(b>7)b=7; data[b]+=q; }
                 }
             });
-            document.getElementById('editor-card-count').innerText = total; 
+            setText('editor-card-count', total);
             renderEditorChart(data);
         }
         
-        // V9.9.3 Fix: Canvas Size Locking
         function renderEditorChart(d) {
             const ctx=document.getElementById('editorManaChart').getContext('2d'); if(editorChartInstance) editorChartInstance.destroy();
             editorChartInstance = new Chart(ctx, { type:'bar', data:{labels:['0','1','2','3','4','5','6','7+'],datasets:[{data:Object.values(d),backgroundColor:'#3b82f6',borderRadius:2}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{display:false}}} });
@@ -789,7 +721,7 @@
 
         async function validateDeck(btn) {
             setLoading(btn, true);
-            const main = document.getElementById('deckMain').value;
+            const main = getValue('deckMain');
             const lines = main.split('\n').filter(l=>l.trim());
             const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x);
             
@@ -819,7 +751,7 @@
         function processDeckData(data) {
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
-            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Deck";
+            setText('detail-deck-name', getValue('deckName') || "New Deck");
             
             let totalVal=0, types={}, cmcs={}, colors={W:0,U:0,B:0,R:0,G:0,C:0};
             let ownedVal=0, missingVal=0, ownedCount=0, totalCount=0;
@@ -852,13 +784,13 @@
                 return `<div class="deck-line ${status}" data-name="${c.name}" data-qty="${missing}"><b>${c.qty}</b> ${c.name} <span style="float:right; opacity:0.6;">$${c.price.toFixed(2)} (${effectiveHave}/${c.qty})</span></div>`;
             }).join('');
 
-            document.getElementById('detail-decklist-viewer').innerHTML = listHtml;
-            document.getElementById('detail-deck-price').innerText = "$"+totalVal.toFixed(2);
-            document.getElementById('detail-missing-cost').innerText = "$"+missingVal.toFixed(2);
+            setHTML('detail-decklist-viewer', listHtml);
+            setText('detail-deck-price', "$"+totalVal.toFixed(2));
+            setText('detail-missing-cost', "$"+missingVal.toFixed(2));
             
             const pct = Math.round((ownedCount/totalCount)*100) || 0;
-            document.getElementById('detail-owned-percent').innerText = pct+"%";
-            document.getElementById('detail-owned-bar').style.width = pct+"%";
+            setText('detail-owned-percent', pct+"%");
+            const bar = document.getElementById('detail-owned-bar'); if(bar) bar.style.width = pct+"%";
             
             document.getElementById('deck-charts').classList.remove('hidden');
             renderTypeChart(types); renderManaCurve(cmcs);
@@ -878,7 +810,7 @@
                 let col = 'var(--red)'; if(d.count/d.target > 0.8) col='var(--green)';
                 advHtml += `<div class="mb-20"><div class="flex-between text-sub" style="font-size:10px;"><span style="text-transform:capitalize">${k}</span><span>${d.count}/${d.target}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${Math.min(100, (d.count/d.target)*100)}%; background:${col}"></div></div></div>`;
             }
-            document.getElementById('deck-advisor').innerHTML = advHtml;
+            setHTML('deck-advisor', advHtml);
         }
 
         function renderTypeChart(d) { 
@@ -893,8 +825,8 @@
 
         async function saveDeck(btn) {
             setLoading(btn, true);
-            const name = document.getElementById('deckName').value;
-            const main = document.getElementById('deckMain').value;
+            const name = getValue('deckName');
+            const main = getValue('deckMain');
             try {
                 if(!name) throw new Error("Name required");
                 const payload = { 
@@ -963,7 +895,7 @@
             if (!window.currentDeckStats) return;
             const s = window.currentDeckStats;
             const total = s.W+s.U+s.B+s.R+s.G;
-            if(total===0) { document.getElementById('land-results').innerHTML="No symbols found."; return; }
+            if(total===0) { setHTML('land-results', "No symbols found."); return; }
             let html='';
             suggestedLands=[];
             const types=[{n:'Plains',c:'pip-w',v:s.W},{n:'Island',c:'pip-u',v:s.U},{n:'Swamp',c:'pip-b',v:s.B},{n:'Mountain',c:'pip-r',v:s.R},{n:'Forest',c:'pip-g',v:s.G}];
@@ -976,7 +908,7 @@
                     }
                 }
             });
-            document.getElementById('land-results').innerHTML=html;
+            setHTML('land-results', html);
         }
         function applyLands() {
             const box = document.getElementById('deckMain');
@@ -1003,15 +935,15 @@
             renderBF();
         }
         function renderBF() {
-            document.getElementById('bf-lib-count').innerText = gameState.lib.length;
-            document.getElementById('bf-grave-count').innerText = gameState.grave.length;
-            document.getElementById('bf-exile-count').innerText = gameState.exile.length;
-            document.getElementById('bf-life').innerText = gameState.life;
-            document.getElementById('bf-turn').innerText = gameState.turn;
+            setText('bf-lib-count', gameState.lib.length);
+            setText('bf-grave-count', gameState.grave.length);
+            setText('bf-exile-count', gameState.exile.length);
+            setText('bf-life', gameState.life);
+            setText('bf-turn', gameState.turn);
 
-            document.getElementById('bf-hand').innerHTML = gameState.hand.map(c => 
+            setHTML('bf-hand', gameState.hand.map(c => 
                 `<div class="bf-card" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="playCard('${c.uid}')"><img src="${c.img}" draggable="false"></div>`
-            ).join('');
+            ).join(''));
             
             const cardHTML = (c) => `
                 <div class="bf-card ${c.tapped?'bf-tapped':''}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}', event)">
@@ -1023,8 +955,8 @@
             const lands = gameState.field.filter(c => c.type && c.type.includes('Land'));
             const spells = gameState.field.filter(c => !c.type || !c.type.includes('Land'));
             
-            document.getElementById('bf-backline').innerHTML = lands.map(cardHTML).join('');
-            document.getElementById('bf-frontline').innerHTML = spells.map(cardHTML).join('');
+            setHTML('bf-backline', lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', spells.map(cardHTML).join(''));
         }
         
         function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
@@ -1092,11 +1024,11 @@
             document.getElementById('codex-modal').classList.remove('hidden');
             fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
                 document.getElementById('codex-img').src=getCardImage(d);
-                document.getElementById('codex-title').innerText=d.name;
-                document.getElementById('codex-type').innerText=d.type_line;
-                document.getElementById('codex-text').innerText=d.oracle_text;
+                setText('codex-title', d.name);
+                setText('codex-type', d.type_line);
+                setText('codex-text', d.oracle_text);
                 let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
-                document.getElementById('codex-legality').innerHTML=h;
+                setHTML('codex-legality', h);
                 window.scryfallLink=d.scryfall_uri;
             })
         }
