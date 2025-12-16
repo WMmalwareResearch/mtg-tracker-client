@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.2 (Image Fix)</title>
+    <title>The Grimoire | v10.3 (Live Link)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -450,7 +450,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
-        
+
         // ERROR TRAP
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -469,13 +469,13 @@
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V10.2: PRIORITIZE API FOR STABILITY)
+        // FIXED IMAGE LOADER (V10.3: LIVE LINK)
         function getCardImage(c) {
              // 1. Fresh Scryfall Data (e.g. search results)
              if(c.image_uris?.normal) return c.image_uris.normal;
              if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
              
-             // 2. Fallback Construction (Set + Num) - MOST RELIABLE for grid
+             // 2. API Fallback (The Fix: Always use the API redirect if we have Set+Num)
              const set = (c.set_code || c.set || '').toLowerCase();
              const num = c.collector_number || c.num;
              if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
@@ -485,6 +485,7 @@
 
              return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
+        
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
@@ -528,7 +529,7 @@
             if(view) view.classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
             if(active) active.classList.add('active');
             
             if(v === 'decks') loadDecks();
@@ -572,7 +573,7 @@
             else setHTML('recent-grid', recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
-                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
+                    <img src="${getCardImage(c)}" loading="lazy">
                     <div class="overlay"><span>${c.name}</span></div>
                 </div>
             `).join(''));
@@ -1025,8 +1026,8 @@
             if(list.classList.contains('hidden')) { list.classList.remove('hidden'); grid.classList.add('hidden'); }
             else {
                 list.classList.add('hidden'); grid.classList.remove('hidden');
-                grid.innerHTML = `<div class="visual-grid">` + currentDeckCache.map(c => `
-                    <div class="grid-card">
+                grid.innerHTML = `<div class="visual-card-grid">` + currentDeckCache.map(c => `
+                    <div class="visual-card">
                         <img src="${c.img}">
                         <div class="visual-badge">${c.qty}</div>
                     </div>
@@ -1049,7 +1050,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
