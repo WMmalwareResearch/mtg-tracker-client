@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.6 (Placeholder Fix)</title>
+    <title>The Grimoire | v10.5 (Reporter)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -184,6 +184,17 @@
         </div>
     </div>
     
+    <div id="report-modal" class="modal-overlay hidden">
+        <div class="card-box" style="max-width: 400px;">
+            <h2 style="color:var(--red);">Report Bug</h2>
+            <textarea id="bug-text" placeholder="Describe the issue..." style="height:150px; margin-bottom:15px;"></textarea>
+            <div class="flex-row" style="justify-content:center;">
+                <button onclick="sendBugReport(this)" style="background:var(--red);">Send Report</button>
+                <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
     <div id="delete-modal" class="modal-overlay hidden">
         <div class="card-box" style="max-width: 400px; border-color: var(--red);">
             <h2 style="color:var(--red);">Sacrifice?</h2>
@@ -237,7 +248,9 @@
             
             <div style="flex:1;"></div>
             
-            <button class="secondary btn-sm w-full" onclick="handleLogout(this)" style="border:1px solid var(--red); color:var(--red);">Log Out</button>
+            <button class="secondary btn-sm w-full mb-10" onclick="document.getElementById('report-modal').classList.remove('hidden')" style="border:1px solid var(--red); color:var(--red); background:rgba(220, 38, 38, 0.1);">🪲 Report Bug</button>
+            
+            <button class="secondary btn-sm w-full" onclick="handleLogout(this)" style="border:1px solid var(--subtext);">Log Out</button>
             <div class="mobile-menu-btn" style="position:static; margin-top:20px; text-align:center; cursor:pointer; color:var(--subtext);" onclick="toggleSidebar()">Close Menu ✕</div>
         </div>
 
@@ -443,14 +456,19 @@
             <div onclick="nav('collection')">📚</div>
             <div onclick="nav('decks')">📋</div>
         </div>
+        <button class="fab-btn" onclick="nav('add')">+</button>
     </div>
 
     <script>
         // CONFIG
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
-        const CARD_BACK_URL = "https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
+        
+        // BUG REPORT KEYS
+        const EMAILJS_SERVICE_ID = 'service_n9utr47';
+        const EMAILJS_TEMPLATE_ID = 'template_xtth5gu';
+        const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf';
 
         // ERROR TRAP
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
@@ -470,20 +488,21 @@
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V10.6: PLACEHOLDER FALLBACK)
+        // FIXED IMAGE LOADER (V10.4: LIVE LINK + FALLBACK)
         function getCardImage(c) {
-             if(!c) return CARD_BACK_URL;
-             // 1. Fresh Scryfall Data
+             // 1. Fresh Scryfall Data (e.g. search results)
              if(c.image_uris?.normal) return c.image_uris.normal;
              if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
              
-             // 2. API Redirect (Live Link)
+             // 2. API Redirect (The Fix: Always use the API redirect if we have Set+Num)
              const set = (c.set_code || c.set || '').toLowerCase();
              const num = c.collector_number || c.num;
              if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
 
-             // 3. Fallback to Card Back (User Request)
-             return CARD_BACK_URL;
+             // 3. Database URL (Last resort)
+             if(c.image_url && c.image_url.includes('http')) return c.image_url;
+
+             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
@@ -521,6 +540,30 @@
             setText('user-email', session.user.email);
         }
 
+        // --- BUG REPORT (V10.5) ---
+        async function sendBugReport(btn) {
+            const txt = getValue('bug-text');
+            if(!txt) return showToast("Describe the bug first.");
+            setLoading(btn, true);
+            
+            const templateParams = {
+                bug_description: txt,
+                user_email: session ? session.user.email : 'Anonymous',
+                app_version: 'v10.5'
+            };
+
+            try {
+                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY);
+                showToast("Report Sent!");
+                document.getElementById('report-modal').classList.add('hidden');
+                document.getElementById('bug-text').value = '';
+            } catch(e) {
+                console.error(e);
+                showToast("Failed to send. Check console.");
+            }
+            setLoading(btn, false);
+        }
+
         // --- NAVIGATION ---
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
@@ -528,7 +571,7 @@
             if(view) view.classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
             if(active) active.classList.add('active');
             
             if(v === 'decks') loadDecks();
@@ -572,7 +615,7 @@
             else setHTML('recent-grid', recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
-                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='${CARD_BACK_URL}'">
+                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
                     <div class="overlay"><span>${c.name}</span></div>
                 </div>
             `).join(''));
@@ -582,7 +625,7 @@
         function loadOracle() {
             const oracle = cardsCache.filter(c => c.quantity === 0);
             if(oracle.length === 0) setHTML('oracle-grid', '<div class="empty-state">Wishlist is empty.</div>');
-            else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onerror="this.src='${CARD_BACK_URL}'"></div>`).join(''));
+            else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'"></div>`).join(''));
         }
 
         function filterVault() {
@@ -607,7 +650,7 @@
                 `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge">$${c.market_price_usd}</div>
                     <div class="overlay"><button onclick="openEditModal('${c.id}', event)">✎</button><button onclick="deleteCard('${c.id}', event)">🗑️</button></div>
-                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='${CARD_BACK_URL}'">
+                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
                 </div>`
             ).join(''));
         }
@@ -1025,8 +1068,8 @@
             if(list.classList.contains('hidden')) { list.classList.remove('hidden'); grid.classList.add('hidden'); }
             else {
                 list.classList.add('hidden'); grid.classList.remove('hidden');
-                grid.innerHTML = `<div class="visual-card-grid">` + currentDeckCache.map(c => `
-                    <div class="visual-card">
+                grid.innerHTML = `<div class="visual-grid">` + currentDeckCache.map(c => `
+                    <div class="grid-card">
                         <img src="${c.img}">
                         <div class="visual-badge">${c.qty}</div>
                     </div>
