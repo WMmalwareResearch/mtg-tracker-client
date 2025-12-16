@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.9.3 (Polished)</title>
+    <title>The Grimoire | v9.9.4 (Stabilized)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -27,21 +27,21 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Layout */
-        .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; position: relative; }
-        .sidebar { background: var(--card-bg); padding: 25px; display: flex; flex-direction: column; border-right: 1px solid var(--border); z-index: 50; }
+        .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
+        .sidebar { background: var(--card-bg); padding: 25px; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
         .main { padding: 30px; overflow-y: auto; flex: 1; position: relative; }
         .bottom-nav { display: none; }
         
-        /* MOBILE FIXES (V9.9.3) */
+        /* MOBILE */
         @media (max-width: 768px) { 
             .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
-            .sidebar { display: none; position: absolute; top: 0; left: 0; height: 100%; width: 280px; box-shadow: 10px 0 20px rgba(0,0,0,0.5); } 
+            .sidebar { display: none; position: absolute; top: 0; left: 0; height: 100%; width: 280px; box-shadow: 10px 0 20px rgba(0,0,0,0.5); z-index: 2000; } 
             .sidebar.mobile-open { display: flex; }
-            .bottom-nav { display: flex; position: fixed; bottom: 0; width: 100%; background: var(--bg-dark); border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 100; backdrop-filter: blur(10px); } 
+            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-dark); border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 100; backdrop-filter: blur(10px); } 
             .main { padding: 15px; } 
             .mobile-menu-btn { display: block !important; }
         }
-        .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 40; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
+        .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 500; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; }
 
         /* Components */
         .card-box { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow); }
@@ -104,8 +104,10 @@
         .gain-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.8); color: var(--green); padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); display:flex; justify-content: space-between; align-items: flex-end; }
         
-        /* EMPTY STATE */
         .empty-state { text-align: center; color: var(--subtext); padding: 40px; border: 2px dashed var(--border); border-radius: 12px; }
+        
+        /* NAV ACTIVE */
+        .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
     </style>
 </head>
 <body>
@@ -158,7 +160,7 @@
     <div id="app" class="app-container hidden">
         <div id="sidebar" class="sidebar">
             <div class="flex-between mb-20">
-                <div style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-size:10px;">v9.9.3</span></div>
+                <div style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-size:10px;">v9.9.4</span></div>
                 <div class="text-sub" style="cursor:pointer;" onclick="toggleSidebar()">✕</div>
             </div>
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
@@ -216,7 +218,7 @@
                     <h2>Collection</h2>
                     <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise</button>
                 </div>
-                <input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()">
+                <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()" style="padding-left:40px;"></div>
                 <div id="collection-grid" class="collection-grid mt-20"></div>
             </div>
 
@@ -240,9 +242,9 @@
                     <div id="editor-mode">
                         <div class="card-box">
                             <div class="flex-row mb-20">
-                                <input id="deckName" placeholder="Deck Name" style="flex:2;">
-                                <input id="deckCommander" placeholder="Commander" style="flex:2;">
-                                <select id="deckFormat" style="flex:1;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
+                                <input id="deckName" placeholder="Deck Name" style="flex:2; padding-left:14px;">
+                                <input id="deckCommander" placeholder="Commander" style="flex:2; padding-left:14px;">
+                                <select id="deckFormat" style="flex:1; padding-left:14px;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
                             </div>
                             <div class="flex-between mb-10"><span class="text-sub text-bold">LIVE CURVE</span><span id="editor-card-count">0</span></div>
                             <div style="height:100px; position:relative;"><canvas id="editorManaChart"></canvas></div>
@@ -377,6 +379,9 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
+        
+        // ERROR TRAP
+        window.onerror = function(msg, url, line) { alert("Error on line " + line + ": " + msg); return false; };
 
         // STATE
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId, pendingDeleteId;
@@ -386,14 +391,25 @@
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
-        // --- HELPERS ---
+        // --- HELPERS (Global Scope) ---
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
+        
+        // FIXED IMAGE LOADER (V9.9.4)
         function getCardImage(c) {
             if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
+            // 1. Direct saved URL
             if(c.image_url) return c.image_url;
+            // 2. Scryfall object structure
             if(c.image_uris?.normal) return c.image_uris.normal;
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
+            
+            // 3. Mathematical Fallback (Lens)
+            const set = c.set_code || c.set;
+            const num = c.collector_number || c.num;
+            if(set && num) {
+                 return `https://cards.scryfall.io/normal/front/${set.charAt(0)}/${set.charAt(1)}/${set}/${num}.jpg`;
+            }
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
@@ -429,6 +445,12 @@
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             document.getElementById('view-'+v).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); 
+            
+            // Highlight
+            const activeLink = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            if(activeLink) activeLink.classList.add('active');
+
             if(v === 'decks') loadDecks();
             if(v === 'collection') loadCollection();
             if(v === 'oracle') loadOracle();
@@ -504,7 +526,7 @@
             ).join('');
         }
 
-        // REAL APPRAISAL LOGIC (V9.9.3 Fix: Reload Data on Success)
+        // REAL APPRAISAL LOGIC (V9.9.2)
         async function appraiseCollection(btn) {
             setLoading(btn, true);
             const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
