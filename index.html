@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.0 (RC1)</title>
+    <title>The Grimoire | v10.1 (Visual Fidelity)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,7 +29,7 @@
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- LAYOUT (V9.7 Sidebar Structure) --- */
+        /* --- LAYOUT --- */
         .app-container { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
         .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); padding: 25px; display: flex; flex-direction: column; border-right: 1px solid var(--border); z-index: 50; }
         .main { padding: 40px clamp(1rem, 2vw + 1rem, 5rem); overflow-y: auto; flex: 1; position: relative; }
@@ -45,7 +45,7 @@
         }
         .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 500; background: var(--card-bg); border: 1px solid var(--border); padding: 8px; border-radius: 6px; cursor: pointer; }
 
-        /* SIDEBAR IDENTITY (V9.7) */
+        /* SIDEBAR IDENTITY */
         .logo { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .user-profile-section { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
         .user-profile-section:hover { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; margin: 0 0 20px 0; }
@@ -84,7 +84,7 @@
         .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; color: white; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* GRIDS & CARDS (Restored Badges) */
+        /* GRIDS & CARDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         
@@ -97,7 +97,7 @@
         .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(15, 10, 28, 1) 0%, rgba(15, 10, 28, 0.6) 40%, rgba(15, 10, 28, 0) 100%); z-index: 1; }
         .deck-card-content { position: relative; z-index: 2; padding: 20px; }
 
-        /* Badges & Overlay (Restored from V9.7) */
+        /* Badges & Overlay */
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
@@ -129,7 +129,6 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
         
-        /* Battlefield Cards */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
         .bf-row { flex: 1; padding: 20px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); overflow-y: auto; }
@@ -206,6 +205,14 @@
         </div>
     </div>
     
+    <div id="user-options-modal" class="modal-overlay hidden" onclick="closeUserOptionsModal()">
+        <div class="card-box" style="max-width: 300px; text-align: left;" onclick="event.stopPropagation()">
+            <h2 style="color:var(--primary); margin-bottom: 15px;">Menu</h2>
+            <button class="secondary mb-20 w-full" onclick="nav('settings', 'settings'); closeUserOptionsModal()">⚙️ Settings</button>
+            <button onclick="handleLogout(this)" class="w-full" style="background:var(--red);">🚪 Log Out</button>
+        </div>
+    </div>
+    
     <div id="app" class="app-container hidden">
         <div id="sidebar" class="sidebar">
             <div class="logo">🩸 The Grimoire</div>
@@ -228,7 +235,7 @@
             <div style="flex:1;"></div>
             
             <button class="secondary btn-sm w-full" onclick="handleLogout(this)" style="border:1px solid var(--red); color:var(--red);">Log Out</button>
-            <div class="mobile-only text-sub mt-20" onclick="toggleSidebar()" style="text-align:center; cursor:pointer;">Close Menu ✕</div>
+            <div class="mobile-menu-btn" style="position:static; margin-top:20px; text-align:center; cursor:pointer; color:var(--subtext);" onclick="toggleSidebar()">Close Menu ✕</div>
         </div>
 
         <div class="main">
@@ -433,7 +440,6 @@
             <div onclick="nav('collection')">📚</div>
             <div onclick="nav('decks')">📋</div>
         </div>
-        <button class="fab-btn" onclick="nav('add')">+</button>
     </div>
 
     <script>
@@ -441,7 +447,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
-
+        
         // ERROR TRAP
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -460,16 +466,21 @@
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER
+        // FIXED IMAGE LOADER (V10.1)
         function getCardImage(c) {
             if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
             if(c.image_url) return c.image_url;
             if(c.image_uris?.normal) return c.image_uris.normal;
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
-            const set = c.set_code || c.set; const num = c.collector_number || c.num;
-            if(set && num) return `https://cards.scryfall.io/normal/front/${set.charAt(0).toLowerCase()}/${set.charAt(1).toLowerCase()}/${set.toLowerCase()}/${num}.jpg`;
+            
+            // API Fallback (Reliable)
+            const set = (c.set_code || c.set || '').toLowerCase();
+            const num = c.collector_number || c.num;
+            if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
+            
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
+        
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
@@ -513,7 +524,7 @@
             if(view) view.classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
             if(active) active.classList.add('active');
             
             if(v === 'decks') loadDecks();
@@ -557,7 +568,7 @@
             else setHTML('recent-grid', recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
-                    <img src="${getCardImage(c)}" loading="lazy">
+                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
                     <div class="overlay"><span>${c.name}</span></div>
                 </div>
             `).join(''));
@@ -567,7 +578,7 @@
         function loadOracle() {
             const oracle = cardsCache.filter(c => c.quantity === 0);
             if(oracle.length === 0) setHTML('oracle-grid', '<div class="empty-state">Wishlist is empty.</div>');
-            else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy"></div>`).join(''));
+            else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'"></div>`).join(''));
         }
 
         function filterVault() {
@@ -590,10 +601,9 @@
             if(filtered.length === 0) setHTML('collection-grid', '<div class="empty-state">No cards match filters.</div>');
             else setHTML('collection-grid', filtered.map(c => 
                 `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
-                    ${c.tags ? `<div class="tag-container">${c.tags.map(t=>`<div class="tag-pill">${t}</div>`).join('')}</div>` : ''}
                     <div class="gain-badge">$${c.market_price_usd}</div>
                     <div class="overlay"><button onclick="openEditModal('${c.id}', event)">✎</button><button onclick="deleteCard('${c.id}', event)">🗑️</button></div>
-                    <img src="${getCardImage(c)}" loading="lazy">
+                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
                 </div>`
             ).join(''));
         }
@@ -890,6 +900,7 @@
             const listHtml = data.map(c => {
                 const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
                 const have = vaultLookup[key] || 0;
+                // Basic land assumption
                 const isBasic = ['plains','island','swamp','mountain','forest'].some(x => c.name.toLowerCase().includes(x));
                 const effectiveHave = isBasic ? c.qty : have;
                 const match = Math.min(effectiveHave, c.qty);
