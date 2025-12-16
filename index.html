@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.6.1 (The Lens)</title>
+    <title>The Grimoire | v9.7 (Grand Restoration)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,105 +12,199 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --primary: #a78bfa; --bg-dark: #0f0a1c; --card-bg: rgba(45, 21, 60, 0.9); --text: #f8fafc; --subtext: #a1a1aa; --border: rgba(167, 139, 250, 0.2); --green: #d946ef; --red: #dc2626; --yellow: #facc15; --blue: #3b82f6; --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); }
-        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #1a1a1a, var(--bg-dark)); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        * { box-sizing: border-box; } .hidden { display: none !important; }
-        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        /* --- THEME & VARS (Restored V9.0) --- */
+        :root { 
+            --primary: #a78bfa; 
+            --bg-dark: #0f0a1c; 
+            --card-bg: rgba(45, 21, 60, 0.8); 
+            --text: #f8fafc; 
+            --subtext: #a1a1aa; 
+            --border: rgba(167, 139, 250, 0.2); 
+            --green: #d946ef; --red: #dc2626; --yellow: #facc15; --blue: #3b82f6; 
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            --chart-color-1: #d946ef; --chart-color-2: #dc2626; --chart-color-3: #a78bfa; --chart-color-4: #4f46e5; --chart-color-5: #059669;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top left, #1a1a1a, var(--bg-dark)); background-attachment: fixed; color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; font-size: clamp(1rem, 0.8rem + 0.5vw, 1.125rem); overflow: hidden; transition: background 0.5s; }
+        * { box-sizing: border-box; }
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- LAYOUT & NAV --- */
+        .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
+        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
+        .main { padding: 40px clamp(1rem, 2vw + 1rem, 5rem); overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+        .bottom-nav { display: none; } 
+
+        @media (max-width: 768px) { 
+            .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
+            .sidebar { display: none; } 
+            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 28, 0.95); border-top: 1px solid var(--border); padding: 10px 0; justify-content: space-around; z-index: 20; backdrop-filter: blur(10px); }
+            .main { padding: 20px 15px; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+            .dashboard-split { grid-template-columns: 1fr; }
+        }
+
+        .nav-item { padding: 12px 15px; cursor: pointer; color: var(--subtext); font-weight: 500; border-radius: 8px; transition: all 0.2s; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+        .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
         
-        /* UI & Buttons */
-        button { position: relative; overflow: hidden; transform: translate3d(0, 0, 0); cursor: pointer; user-select: none; transition: 0.1s; }
-        button:active { transform: scale(0.98); }
-        .btn-loading { pointer-events: none; opacity: 0.7; color: transparent !important; }
-        .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
+        .b-item.active { color: var(--primary); }
 
-        /* Layout */
-        .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; }
-        .sidebar { background: var(--card-bg); padding: 25px; display: flex; flex-direction: column; border-right: 1px solid var(--border); }
-        .main { padding: 30px; overflow-y: auto; flex: 1; }
-        .bottom-nav { display: none; }
-        @media (max-width: 768px) { .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } .sidebar { display: none; } .bottom-nav { display: flex; position: fixed; bottom: 0; width: 100%; background: var(--bg-dark); border-top: 1px solid var(--border); justify-content: space-around; padding: 15px; z-index: 100; backdrop-filter: blur(10px); } .main { padding: 15px; } }
-
-        /* Components */
-        .card-box { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: var(--shadow); }
-        input, select, textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); color: white; border-radius: 6px; margin-bottom: 10px; }
-        button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 6px; font-weight: 600; }
-        .secondary { background: rgba(255,255,255,0.1); }
+        /* --- COMPONENTS (V9.0 Aesthetic) --- */
+        .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
+        h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
+        h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;}
+        
+        /* Inputs & Buttons */
+        .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
+        .input-icon { position: absolute; left: 12px; color: var(--subtext); font-size: 16px; pointer-events: none; }
+        input, select, textarea { width: 100%; padding: 14px 14px 14px 14px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: white; font-size: 14px; margin: 0; margin-bottom: 10px; }
+        .input-group input { padding-left: 40px; margin-bottom: 0; }
+        
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s, background 0.3s; position: relative; overflow: hidden; }
+        button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
+        button.secondary { background: rgba(255,255,255,0.1); }
         .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
         .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
         
-        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); cursor: pointer; background: rgba(0,0,0,0.3); transition: transform 0.2s; }
-        .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s; }
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; }
-        
-        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-        .deck-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; height: 280px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center; }
-        .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); }
-        .deck-card-content { position: relative; z-index: 2; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+        /* Ripple & Loading (V9.6 Features) */
+        button:after { content: ""; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; background-image: radial-gradient(circle, #fff 10%, transparent 10.01%); background-repeat: no-repeat; background-position: 50%; transform: scale(10, 10); opacity: 0; transition: transform .5s, opacity 1s; }
+        button:active:after { transform: scale(0, 0); opacity: .2; transition: 0s; }
+        .btn-loading { pointer-events: none; opacity: 0.7; color: transparent !important; }
+        .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; color: white; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Utils */
+        /* GRIDS & CARDS (Restored Badges) */
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        
+        .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: rgba(0,0,0,0.3); border: 1px solid var(--border); }
+        .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .grid-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.5s; }
+        
+        .deck-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; height: 300px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center; }
+        .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow); }
+        .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(15, 10, 28, 1) 0%, rgba(15, 10, 28, 0.6) 40%, rgba(15, 10, 28, 0) 100%); z-index: 1; }
+        .deck-card-content { position: relative; z-index: 2; padding: 20px; }
+
+        /* Badges & Overlay (Restored from V9.0) */
+        .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
+        .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
+        .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; z-index: 5; align-items: flex-start; }
+        .format-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+        /* Dashboard & Utilities */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
+        .dashboard-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .flex-row { display: flex; gap: 10px; align-items: center; }
-        .text-sub { color: var(--subtext); font-size: 12px; }
-        .mb-20 { margin-bottom: 20px; } .mt-20 { margin-top: 20px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .flex-row { display: flex; align-items: center; gap: 10px; }
+        .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; }
+        .text-sub { font-size: 12px; color: var(--subtext); }
+        .text-green { color: var(--green); } .text-red { color: var(--red); }
         
-        /* BATTLEFIELD 2.0 (Restored) */
-        .bf-card { width: 110px; border-radius: 6px; position: relative; cursor: grab; transition: 0.2s; }
-        .bf-card img { width: 100%; border-radius: 6px; }
-        .bf-card:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 0 10px var(--primary); }
-        .bf-tapped { transform: rotate(5deg) translateY(10px); filter: grayscale(0.5) brightness(0.7); }
-        .drag-over { border: 2px dashed var(--primary) !important; background: rgba(167, 139, 250, 0.1); }
-        .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #000; z-index: 20; font-weight: 700; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 10, 28, 0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+        .modal-content { width: 90%; max-width: 800px; text-align: center; }
         
-        /* VISUAL DECK VIEW */
-        .visual-section { margin-bottom: 20px; }
-        .visual-header { border-bottom: 1px solid var(--border); margin-bottom: 10px; font-size: 12px; color: var(--subtext); font-weight: 700; text-transform: uppercase; }
-        .visual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+        /* BATTLEFIELD & EDITOR */
+        .deck-area-detail { display: grid; grid-template-columns: 1fr 400px; gap: 20px; }
+        .deck-list-viewer { height: 70vh; overflow-y: auto; white-space: pre-wrap; padding: 15px; font-size: 14px; line-height: 1.5; color: var(--text); background: rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
+        .is-owned { color: var(--green); border-left: 2px solid var(--green); background: rgba(217, 70, 239, 0.05); }
+        .is-partial { color: var(--yellow); border-left: 2px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
+        .is-missing { color: var(--red); border-left: 2px solid var(--red); opacity: 0.8; }
+        .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
         
-        /* LINK STYLES */
-        .deck-line { padding: 6px 10px; border-radius: 4px; margin-bottom: 2px; font-size: 13px; display: flex; justify-content: space-between; }
-        .is-owned { border-left: 3px solid var(--green); background: rgba(217, 70, 239, 0.05); }
-        .is-partial { border-left: 3px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
-        .is-missing { border-left: 3px solid var(--red); opacity: 0.7; }
-        .progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
-        .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s; }
+        .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
+        .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
+        .bf-row { flex: 1; padding: 20px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); overflow-y: auto; }
+        .bf-hand-area { height: 220px; background: rgba(0,0,0,0.85); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
+        .bf-card { width: 120px; border-radius: 8px; cursor: grab; position: relative; transition: 0.1s; }
+        .bf-card img { width: 100%; border-radius: 8px; }
+        .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 15px var(--primary); }
+        .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
+        
+        /* Animations */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-in { animation: fadeUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
+        .skeleton { background-color: rgba(255,255,255,0.05); animation: shimmer 1.5s infinite linear; }
+        @keyframes shimmer { 0% { opacity:0.5; } 50% { opacity:1; } 100% { opacity:0.5; } }
     </style>
 </head>
 <body>
-    <img id="hover-preview" style="position:fixed; z-index:3000; width:240px; border-radius:12px; display:none; pointer-events:none; border: 2px solid var(--primary); background:#000;">
-    <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+
+    <img id="hover-preview" style="position:fixed; z-index:9999; width:220px; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.8); border:2px solid var(--primary); display:none; pointer-events:none;"> 
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
 
     <div id="auth-screen" class="modal-overlay">
-        <div class="card-box" style="width: 350px; text-align: center;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🩸</div>
-            <h2 class="mb-20">The Grimoire</h2>
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
+        <div class="card-box auth-box" style="text-align: center;">
+            <div style="font-size:50px; margin-bottom:15px;">🩸</div>
+            <h2>The Grimoire</h2>
+            <div class="input-group"><input type="email" id="email" placeholder="Email" style="padding-left:14px;"></div>
+            <div class="input-group"><input type="password" id="password" placeholder="Password" style="padding-left:14px;"></div>
             <button onclick="handleAuthAction(this)">Enter</button>
-            <div class="mt-20 text-sub" style="cursor:pointer;" onclick="toggleResetMode()">Forgot Password?</div>
+            <div style="margin-top:15px; font-size:12px; color:var(--subtext); cursor:pointer;" onclick="toggleResetMode()">Forgot Password?</div>
+        </div>
+    </div>
+
+    <div id="user-options-modal" class="modal-overlay hidden" onclick="closeUserOptionsModal()">
+        <div class="card-box" style="max-width: 300px; text-align: left;" onclick="event.stopPropagation()">
+            <h2 style="color:var(--primary); margin-bottom: 15px;">Menu</h2>
+            <button class="secondary mb-20" onclick="nav('settings', 'settings'); closeUserOptionsModal()">⚙️ Settings</button>
+            <button onclick="handleLogout(this)" style="background:var(--red);">🚪 Log Out</button>
         </div>
     </div>
     
+    <div id="codex-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="card-box" style="max-width: 800px; display:flex; gap:20px; flex-wrap:wrap;">
+            <img id="codex-img" style="width:250px; border-radius:12px;">
+            <div style="flex:1;">
+                <h2 id="codex-title" style="margin-bottom:5px;"></h2>
+                <div id="codex-type" style="color:var(--subtext); margin-bottom:20px;"></div>
+                <div id="codex-text" style="white-space:pre-wrap; margin-bottom:20px; line-height:1.5;"></div>
+                <div id="codex-legality"></div>
+                <div class="flex-row mt-20">
+                    <button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close</button>
+                    <button onclick="window.open(window.scryfallLink, '_blank')" style="background:#2b253a;">Scryfall ↗</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="land-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="card-box" style="max-width: 400px;">
+            <h2 style="color:var(--primary);">The Geomancer</h2>
+            <input type="number" id="target-land-count" value="36" onchange="recalcLands()" placeholder="Total Lands">
+            <div id="land-results" class="mb-20 mt-20"></div>
+            <button onclick="applyLands(this)">Add to Deck</button>
+        </div>
+    </div>
+
     <div id="app" class="app-container hidden">
         <div class="sidebar">
-            <div class="flex-row mb-20" style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-weight:400; font-size:10px;">v9.6</span></div>
+            <div class="flex-row mb-20" style="font-weight: 700; font-size:20px; color: var(--primary);">🩸 The Grimoire</div>
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Card</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Collection</div>
             <div class="nav-item" onclick="nav('decks', 'decks')">📋 Decks</div>
             <div style="flex:1;"></div>
-            <button class="secondary" onclick="handleLogout(this)" style="background: rgba(220,38,38,0.2); color: var(--red);">Log Out</button>
+            <button class="secondary" onclick="openUserOptionsModal()">🧙 User</button>
         </div>
 
         <div class="main">
             <div id="view-dashboard">
                 <div class="flex-between mb-20"><h2>Dashboard</h2><button class="secondary btn-sm" onclick="exportCSV()">CSV</button></div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px;">
-                    <div class="card-box" style="text-align: center;"><div style="font-size: 24px;" id="stat-count">0</div><div class="text-sub">Cards</div></div>
-                    <div class="card-box" style="text-align: center;"><div style="font-size: 24px;" id="stat-value">$0</div><div class="text-sub">Value</div></div>
-                    <div class="card-box" style="text-align: center;"><div style="font-size: 24px;" id="stat-cost">$0</div><div class="text-sub">Cost</div></div>
+                <div class="stat-grid">
+                    <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Cards</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Value</div></div>
+                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Cost</div></div>
                 </div>
                 <h3>Recent Adds</h3>
                 <div id="recent-grid" class="collection-grid mt-20"></div>
@@ -119,23 +213,21 @@
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
                     <h2>Add Card</h2>
-                    <input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()">
+                    <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
                     <div id="search-status" class="text-sub mb-20"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
-                    
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20" style="padding-left:14px;"></select>
                     <div class="flex-row">
-                        <input id="set" readonly placeholder="SET" style="width: 30%;">
-                        <input id="num" readonly placeholder="#" style="width: 30%;">
-                        <input type="number" id="qty" value="1" placeholder="Qty">
+                        <input id="set" readonly placeholder="SET" style="width: 30%; padding-left:14px;">
+                        <input id="num" readonly placeholder="#" style="width: 30%; padding-left:14px;">
+                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%; padding-left:14px;">
                     </div>
-                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
-                    <input id="add-tags" placeholder="Tags (foil, trade)...">
+                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Cost ($)" step="0.01" style="padding-left:40px;"></div>
+                    <div class="input-group"><span class="input-icon">🏷️</span><input id="add-tags" placeholder="Tags (foil, trade)..." style="padding-left:40px;"></div>
                     
                     <div class="flex-between mb-20 mt-20">
                         <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
                         <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
                     </div>
-
                     <div class="flex-row">
                         <button onclick="addCard(this, false)">Add to Collection</button>
                         <button onclick="addCard(this, true)" class="secondary">Wishlist</button>
@@ -148,7 +240,7 @@
                     <h2>Collection</h2>
                     <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise</button>
                 </div>
-                <input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()">
+                <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()" style="padding-left:40px;"></div>
                 <div id="collection-grid" class="collection-grid mt-20"></div>
             </div>
 
@@ -172,15 +264,15 @@
                     <div id="editor-mode">
                         <div class="card-box">
                             <div class="flex-row mb-20">
-                                <input id="deckName" placeholder="Deck Name" style="flex:2">
-                                <input id="deckCommander" placeholder="Commander" style="flex:2">
-                                <select id="deckFormat" style="flex:1"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
+                                <input id="deckName" placeholder="Deck Name" style="flex:2; padding-left:14px;">
+                                <input id="deckCommander" placeholder="Commander" style="flex:2; padding-left:14px;">
+                                <select id="deckFormat" style="flex:1; padding-left:14px;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
                             </div>
                             <div class="flex-between mb-10"><span class="text-sub text-bold">LIVE CURVE</span><span id="editor-card-count">0</span></div>
                             <div style="height:100px;"><canvas id="editorManaChart"></canvas></div>
-                            <div class="flex-row mt-20">
-                                <div style="flex:1">Mainboard<textarea id="deckMain" style="height: 300px;"></textarea></div>
-                                <div style="flex:1">Sideboard<textarea id="deckSide" style="height: 300px;"></textarea></div>
+                            <div class="flex-row mt-20" style="align-items:flex-start;">
+                                <div style="flex:1"><div class="text-sub mb-5">Mainboard</div><textarea id="deckMain"></textarea></div>
+                                <div style="flex:1"><div class="text-sub mb-5">Sideboard</div><textarea id="deckSide"></textarea></div>
                             </div>
                             <div class="flex-row mt-20">
                                 <button onclick="validateDeck(this)">Validate</button>
@@ -190,14 +282,14 @@
                     </div>
                     
                     <div id="detail-mode" class="hidden">
-                        <div style="display:grid; grid-template-columns: 1fr 350px; gap:20px;">
+                        <div class="deck-area-detail">
                             <div class="card-box">
                                 <div class="flex-between">
                                     <h2 id="detail-deck-name"></h2>
                                     <div class="flex-row">
                                         <button class="secondary btn-sm" onclick="toggleDeckView()">👁️ View</button>
                                         <button class="secondary btn-sm" onclick="showRitualEditor(true)">✎ Edit</button>
-                                        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width:auto; margin:0; padding:6px;">
+                                        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width:auto; margin:0; padding:6px; height:30px; font-size:12px;">
                                             <option value="">⚙️ Tools</option>
                                             <option value="copy_missing">Copy Missing</option>
                                             <option value="buy">Buy Missing (TCG)</option>
@@ -208,7 +300,7 @@
                                 </div>
                                 <div id="detail-commander" class="text-sub mb-20"></div>
                                 <div id="detail-visual-grid" class="hidden"></div>
-                                <div id="detail-decklist-viewer"></div>
+                                <div id="detail-decklist-viewer" class="deck-list-viewer"></div>
                             </div>
                             
                             <div class="card-box">
@@ -219,6 +311,7 @@
                                 
                                 <div id="deck-advisor" class="mt-20 pt-20" style="border-top:1px solid var(--border);"></div>
                                 <div id="deck-charts" class="mt-20"><canvas id="typeChart"></canvas><canvas id="manaCurve"></canvas></div>
+                                <button class="secondary w-full mt-20" onclick="openLandCalculator()">Geomancer</button>
                             </div>
                         </div>
                     </div>
@@ -237,19 +330,27 @@
                         <button class="btn-sm" style="background:var(--red);" onclick="initBattlefield()">Reset</button>
                     </div>
                 </div>
-                <div class="bf-main" style="height: calc(100vh - 250px); display:flex; flex-direction:column;">
-                    <div id="bf-frontline" class="bf-row" style="flex:1; border-bottom:1px dashed var(--subtext); padding:10px; display:flex; flex-wrap:wrap; gap:10px;" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
-                    <div id="bf-backline" class="bf-row" style="flex:1; padding:10px; display:flex; flex-wrap:wrap; gap:10px;" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
+                <div class="bf-main" style="height: calc(100vh - 200px); display:flex; flex-direction:column;">
+                    <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
+                    <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
                 </div>
-                <div class="bf-hand-area" style="height:150px; background:rgba(0,0,0,0.5); padding:10px; display:flex; gap:10px; align-items:center;">
+                <div class="bf-hand-area">
                     <div style="border:1px solid var(--subtext); padding:10px; border-radius:6px; cursor:pointer;" onclick="drawCard()">Library (<span id="bf-lib-count">0</span>)</div>
                     <div style="border:1px solid var(--red); padding:10px; border-radius:6px;" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)">Grave (<span id="bf-grave-count">0</span>)</div>
                     <div style="border:1px solid var(--blue); padding:10px; border-radius:6px;" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)">Exile (<span id="bf-exile-count">0</span>)</div>
-                    <div id="bf-hand" style="flex:1; display:flex; gap:5px; overflow-x:auto;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)"></div>
+                    <div id="bf-hand" style="flex:1; display:flex; gap:5px; overflow-x:auto; align-items:center;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)"></div>
                 </div>
             </div>
             
-            <div id="view-oracle" class="hidden"><h2>Wishlist</h2><div id="oracle-grid" class="collection-grid"></div></div>
+            <div id="view-oracle" class="hidden"><h2>Wishlist</h2><div id="oracle-grid" class="collection-grid mt-20"></div></div>
+            
+            <div id="view-settings" class="hidden">
+                <div class="card-box" style="max-width:500px; margin:0 auto;">
+                    <h2>Settings</h2>
+                    <input id="settings-username" placeholder="Username">
+                    <button onclick="saveProfile(this)">Save Identity</button>
+                </div>
+            </div>
         </div>
 
         <div class="bottom-nav">
@@ -272,10 +373,11 @@
         let currentDeckCache=[], currentDeckStructuredList=[], currentDeckCoverUrl='';
         let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
+        let suggestedLands = [];
 
         // --- HELPERS ---
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
-        function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
+        function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='toast'; e.innerHTML=`<span>${msg}</span>`; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function getCardImage(c) {
             if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
             if(c.image_url) return c.image_url;
@@ -283,7 +385,7 @@
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
-        function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+10)+'px'; el.style.top=(e.clientY)+'px'; }}
+        function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
         // --- AUTH ---
@@ -301,6 +403,10 @@
             setLoading(btn, false);
         }
         async function handleLogout(btn) { setLoading(btn, true); await sb.auth.signOut(); window.location.reload(); }
+        async function saveProfile(btn) {
+             const u = document.getElementById('settings-username').value;
+             if(u) { setLoading(btn,true); await sb.from('profiles').upsert({id:session.user.id, username:u}); setLoading(btn,false); showToast("Saved"); }
+        }
         
         function initApp() {
             document.getElementById('auth-screen').classList.add('hidden');
@@ -318,6 +424,7 @@
         }
         function closeUserOptionsModal() { document.getElementById('user-options-modal').classList.add('hidden'); }
         function openUserOptionsModal() { document.getElementById('user-options-modal').classList.remove('hidden'); }
+        function toggleResetMode() { showToast("Not implemented yet"); }
 
         // --- DATA ---
         async function loadData() {
@@ -327,7 +434,7 @@
             
             let count=0, val=0, cost=0;
             cardsCache.forEach(c => {
-                const key = `${c.name.toLowerCase()}_${c.set_code}_${c.collector_number}`;
+                const key = `${c.name.toLowerCase().trim()}_${c.set_code}_${c.collector_number}`;
                 vaultLookup[key] = (vaultLookup[key]||0) + c.quantity;
                 if(c.quantity > 0) { count += c.quantity; val += (c.market_price_usd||0)*c.quantity; cost += (c.buy_price||0)*c.quantity; }
             });
@@ -336,29 +443,38 @@
             document.getElementById('stat-cost').innerText = "$"+cost.toFixed(2);
             
             const recent = cardsCache.filter(c=>c.quantity>0).slice(0, 5);
-            document.getElementById('recent-grid').innerHTML = recent.map(c => `<div class="grid-card" onmouseenter="showPreview('${getCardImage(c)}', event)" onmouseleave="hidePreview()"><img src="${getCardImage(c)}"></div>`).join('');
+            // RESTORED BADGES (V9.7)
+            document.getElementById('recent-grid').innerHTML = recent.map(c => `
+                <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
+                    <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
+                    <img src="${getCardImage(c)}" loading="lazy">
+                    <div class="overlay"><span>${c.name}</span></div>
+                </div>
+            `).join('');
         }
 
-        function loadCollection() {
-            filterVault();
-        }
-        
+        function loadCollection() { filterVault(); }
         function loadOracle() {
             const oracle = cardsCache.filter(c => c.quantity === 0);
-            document.getElementById('oracle-grid').innerHTML = oracle.map(c => `<div class="grid-card"><img src="${getCardImage(c)}"></div>`).join('');
+            document.getElementById('oracle-grid').innerHTML = oracle.map(c => `<div class="grid-card"><img src="${getCardImage(c)}" loading="lazy"></div>`).join('');
         }
 
         function filterVault() {
             const search = document.getElementById('vaultSearch').value.toLowerCase();
             const filtered = cardsCache.filter(c => c.quantity > 0 && c.name.toLowerCase().includes(search));
             document.getElementById('collection-grid').innerHTML = filtered.map(c => 
-                `<div class="grid-card" onmouseenter="showPreview('${getCardImage(c)}', event)" onmouseleave="hidePreview()"><img src="${getCardImage(c)}"></div>`
+                `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
+                    ${c.tags ? `<div class="tag-container">${c.tags.map(t=>`<div class="tag-pill">${t}</div>`).join('')}</div>` : ''}
+                    <div class="gain-badge">$${c.market_price_usd}</div>
+                    <img src="${getCardImage(c)}" loading="lazy">
+                    <div class="overlay"><span>${c.name}</span></div>
+                </div>`
             ).join('');
         }
 
         async function appraiseCollection(btn) {
             setLoading(btn, true);
-            await new Promise(r => setTimeout(r, 1000)); // Simulated for now
+            await new Promise(r => setTimeout(r, 1000)); // Simulated
             showToast("Appraisal Complete");
             setLoading(btn, false);
         }
@@ -432,9 +548,11 @@
         // --- DECKS ---
         async function loadDecks() {
             const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
-            document.getElementById('deck-grid-container').innerHTML = (data||[]).map(d => 
-                `<div class="deck-card" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}');">
-                    <div class="deck-card-content"><h4>${d.name}</h4><span>${d.card_count} Cards</span></div>
+            window.myDecks = data||[];
+            document.getElementById('deck-grid-container').innerHTML = window.myDecks.map(d => 
+                `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}');">
+                    <div class="deck-card-content"><h4>${d.name}</h4>
+                    <div class="deck-card-meta"><span>${d.card_count} Cards</span><span class="format-badge">${d.format}</span></div></div>
                 </div>`
             ).join('');
         }
@@ -448,6 +566,7 @@
             if(!keep) {
                 document.getElementById('deckName').value = '';
                 document.getElementById('deckMain').value = '';
+                window.currentDeckStructuredList = null;
             }
             initEditorListeners();
             updateLiveEditorStats();
@@ -549,7 +668,7 @@
                     colors.G += (c.mana_cost.match(/{G}/g)||[]).length * c.qty;
                 }
                 
-                return `<div class="deck-line ${status}"><b>${c.qty}</b> ${c.name} <span style="float:right; opacity:0.6;">$${c.price.toFixed(2)} (${effectiveHave}/${c.qty})</span></div>`;
+                return `<div class="deck-line ${status}" data-name="${c.name}" data-qty="${missing}"><b>${c.qty}</b> ${c.name} <span style="float:right; opacity:0.6;">$${c.price.toFixed(2)} (${effectiveHave}/${c.qty})</span></div>`;
             }).join('');
 
             document.getElementById('detail-decklist-viewer').innerHTML = listHtml;
@@ -572,7 +691,7 @@
                 if((t.includes('add') && t.includes('mana')) || (t.includes('search') && t.includes('land'))) stats.ramp.count+=q;
                 if(t.includes('draw') && t.includes('card')) stats.draw.count+=q;
                 if((t.includes('destroy')||t.includes('exile')) && t.includes('target')) stats.removal.count+=q;
-                if(t.includes('destroy') && t.includes('all')) stats.wipes.count+=q;
+                if((t.includes('destroy')||t.includes('exile')||t.includes('damage')) && (t.includes('all')||t.includes('each'))) stats.wipes.count+=q;
             });
             let advHtml = "";
             for(const [k,d] of Object.entries(stats)) {
@@ -737,6 +856,56 @@
         function createToken() {
             const n = prompt("Token Name");
             if(n) { gameState.field.push({ uid:Math.random(), name:n, isToken:true, type:'Creature' }); renderBF(); }
+        }
+        
+        // Open Codex Function
+        function openCodex(set, num) {
+            document.getElementById('codex-modal').classList.remove('hidden');
+            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
+                document.getElementById('codex-img').src=getCardImage(d);
+                document.getElementById('codex-title').innerText=d.name;
+                document.getElementById('codex-type').innerText=d.type_line;
+                document.getElementById('codex-text').innerText=d.oracle_text;
+                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
+                document.getElementById('codex-legality').innerHTML=h;
+                window.scryfallLink=d.scryfall_uri;
+            })
+        }
+        
+        // --- LAND CALCULATOR ---
+        function openLandCalculator() {
+            document.getElementById('land-modal').classList.remove('hidden');
+            recalcLands();
+        }
+        function recalcLands() {
+            const target = parseInt(document.getElementById('target-land-count').value) || 36;
+            if (!window.currentDeckStats) return;
+            const s = window.currentDeckStats;
+            const total = s.W+s.U+s.B+s.R+s.G;
+            if(total===0) { document.getElementById('land-results').innerHTML="No symbols found."; return; }
+            let html='';
+            suggestedLands=[];
+            const types=[{n:'Plains',c:'pip-w',v:s.W},{n:'Island',c:'pip-u',v:s.U},{n:'Swamp',c:'pip-b',v:s.B},{n:'Mountain',c:'pip-r',v:s.R},{n:'Forest',c:'pip-g',v:s.G}];
+            types.forEach(t=>{
+                if(t.v>0) {
+                    const count = Math.round((t.v/total)*target);
+                    if(count>0) {
+                        suggestedLands.push({name:t.n, qty:count});
+                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                    }
+                }
+            });
+            document.getElementById('land-results').innerHTML=html;
+        }
+        function applyLands() {
+            const box = document.getElementById('deckMain');
+            let txt = box.value.trim();
+            if(txt) txt+='\n';
+            suggestedLands.forEach(l => txt+=`${l.qty} ${l.name}\n`);
+            box.value=txt;
+            document.getElementById('land-modal').classList.add('hidden');
+            showToast("Lands added!");
+            updateLiveEditorStats();
         }
 
         // --- INIT ---
