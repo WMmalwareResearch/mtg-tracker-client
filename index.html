@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.9 (The Union)</title>
+    <title>The Grimoire | v9.9.1 (Hotfix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -12,11 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME & VARS (From V9.7) --- */
+        /* --- THEME & VARS --- */
         :root { 
             --primary: #a78bfa; 
             --bg-dark: #0f0a1c; 
-            --card-bg: rgba(45, 21, 60, 0.8); 
+            --card-bg: rgba(45, 21, 60, 0.9); 
             --text: #f8fafc; 
             --subtext: #a1a1aa; 
             --border: rgba(167, 139, 250, 0.2); 
@@ -52,7 +52,7 @@
         .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; }
         .b-item.active { color: var(--primary); }
 
-        /* --- COMPONENTS (V9.7 Aesthetic) --- */
+        /* --- COMPONENTS --- */
         .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
         h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
         h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;}
@@ -69,14 +69,14 @@
         .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
         .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
         
-        /* Ripple & Loading (V9.6 Features) */
+        /* Ripple & Loading */
         button:after { content: ""; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; background-image: radial-gradient(circle, #fff 10%, transparent 10.01%); background-repeat: no-repeat; background-position: 50%; transform: scale(10, 10); opacity: 0; transition: transform .5s, opacity 1s; }
         button:active:after { transform: scale(0, 0); opacity: .2; transition: 0s; }
         .btn-loading { pointer-events: none; opacity: 0.7; color: transparent !important; }
         .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; color: white; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* GRIDS & CARDS (Restored Badges) */
+        /* GRIDS & CARDS */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         
@@ -89,7 +89,7 @@
         .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(15, 10, 28, 1) 0%, rgba(15, 10, 28, 0.6) 40%, rgba(15, 10, 28, 0) 100%); z-index: 1; }
         .deck-card-content { position: relative; z-index: 2; padding: 20px; }
 
-        /* Badges & Overlay (Restored from V9.0) */
+        /* Badges & Overlay */
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); font-size: 12px; font-weight: 600; color: white; display:flex; justify-content:space-between; align-items: flex-end; box-sizing: border-box; height: 50px; }
         .gain-badge { position: absolute; top: 10px; right: 10px; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.8); z-index: 5; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); white-space: nowrap; max-width: 100px; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
@@ -171,8 +171,8 @@
         <div class="card-box" style="width: 350px; text-align: center;">
             <div style="font-size: 40px; margin-bottom: 10px;">🩸</div>
             <h2 class="mb-20">The Grimoire</h2>
-            <div class="input-group"><input type="email" id="email" placeholder="Email" style="padding-left:14px;"></div>
-            <div class="input-group"><input type="password" id="password" placeholder="Password" style="padding-left:14px;"></div>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Password">
             <button onclick="handleAuthAction(this)">Enter</button>
             <div class="mt-20 text-sub" style="cursor:pointer;" onclick="toggleResetMode()">Forgot Password?</div>
         </div>
@@ -235,18 +235,18 @@
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
-                    <div class="flex-between mb-20"><h2>Add Card</h2><button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)"></div>
-                    <input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()">
+                    <h2>Add Card</h2>
+                    <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
                     <div id="search-status" class="text-sub mb-20"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20" style="padding-left:14px;"></select>
                     
                     <div class="flex-row">
-                        <input id="set" readonly placeholder="SET" style="width: 30%;">
-                        <input id="num" readonly placeholder="#" style="width: 30%;">
-                        <input type="number" id="qty" value="1" placeholder="Qty">
+                        <input id="set" readonly placeholder="SET" style="width: 30%; padding-left:14px;">
+                        <input id="num" readonly placeholder="#" style="width: 30%; padding-left:14px;">
+                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%; padding-left:14px;">
                     </div>
-                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
-                    <input id="add-tags" placeholder="Tags (foil, trade)...">
+                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Cost ($)" step="0.01" style="padding-left:40px;"></div>
+                    <div class="input-group"><span class="input-icon">🏷️</span><input id="add-tags" placeholder="Tags (foil, trade)..." style="padding-left:40px;"></div>
                     
                     <div class="flex-between mb-20 mt-20">
                         <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
@@ -265,7 +265,7 @@
                     <h2>Collection</h2>
                     <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise</button>
                 </div>
-                <input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()">
+                <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()" style="padding-left:40px;"></div>
                 <div id="collection-grid" class="collection-grid mt-20"></div>
             </div>
 
@@ -307,7 +307,7 @@
                     </div>
                     
                     <div id="detail-mode" class="hidden">
-                        <div style="display:grid; grid-template-columns: 1fr 350px; gap:20px;">
+                        <div class="deck-area-detail">
                             <div class="card-box">
                                 <div class="flex-between">
                                     <h2 id="detail-deck-name"></h2>
@@ -419,7 +419,6 @@
             <div onclick="nav('collection','collection')">📚</div>
             <div onclick="nav('decks','decks')">📋</div>
         </div>
-        <button class="fab-btn" onclick="nav('add', 'add')">+</button>
     </div>
 
     <script>
@@ -440,10 +439,14 @@
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function getCardImage(c) {
-            if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
+            if(!c) return '';
             if(c.image_url) return c.image_url;
             if(c.image_uris?.normal) return c.image_uris.normal;
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
+            
+            const set = c.set_code || c.set;
+            const num = c.collector_number || c.num;
+            if(set && num) return `https://cards.scryfall.io/normal/front/${set[0]}/${set[1]}/${set}/${num}.jpg`;
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
@@ -515,6 +518,7 @@
             document.getElementById('stat-cost').innerText = "$"+cost.toFixed(2);
             
             const recent = cardsCache.filter(c=>c.quantity>0).slice(0, 5);
+            // RESTORED BADGES (V9.7)
             document.getElementById('recent-grid').innerHTML = recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
@@ -549,6 +553,15 @@
             await new Promise(r => setTimeout(r, 1000)); // Simulated
             showToast("Appraisal Complete");
             setLoading(btn, false);
+        }
+        
+        function exportCSV() {
+             const rows = [["Name","Set","Num","Qty","Price"]];
+             cardsCache.forEach(c => rows.push([c.name, c.set_code, c.collector_number, c.quantity, c.market_price_usd]));
+             const csv = rows.map(r => r.join(",")).join("\n");
+             const blob = new Blob([csv], { type: 'text/csv' });
+             const url = window.URL.createObjectURL(blob);
+             const a = document.createElement('a'); a.href=url; a.download="collection.csv"; a.click();
         }
 
         // --- CRUD ---
@@ -871,7 +884,38 @@
                 showToast("Saved!", "success"); loadDecks();
             } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
         }
+        
+        function viewRitualDetails(id) { 
+            const d = window.myDecks.find(x => x.id == id);
+            
+            // UI Switch (This was the missing piece causing the "Nothing Happens" bug)
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
 
+            currentViewedDeckId = id;
+            document.getElementById('deckName').value = d.name;
+            document.getElementById('deckMain').value = d.card_list;
+            window.currentDeckStructuredList = d.structured_list;
+            
+            // Trigger validate to populate visuals
+            validateDeck();
+        }
+        
+        function openCodex(set, num) {
+            document.getElementById('codex-modal').classList.remove('hidden');
+            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
+                document.getElementById('codex-img').src=getCardImage(d);
+                document.getElementById('codex-title').innerText=d.name;
+                document.getElementById('codex-type').innerText=d.type_line;
+                document.getElementById('codex-text').innerText=d.oracle_text;
+                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
+                document.getElementById('codex-legality').innerHTML=h;
+                window.scryfallLink=d.scryfall_uri;
+            })
+        }
+        
         // --- TOOLS ---
         function handleDeckTool(action) {
             document.getElementById('tools-dropdown').value = '';
@@ -1029,28 +1073,6 @@
         function createToken() {
             const n = prompt("Token Name");
             if(n) { gameState.field.push({ uid:Math.random(), name:n, isToken:true, type:'Creature' }); renderBF(); }
-        }
-        
-        function viewRitualDetails(id) { 
-            const d = window.myDecks.find(x => x.id == id);
-            currentViewedDeckId = id;
-            document.getElementById('deckName').value = d.name;
-            document.getElementById('deckMain').value = d.card_list;
-            window.currentDeckStructuredList = d.structured_list;
-            validateDeck();
-        }
-        
-        function openCodex(set, num) {
-            document.getElementById('codex-modal').classList.remove('hidden');
-            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
-                document.getElementById('codex-img').src=getCardImage(d);
-                document.getElementById('codex-title').innerText=d.name;
-                document.getElementById('codex-type').innerText=d.type_line;
-                document.getElementById('codex-text').innerText=d.oracle_text;
-                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
-                document.getElementById('codex-legality').innerHTML=h;
-                window.scryfallLink=d.scryfall_uri;
-            })
         }
 
         // --- INIT ---
