@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.3 (Live Link)</title>
+    <title>The Grimoire | v10.5 (API Standard)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -469,18 +469,18 @@
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V10.3: LIVE LINK)
+        // FIXED IMAGE LOADER (V10.4: API PRIORITY)
         function getCardImage(c) {
-             // 1. Fresh Scryfall Data (e.g. search results)
+             // 1. Scryfall Object Direct
              if(c.image_uris?.normal) return c.image_uris.normal;
              if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
              
-             // 2. API Fallback (The Fix: Always use the API redirect if we have Set+Num)
+             // 2. API Redirect (Correct Logic for "Live Link")
              const set = (c.set_code || c.set || '').toLowerCase();
              const num = c.collector_number || c.num;
              if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
 
-             // 3. Database URL (Last resort)
+             // 3. Last Resort: Database (Only if above fails)
              if(c.image_url && c.image_url.includes('http')) return c.image_url;
 
              return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
@@ -529,7 +529,7 @@
             if(view) view.classList.remove('hidden');
             
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
             if(active) active.classList.add('active');
             
             if(v === 'decks') loadDecks();
@@ -573,7 +573,7 @@
             else setHTML('recent-grid', recent.map(c => `
                 <div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
                     <div class="gain-badge" style="color:${(c.market_price_usd - c.buy_price)>=0?'var(--green)':'var(--red)'}">$${c.market_price_usd}</div>
-                    <img src="${getCardImage(c)}" loading="lazy">
+                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'">
                     <div class="overlay"><span>${c.name}</span></div>
                 </div>
             `).join(''));
