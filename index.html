@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.1 (Visual Fix)</title>
+    <title>The Grimoire | v10.2 (Image Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -76,6 +76,7 @@
         button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
         .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
+        .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
         
         /* Ripple & Loading */
         button:after { content: ""; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; background-image: radial-gradient(circle, #fff 10%, transparent 10.01%); background-repeat: no-repeat; background-position: 50%; transform: scale(10, 10); opacity: 0; transition: transform .5s, opacity 1s; }
@@ -449,7 +450,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
-
+        
         // ERROR TRAP
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -468,18 +469,21 @@
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V10.1)
+        // FIXED IMAGE LOADER (V10.2: PRIORITIZE API FOR STABILITY)
         function getCardImage(c) {
-            // Priority 1: Scryfall API Redirect (Most Reliable)
-            const set = (c.set_code || c.set || '').toLowerCase();
-            const num = c.collector_number || c.num || c.collector_number;
-            if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
+             // 1. Fresh Scryfall Data (e.g. search results)
+             if(c.image_uris?.normal) return c.image_uris.normal;
+             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
+             
+             // 2. Fallback Construction (Set + Num) - MOST RELIABLE for grid
+             const set = (c.set_code || c.set || '').toLowerCase();
+             const num = c.collector_number || c.num;
+             if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
 
-            // Priority 2: Database URL
-            if(c.image_url) return c.image_url;
+             // 3. Database URL (Last resort)
+             if(c.image_url && c.image_url.includes('http')) return c.image_url;
 
-            // Fallback: Card Back
-            return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
+             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
@@ -900,6 +904,7 @@
             const listHtml = data.map(c => {
                 const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
                 const have = vaultLookup[key] || 0;
+                // Basic land assumption
                 const isBasic = ['plains','island','swamp','mountain','forest'].some(x => c.name.toLowerCase().includes(x));
                 const effectiveHave = isBasic ? c.qty : have;
                 const match = Math.min(effectiveHave, c.qty);
