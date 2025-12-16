@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.6 (Feature Complete)</title>
+    <title>The Grimoire | v9.6.1 (The Lens)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -277,9 +277,11 @@
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function getCardImage(c) {
-            const set = c.set_code || c.set; const num = c.collector_number || c.num;
-            if(!set || !num) return c.image_url || '';
-            return c.image_url || `https://cards.scryfall.io/normal/front/${set[0]}/${set[1]}/${set}/${num}.jpg`;
+            if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
+            if(c.image_url) return c.image_url;
+            if(c.image_uris?.normal) return c.image_uris.normal;
+            if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
+            return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+10)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
