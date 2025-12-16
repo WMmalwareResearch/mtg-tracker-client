@@ -2459,9 +2459,11 @@
             }
         }
         
-        // V9.0: Heuristic Analysis Engine
+       // =========================================================================
+// V9.1.1: Smarter Heuristic Engine - BEGIN CHUNK
+// =========================================================================
+
         function analyzeDeckStructure(deckList) {
-            // 1. Define Categories & Targets (Commander Standard)
             const stats = {
                 lands: { count: 0, target: 36, label: "Lands" },
                 ramp: { count: 0, target: 10, label: "Ramp" },
@@ -2470,7 +2472,6 @@
                 wipes: { count: 0, target: 3, label: "Board Wipes" }
             };
 
-            // 2. Iterate and Classify
             deckList.forEach(c => {
                 const text = (c.oracle_text || "").toLowerCase();
                 const type = (c.type_line || "").toLowerCase();
@@ -2479,34 +2480,54 @@
                 // A. Lands
                 if (type.includes("land")) {
                     stats.lands.count += qty;
-                    return; // Don't double count lands as ramp usually
+                    return; 
                 }
 
-                // B. Ramp (Add mana, search for land)
-                if (text.includes("add ") && (text.includes("{") || text.includes("mana"))) {
+                // B. Ramp
+                // 1. "Add {X}" or "Add one mana"
+                // 2. "Search your library" AND ("land" OR "basic") AND ("battlefield" OR "hand")
+                if (
+                    (text.includes("add ") && (text.includes("{") || text.includes(" mana"))) ||
+                    (text.includes("search your library") && (text.includes("land") || text.includes("basic")) && (text.includes("battlefield") || text.includes("hand")))
+                ) {
                     stats.ramp.count += qty;
-                } else if (text.includes("search your library") && text.includes("land") && text.includes("battlefield")) {
-                    stats.ramp.count += qty;
                 }
 
-                // C. Draw
-                if (text.includes("draw a card") || text.includes("draw cards") || text.includes("draw x cards")) {
-                    stats.draw.count += qty;
+                // C. Draw (Improved)
+                // Matches: "draw a card", "draw two cards", "draw X cards", "draws a card"
+                // Logic: "draw" followed eventually by "card"
+                // Exclude: "draw step" (to avoid false positives on weird enchantments)
+                if (text.includes("draw") && text.includes("card") && !text.includes("draw step")) {
+                    // Check if it's actually drawing (not just "discard a card to draw")
+                    // Simple heuristic: Does it have "draw" before "card"?
+                    if(text.indexOf("draw") < text.indexOf("card")) {
+                        stats.draw.count += qty;
+                    }
                 }
 
-                // D. Removal (Destroy/Exile target)
+                // D. Removal
+                // Matches: "destroy target", "exile target"
                 if ((text.includes("destroy") || text.includes("exile")) && text.includes("target")) {
                     stats.removal.count += qty;
                 }
 
-                // E. Wipes (Destroy/Exile all)
-                if ((text.includes("destroy") || text.includes("exile")) && text.includes(" all ")) {
+                // E. Board Wipes (Improved)
+                // 1. "Destroy all", "Exile all", "Destroy each", "Exile each"
+                // 2. "Deals" + "damage" + ("all" OR "each") + "creature"
+                const isDestructionWipe = (text.includes("destroy") || text.includes("exile")) && (text.includes(" all ") || text.includes(" each "));
+                const isDamageWipe = text.includes("deals") && text.includes("damage") && (text.includes(" all ") || text.includes(" each ")) && text.includes("creature");
+                
+                if (isDestructionWipe || isDamageWipe) {
                     stats.wipes.count += qty;
                 }
             });
 
             renderAdvisor(stats);
         }
+
+// =========================================================================
+// V9.1.1: Smarter Heuristic Engine - END CHUNK
+// =========================================================================
 
         function renderAdvisor(stats) {
             const grid = document.getElementById('advisor-grid');
@@ -3103,3 +3124,4 @@
     </script>
 </body>
 </html>
+
