@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.1 (Visual Fidelity)</title>
+    <title>The Grimoire | v10.1 (Visual Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -104,7 +104,7 @@
         .tag-container { position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; z-index: 5; align-items: flex-start; }
         .format-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-        /* Dashboard */
+        /* Dashboard & Utilities */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
         .stat-val { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; }
@@ -138,11 +138,13 @@
         .bf-card:hover { transform: translateY(-10px); z-index: 10; box-shadow: 0 0 15px var(--primary); }
         .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
         .drag-over { border: 2px dashed var(--primary) !important; background: rgba(167, 139, 250, 0.1); }
+        .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #000; z-index: 20; font-weight: 700; }
         
         /* Visual Deck View */
         .visual-grid-container { height: 70vh; overflow-y: auto; padding-right: 5px; }
         .visual-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
         .visual-card { position: relative; border-radius: 6px; overflow: hidden; transition: transform 0.2s; cursor: pointer; aspect-ratio: 2.5/3.5; }
+        .visual-card:hover { transform: scale(1.05); z-index: 10; border: 1px solid var(--primary); }
         .visual-card img { width: 100%; height: 100%; object-fit: cover; }
         .visual-badge { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8); color: white; font-size: 10px; padding: 2px 6px; border-top-left-radius: 6px; font-weight: 700; }
         
@@ -447,7 +449,7 @@
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
-        
+
         // ERROR TRAP
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -468,19 +470,17 @@
         
         // FIXED IMAGE LOADER (V10.1)
         function getCardImage(c) {
-            if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
-            if(c.image_url) return c.image_url;
-            if(c.image_uris?.normal) return c.image_uris.normal;
-            if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
-            
-            // API Fallback (Reliable)
+            // Priority 1: Scryfall API Redirect (Most Reliable)
             const set = (c.set_code || c.set || '').toLowerCase();
-            const num = c.collector_number || c.num;
+            const num = c.collector_number || c.num || c.collector_number;
             if(set && num) return `https://api.scryfall.com/cards/${set}/${num}?format=image&version=normal`;
-            
+
+            // Priority 2: Database URL
+            if(c.image_url) return c.image_url;
+
+            // Fallback: Card Back
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
-        
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
@@ -813,7 +813,7 @@
             else setHTML('deck-grid-container', window.myDecks.map(d => 
                 `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}');">
                     <div class="deck-card-content">
-                        <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
+                        <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)">✕</span></div>
                         <div class="deck-card-meta"><span>${d.card_count} Cards</span><span class="format-badge">${d.format}</span></div>
                     </div>
                 </div>`
@@ -900,7 +900,6 @@
             const listHtml = data.map(c => {
                 const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
                 const have = vaultLookup[key] || 0;
-                // Basic land assumption
                 const isBasic = ['plains','island','swamp','mountain','forest'].some(x => c.name.toLowerCase().includes(x));
                 const effectiveHave = isBasic ? c.qty : have;
                 const match = Math.min(effectiveHave, c.qty);
@@ -1021,8 +1020,8 @@
             if(list.classList.contains('hidden')) { list.classList.remove('hidden'); grid.classList.add('hidden'); }
             else {
                 list.classList.add('hidden'); grid.classList.remove('hidden');
-                grid.innerHTML = `<div class="visual-card-grid">` + currentDeckCache.map(c => `
-                    <div class="visual-card">
+                grid.innerHTML = `<div class="visual-grid">` + currentDeckCache.map(c => `
+                    <div class="grid-card">
                         <img src="${c.img}">
                         <div class="visual-badge">${c.qty}</div>
                     </div>
@@ -1045,7 +1044,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
