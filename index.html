@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.9.1 (Hotfix)</title>
+    <title>The Grimoire | v9.9.2 (Fully Functional)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -212,7 +212,7 @@
     
     <div id="app" class="app-container hidden">
         <div class="sidebar">
-            <div class="flex-row mb-20" style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-weight:400; font-size:10px;">v9.9</span></div>
+            <div class="flex-row mb-20" style="font-weight: 700; color: var(--primary);">🩸 The Grimoire <span class="text-sub" style="font-weight:400; font-size:10px;">v9.9.2</span></div>
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Card</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Collection</div>
@@ -235,18 +235,18 @@
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
-                    <h2>Add Card</h2>
-                    <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
+                    <div class="flex-between mb-20"><h2>Add Card</h2><button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)"></div>
+                    <input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()">
                     <div id="search-status" class="text-sub mb-20"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20" style="padding-left:14px;"></select>
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
                     
                     <div class="flex-row">
-                        <input id="set" readonly placeholder="SET" style="width: 30%; padding-left:14px;">
-                        <input id="num" readonly placeholder="#" style="width: 30%; padding-left:14px;">
-                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%; padding-left:14px;">
+                        <input id="set" readonly placeholder="SET" style="width: 30%;">
+                        <input id="num" readonly placeholder="#" style="width: 30%;">
+                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%;">
                     </div>
-                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Cost ($)" step="0.01" style="padding-left:40px;"></div>
-                    <div class="input-group"><span class="input-icon">🏷️</span><input id="add-tags" placeholder="Tags (foil, trade)..." style="padding-left:40px;"></div>
+                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
+                    <input id="add-tags" placeholder="Tags (foil, trade)...">
                     
                     <div class="flex-between mb-20 mt-20">
                         <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
@@ -257,7 +257,7 @@
                         <button onclick="addCard(this, false)">Add to Collection</button>
                         <button onclick="addCard(this, true)" class="secondary">Wishlist</button>
                     </div>
-                </div>
+                    <textarea id="bulkList" class="hidden"></textarea> </div>
             </div>
 
             <div id="view-collection" class="hidden">
@@ -439,14 +439,10 @@
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='card-box'; e.style.padding='10px'; e.innerText=msg; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function getCardImage(c) {
-            if(!c) return '';
+            if(!c) return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
             if(c.image_url) return c.image_url;
             if(c.image_uris?.normal) return c.image_uris.normal;
             if(c.card_faces?.[0]?.image_uris?.normal) return c.card_faces[0].image_uris.normal;
-            
-            const set = c.set_code || c.set;
-            const num = c.collector_number || c.num;
-            if(set && num) return `https://cards.scryfall.io/normal/front/${set[0]}/${set[1]}/${set}/${num}.jpg`;
             return 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg';
         }
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
@@ -548,10 +544,29 @@
             ).join('');
         }
 
+        // REAL APPRAISAL LOGIC (V9.9.2)
         async function appraiseCollection(btn) {
             setLoading(btn, true);
-            await new Promise(r => setTimeout(r, 1000)); // Simulated
-            showToast("Appraisal Complete");
+            const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
+            const totalChunks=Math.ceil(ids.length/75);
+            try {
+                for(let i=0; i<totalChunks; i++){
+                    const chunk = ids.slice(i*75,(i+1)*75);
+                    const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})});
+                    const d=await res.json();
+                    if(d.data) {
+                        for(const sc of d.data){
+                            const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
+                            if(local){
+                                const np=parseFloat(sc.prices.usd||0);
+                                await sb.from('cards').update({market_price_usd:np}).eq('id',local.id);
+                            }
+                        }
+                    }
+                }
+                showToast("Appraisal Complete");
+                loadData();
+            } catch(e) { showToast("Error"); }
             setLoading(btn, false);
         }
         
@@ -682,29 +697,55 @@
             if(error) showToast("Error"); else { showToast("Saved"); loadData(); }
         }
         
+        // REAL IMPORT LOGIC (V9.9.2)
         function handleCSVUpload(input) {
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                const lines = text.split(/\r\n|\n/).slice(1); // Skip header
+                const lines = text.split(/\r\n|\n/).slice(1);
                 let out = "";
                 lines.forEach(l => {
-                    const cols = l.split(','); // Simplified csv parse
-                    if(cols.length > 1) out += `${cols[3]||1} ${cols[1]||cols[0]}\n`; // Guess cols
+                    const cols = l.split(','); // Basic CSV
+                    if(cols.length > 1) {
+                        // Attempt to find Name and Qty columns (rough heuristic)
+                        const qty = parseInt(cols.find(c=>!isNaN(parseInt(c)) && c.length<4)) || 1;
+                        const name = cols.find(c=>c.length>3 && isNaN(parseInt(c)));
+                        if(name) out += `${qty} ${name}\n`;
+                    }
                 });
-                document.getElementById('bulkList').value = out;
+                // Fallback for simple "Qty Name" text files
+                if(!out) out = text;
+                
+                // V9.9.2: Store this in a hidden area or parse immediately
+                processBulkText(out);
             };
             reader.readAsText(file);
         }
         
-        async function processBulkImport(btn) {
-            setLoading(btn, true);
-            // Simulate for robustness in monolith
-            await new Promise(r => setTimeout(r, 1000));
-            showToast("Bulk Import Processed (Simulated)");
-            setLoading(btn, false);
+        async function processBulkText(text) {
+             const lines = text.split('\n').filter(l=>l.trim());
+             const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x);
+             
+             // Chunking
+             let allCards = [];
+             for(let i=0; i<idents.length; i+=75) {
+                const chunk = idents.slice(i, i+75);
+                const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:chunk})});
+                const d = await res.json();
+                if(d.data) allCards = allCards.concat(d.data);
+             }
+             
+             // Insert
+             for(const c of allCards) {
+                 await sb.from('cards').insert({
+                     user_id:session.user.id, name:c.name, set_code:c.set, collector_number:c.collector_number,
+                     image_url:getCardImage(c), quantity:1, market_price_usd:parseFloat(c.prices.usd||0)
+                 });
+             }
+             showToast(`Imported ${allCards.length} cards`);
+             loadData();
         }
 
         // --- DECKS ---
@@ -884,38 +925,7 @@
                 showToast("Saved!", "success"); loadDecks();
             } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
         }
-        
-        function viewRitualDetails(id) { 
-            const d = window.myDecks.find(x => x.id == id);
-            
-            // UI Switch (This was the missing piece causing the "Nothing Happens" bug)
-            document.getElementById('deck-library').classList.add('hidden');
-            document.getElementById('deck-workspace').classList.remove('hidden');
-            document.getElementById('editor-mode').classList.add('hidden');
-            document.getElementById('detail-mode').classList.remove('hidden');
 
-            currentViewedDeckId = id;
-            document.getElementById('deckName').value = d.name;
-            document.getElementById('deckMain').value = d.card_list;
-            window.currentDeckStructuredList = d.structured_list;
-            
-            // Trigger validate to populate visuals
-            validateDeck();
-        }
-        
-        function openCodex(set, num) {
-            document.getElementById('codex-modal').classList.remove('hidden');
-            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
-                document.getElementById('codex-img').src=getCardImage(d);
-                document.getElementById('codex-title').innerText=d.name;
-                document.getElementById('codex-type').innerText=d.type_line;
-                document.getElementById('codex-text').innerText=d.oracle_text;
-                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
-                document.getElementById('codex-legality').innerHTML=h;
-                window.scryfallLink=d.scryfall_uri;
-            })
-        }
-        
         // --- TOOLS ---
         function handleDeckTool(action) {
             document.getElementById('tools-dropdown').value = '';
@@ -1073,6 +1083,37 @@
         function createToken() {
             const n = prompt("Token Name");
             if(n) { gameState.field.push({ uid:Math.random(), name:n, isToken:true, type:'Creature' }); renderBF(); }
+        }
+        
+        function viewRitualDetails(id) { 
+            const d = window.myDecks.find(x => x.id == id);
+            
+            // UI Switch (This was the missing piece causing the "Nothing Happens" bug)
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
+
+            currentViewedDeckId = id;
+            document.getElementById('deckName').value = d.name;
+            document.getElementById('deckMain').value = d.card_list;
+            window.currentDeckStructuredList = d.structured_list;
+            
+            // Trigger validate to populate visuals
+            validateDeck();
+        }
+        
+        function openCodex(set, num) {
+            document.getElementById('codex-modal').classList.remove('hidden');
+            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
+                document.getElementById('codex-img').src=getCardImage(d);
+                document.getElementById('codex-title').innerText=d.name;
+                document.getElementById('codex-type').innerText=d.type_line;
+                document.getElementById('codex-text').innerText=d.oracle_text;
+                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
+                document.getElementById('codex-legality').innerHTML=h;
+                window.scryfallLink=d.scryfall_uri;
+            })
         }
 
         // --- INIT ---
