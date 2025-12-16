@@ -261,12 +261,12 @@
     </div>
 
     <script>
-        // --- CONFIG ---
+        // CONFIG
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
-        let sb; try { sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { alert("Database Error"); }
+        let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e) { alert("Database Error"); }
 
-        // --- STATE ---
+        // STATE
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId;
         let typeChartInstance, manaCurveInstance, editorChartInstance;
         let currentDeckCache=[], currentDeckStructuredList=[], currentDeckCoverUrl='';
