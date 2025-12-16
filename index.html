@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v9.3.1 (Full Restoration)</title>
+    <title>The Grimoire | v9.4 (Button Fix)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩸</text></svg>">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -31,32 +31,17 @@
         .hidden { display: none !important; }
         ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
-        /* --- UTILITY CLASSES (V9.0) --- */
-        .flex-row { display: flex; align-items: center; gap: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .flex-col { display: flex; flex-direction: column; }
-        .gap-5 { gap: 5px; } .gap-10 { gap: 10px; } .gap-20 { gap: 20px; }
-        .mt-5 { margin-top: 5px; } .mt-10 { margin-top: 10px; } .mt-15 { margin-top: 15px; } .mt-20 { margin-top: 20px; }
-        .mb-5 { margin-bottom: 5px; } .mb-10 { margin-bottom: 10px; } .mb-15 { margin-bottom: 15px; } .mb-20 { margin-bottom: 20px; }
-        
-        .btn-sm { width: auto; padding: 6px 12px; font-size: 11px; }
-        .btn-md { width: auto; padding: 8px 16px; font-size: 12px; }
-        .w-full { width: 100%; }
-        
-        .text-sub { font-size: 12px; color: var(--subtext); }
-        .text-bold { font-weight: 700; }
-        .text-green { color: var(--green); } .text-red { color: var(--red); }
-        .text-white { color: white; }
-
-        /* --- UI POLISH (V9.2) --- */
-        button { position: relative; overflow: hidden; transform: translate3d(0, 0, 0); }
+        /* --- UI POLISH & BUTTONS --- */
+        /* Ripple Effect */
+        button { position: relative; overflow: hidden; transform: translate3d(0, 0, 0); cursor: pointer; user-select: none; }
         button:after {
             content: ""; display: block; position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none;
             background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
             background-repeat: no-repeat; background-position: 50%; transform: scale(10, 10); opacity: 0; transition: transform .5s, opacity 1s;
         }
         button:active:after { transform: scale(0, 0); opacity: .2; transition: 0s; }
-        
+        button:disabled, .btn-disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+
         /* V9.3: Loading Spinner (The Guard) */
         .btn-loading { pointer-events: none; opacity: 0.7; position: relative; color: transparent !important; }
         .btn-loading::after {
@@ -65,22 +50,19 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Consistent Inputs */
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2); }
-
-        /* LOGIN SCREEN */
-        #auth-screen { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%; background: linear-gradient(135deg, var(--bg-dark) 0%, #000 100%); position: relative; }
-        .auth-box { background: var(--card-bg); backdrop-filter: blur(15px); padding: 40px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7); max-width: 380px; width: 90%; text-align: center; border: 1px solid var(--border); }
-        
-        /* Toast Style */
-        .toast { background: var(--card-bg); border: 1px solid var(--primary); color: var(--text); padding: 12px 20px; border-radius: 8px; box-shadow: var(--shadow); opacity: 1; transition: opacity 0.3s, transform 0.3s; display: flex; justify-content: space-between; align-items: center; gap: 15px; }
-        .toast.hiding { opacity: 0; transform: translateY(20px); }
-        .toast.error { border-color: var(--red); color: var(--red); }
-        .toast.success { border-color: var(--green); color: var(--green); }
+        /* UTILITIES */
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-row { display: flex; align-items: center; gap: 10px; }
+        .flex-col { display: flex; flex-direction: column; }
+        .w-full { width: 100%; }
+        .mt-15 { margin-top: 15px; } .mb-15 { margin-bottom: 15px; } .mb-20 { margin-bottom: 20px; }
+        .text-sub { font-size: 12px; color: var(--subtext); }
+        .text-bold { font-weight: 700; }
+        .text-green { color: var(--green); } .text-red { color: var(--red); }
 
         /* LAYOUT */
         .app-container { display: grid; grid-template-columns: 240px 1fr; height: 100%; overflow: hidden; }
-        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; transition: border-color 0.3s; }
+        .sidebar { background: var(--card-bg); backdrop-filter: blur(12px); border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; z-index: 10; }
         .bottom-nav { display: none; } 
 
         @media (max-width: 768px) { 
@@ -93,7 +75,7 @@
             #view-add .card-box, #view-settings .card-box { max-width: 100%; margin: 0; }
         }
 
-        .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; transition: color 0.3s; }
+        .logo { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 40px; display: flex; align-items: center; gap: 12px; }
         .nav-item { padding: 12px 15px; cursor: pointer; color: var(--subtext); font-weight: 500; border-radius: 8px; transition: all 0.2s; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
         .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
         .nav-item.active { background: rgba(255, 255, 255, 0.1); color: white; border-left: 3px solid var(--primary); padding-left: 12px; }
@@ -106,18 +88,15 @@
         /* COMPONENTS */
         .skeleton { background-color: var(--card-bg); background-image: linear-gradient(90deg, var(--card-bg) 0%, rgba(167, 139, 250, 0.1) 20%, var(--card-bg) 40%, var(--card-bg) 100%); background-size: 200% 100%; animation: shimmer 1.5s infinite linear; border-radius: 4px; }
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        .skeleton-text { height: 1em; width: 100%; margin-bottom: 0.5em; }
-        .skeleton-text-small { height: 0.7em; width: 60%; margin: 0 auto 0.5em; }
-        .skeleton-avatar { width: 50px; height: 50px; border-radius: 50%; }
-
-        .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); transition: border-color 0.3s; }
+        
+        .card-box { background: var(--card-bg); backdrop-filter: blur(12px); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; box-shadow: var(--shadow); }
         h2 { margin-top: 0; font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; }
         h3 { font-size: 1rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; font-size: 12px; margin-bottom: 15px;}
         .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; }
         .input-icon { position: absolute; left: 12px; color: var(--subtext); font-size: 16px; pointer-events: none; }
         input, select { width: 100%; padding: 14px 14px 14px 40px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.4); color: white; font-size: 14px; margin: 0; }
         textarea { padding: 14px; margin-bottom: 15px; height: 350px; resize: vertical; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; width: 100%; font-family: monospace; font-size: 13px; }
-        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s, background 0.3s; }
+        button { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; transition: transform 0.1s, opacity 0.2s, background 0.3s; }
         button:hover { opacity: 0.85; } button:active { transform: scale(0.98); }
         button.secondary { background: rgba(255,255,255,0.1); }
         .clear-btn { background: none; color: var(--subtext); width: 40px; padding: 0; height: 100%; margin-left: 10px; opacity: 0.7; }
@@ -137,15 +116,6 @@
         .asset-img { width: 40px; height: 56px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); }
         .asset-val { font-weight: 700; color: var(--green); }
         
-        .user-profile-section { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .avatar-circle { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); background: rgba(0,0,0,0.2); }
-        .user-meta { display: flex; flex-direction: column; overflow: hidden; }
-        .user-name { font-weight: 700; color: white; font-size: 14px; }
-        .user-email-txt { font-size: 11px; color: var(--subtext); overflow: hidden; text-overflow: ellipsis; }
-        .avatar-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; max-height: 400px; overflow-y: auto; margin-top: 15px; }
-        .avatar-option { width: 100%; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
-        .avatar-option:hover { transform: scale(1.05); border-color: var(--primary); }
-
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
         #recent-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
         .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform 0.2s; background: rgba(0,0,0,0.3); border: 1px solid var(--border); }
@@ -167,11 +137,9 @@
         
         #hover-preview { position: fixed; pointer-events: none; z-index: 9999; width: 220px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); border: 2px solid var(--primary); display: none; transform: translateY(-50%); animation: fadeIn 0.1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-40%); } to { opacity: 1; transform: translateY(-50%); } }
-
-        /* V8.2 Polish Animation */
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeUp 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; }
 
+        /* DECK GRID */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         .deck-card { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 12px; height: 300px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center; }
         .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: var(--shadow); }
@@ -204,10 +172,7 @@
         .cover-btn:hover { background: var(--yellow); color: black; opacity: 1; transform: scale(1.1); }
         .is-cover-card .cover-btn { opacity: 1; color: var(--yellow); background: black; }
 
-        #deck-charts { display: flex; flex-direction: column; gap: 20px; padding-top: 20px; }
-        #saved-decks-list { max-height: 450px; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 10px; }
         .deck-item-preview { background: rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px solid var(--border); cursor:pointer; display:flex; justify-content:space-between; align-items:center; position: relative; }
-        .deck-item-preview:hover { border-color: var(--primary); }
         .deck-item-info { font-size: 12px; color: var(--subtext); font-weight: 400; margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; }
@@ -217,6 +182,7 @@
         .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
+        /* BATTLEFIELD */
         .bf-hud { height: 60px; background: rgba(0,0,0,0.8); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
         .bf-stat { font-size: 14px; font-weight: 700; display: flex; gap: 10px; align-items: center; }
         .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #0f0a1c 70%); }
@@ -261,11 +227,11 @@
 
     <div id="report-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
-            <h2 style="color:var(--red);">🪲 Submit Bug Report</h2>
-            <p style="color:var(--subtext);">Tell us what broke, and we will crush the insect.</p>
-            <textarea id="bug-description" placeholder="Steps to reproduce, expected behavior, and actual behavior." style="height: 200px; margin-bottom: 20px;"></textarea>
-            <div style="display:flex; gap:10px; justify-content: center;">
-                <button onclick="reportBug()" style="background:var(--red);">🐛 Send Report</button>
+            <h2 class="text-red">🪲 Submit Bug Report</h2>
+            <p class="text-sub">Tell us what broke.</p>
+            <textarea id="bug-description" placeholder="Steps to reproduce..." style="height: 200px; margin-bottom: 20px;"></textarea>
+            <div class="flex-row" style="justify-content: center;">
+                <button onclick="reportBug(this)" style="background:var(--red);">🐛 Send</button>
                 <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="secondary">Cancel</button>
             </div>
         </div>
@@ -274,14 +240,14 @@
     <div id="land-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
             <h2 style="color:var(--primary);">The Geomancer</h2>
-            <p style="color:var(--subtext);">Recommended basic land balance based on your spell symbols.</p>
+            <p class="text-sub">Recommended basic lands.</p>
             <div style="margin-bottom:20px; text-align:left;">
-                <label style="font-size:12px; color:var(--subtext);">Target Land Count</label>
-                <input type="number" id="target-land-count" value="24" onchange="recalcLands()" style="margin-top:5px;">
+                <label class="text-sub">Target Land Count</label>
+                <input type="number" id="target-land-count" value="24" onchange="recalcLands()" class="mt-5">
             </div>
-            <div id="land-results" style="margin-bottom:20px;"></div>
-            <div style="display:flex; gap:10px; justify-content: center;">
-                <button onclick="applyLands()" style="background:var(--green);">💾 Add to Deck</button>
+            <div id="land-results" class="mb-20"></div>
+            <div class="flex-row" style="justify-content: center;">
+                <button onclick="applyLands(this)" style="background:var(--green);">💾 Add to Deck</button>
                 <button onclick="document.getElementById('land-modal').classList.add('hidden')" class="secondary">Cancel</button>
             </div>
         </div>
@@ -290,47 +256,47 @@
     <div id="avatar-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box">
             <h2 style="color:var(--primary);">Choose Your Avatar</h2>
-            <p style="color:var(--subtext);">Select a card from your Collection to represent you.</p>
             <div id="avatar-grid" class="avatar-grid"></div>
-            <button onclick="document.getElementById('avatar-modal').classList.add('hidden')" class="secondary" style="margin-top:20px; width:auto;">Cancel</button>
+            <button onclick="document.getElementById('avatar-modal').classList.add('hidden')" class="secondary mt-20 btn-md">Cancel</button>
         </div>
     </div>
 
     <div id="user-options-modal" class="modal-overlay hidden" onclick="closeUserOptionsModal()">
         <div class="modal-content card-box" style="max-width: 300px; text-align: left;" onclick="event.stopPropagation()">
-            <h2 style="color:var(--primary); margin-bottom: 15px;">Account Actions</h2>
-            <button class="secondary" onclick="nav('settings', 'settings'); closeUserOptionsModal()" style="margin-bottom: 10px; padding: 12px; border: 1px solid var(--border); color: var(--subtext); width: 100%;">⚙️ View Settings</button>
-            <button onclick="openAvatarModal(); closeUserOptionsModal()" style="margin-bottom: 10px; padding: 12px; background: rgba(255, 255, 255, 0.1); color: white; width: 100%;">🖼️ Change Avatar</button>
-            <button onclick="handleLogout()" style="background:var(--red); width: 100%;">🚪 Break Pact (Log Out)</button>
+            <h2 class="mb-15" style="color:var(--primary);">Account Actions</h2>
+            <button class="secondary w-full mb-10" onclick="nav('settings', 'settings'); closeUserOptionsModal()">⚙️ Settings</button>
+            <button class="w-full mb-10" onclick="openAvatarModal(); closeUserOptionsModal()" style="background: rgba(255, 255, 255, 0.1);">🖼️ Change Avatar</button>
+            <button onclick="handleLogout(this)" class="w-full" style="background:var(--red);">🚪 Log Out</button>
         </div>
     </div>
 
     <div id="bulk-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeBulkModal()">
         <div class="modal-content card-box">
-            <h2 style="color:var(--primary);">The Scribe (Bulk Import)</h2>
-            <p style="color:var(--subtext); margin-bottom: 20px;">Paste a list of cards to bind them all at once.<br>Format: <code>Quantity Name</code> (e.g., "4 Sol Ring")</p>
-            
-            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px dashed var(--border); margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span style="font-size:12px; color:var(--subtext);">Import from CSV (Moxfield, ManaBox, TCGPlayer)</span>
+            <h2 style="color:var(--primary);">The Scribe (Bulk)</h2>
+            <p class="text-sub mb-20">Format: <code>Quantity Name</code></p>
+            <div class="mb-15" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; border:1px dashed var(--border);">
+                <div class="flex-between">
+                    <span class="text-sub">Import CSV</span>
                     <input type="file" id="csvFile" accept=".csv" style="display:none;" onchange="handleCSVUpload(this)">
                     <button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">📂 Select File</button>
                 </div>
-                <div id="csv-status" style="font-size:11px; color:var(--primary); margin-top:5px; text-align:right;"></div>
+                <div id="csv-status" class="mt-5 text-bold" style="font-size:11px; color:var(--primary); text-align:right;"></div>
             </div>
-
-            <textarea id="bulkList" placeholder="4 Sol Ring&#10;10 Mountain&#10;1 The One Ring" style="height: 300px;"></textarea>
-            <div style="display: flex; gap: 20px; justify-content: center; margin-top: 20px;"><button onclick="processBulkImport()" style="background: var(--green);">📜 Inscribe to Collection</button><button onclick="closeBulkModal()" class="secondary">Cancel</button></div>
-            <div id="bulk-status" style="margin-top:15px; font-size:13px; color:var(--subtext);"></div>
+            <textarea id="bulkList" placeholder="4 Sol Ring&#10;10 Mountain" style="height: 300px;"></textarea>
+            <div class="flex-row" style="justify-content: center; margin-top: 20px;">
+                <button onclick="processBulkImport(this)" style="background: var(--green);">📜 Inscribe</button>
+                <button onclick="closeBulkModal()" class="secondary">Cancel</button>
+            </div>
+            <div id="bulk-status" class="mt-15 text-sub"></div>
         </div>
     </div>
 
     <div id="delete-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeDeleteModal()">
         <div class="modal-content card-box" style="max-width: 400px; border-color: var(--red);">
-            <h2 style="color:var(--red);">Sacrifice Decklist?</h2>
-            <p style="color:var(--subtext); margin-bottom:20px;">Are you sure you want to destroy <b id="delete-target-name" style="color:white;">this decklist</b>?<br>This action cannot be undone.</p>
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button onclick="confirmDelete()" style="background:var(--red);">🔥 Destroy</button>
+            <h2 class="text-red">Sacrifice Deck?</h2>
+            <p class="text-sub mb-20">Destroy <b id="delete-target-name" class="text-white">this deck</b>?</p>
+            <div class="flex-row" style="justify-content: center;">
+                <button onclick="confirmDelete(this)" style="background:var(--red);">🔥 Destroy</button>
                 <button onclick="closeDeleteModal()" class="secondary">Cancel</button>
             </div>
         </div>
@@ -338,38 +304,35 @@
 
     <div id="edit-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 400px;">
-            <h2 style="color:var(--primary);" id="edit-card-name">Edit Card</h2>
+            <h2 id="edit-card-name" style="color:var(--primary);">Edit Card</h2>
             <input type="hidden" id="edit-card-id">
-            <div style="text-align:left; margin-bottom:10px;"><label style="font-size:12px; color:var(--subtext);">Quantity (Set 0 for Wishlist)</label><input type="number" id="edit-qty" style="margin-top:5px;"></div>
-            <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Cost Basis (Per Card)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">💰</span><input type="number" id="edit-cost" step="0.01" style="padding-left:40px;"></div></div>
-            <div style="text-align:left; margin-bottom:20px;"><label style="font-size:12px; color:var(--subtext);">Tags (comma separated)</label><div class="input-group" style="margin-top:5px;"><span class="input-icon">🏷️</span><input type="text" id="edit-tags" placeholder="Foil, Trade, Damaged..." style="padding-left:40px;"></div></div>
-            <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="saveEdit()" style="background: var(--green);">💾 Save Changes</button><button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button></div>
+            <div style="text-align:left; margin-bottom:10px;"><label class="text-sub">Quantity</label><input type="number" id="edit-qty" class="mt-5"></div>
+            <div style="text-align:left; margin-bottom:20px;"><label class="text-sub">Cost ($)</label><input type="number" id="edit-cost" step="0.01" class="mt-5"></div>
+            <div style="text-align:left; margin-bottom:20px;"><label class="text-sub">Tags</label><input type="text" id="edit-tags" class="mt-5"></div>
+            <div class="flex-row" style="justify-content: center;">
+                <button onclick="saveEdit(this)" style="background: var(--green);">💾 Save</button>
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button>
+            </div>
         </div>
     </div>
 
     <div id="codex-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="modal-content card-box" style="max-width: 800px;">
-            <div id="codex-loading" style="padding: 40px; color: var(--subtext);">Consulting the archives...</div>
+            <div id="codex-loading" style="padding: 40px;" class="text-sub">Consulting archives...</div>
             <div id="codex-content" class="codex-layout hidden">
                 <div><img id="codex-img" class="codex-img" src=""></div>
                 <div class="codex-info">
-                    <div id="codex-title" class="codex-title">Card Name</div>
-                    <div id="codex-type" class="codex-type">Type Line</div>
-                    <div id="codex-text" class="codex-text">Oracle text goes here...</div>
-                    <h4 style="margin:0; font-size:12px; color:var(--subtext); text-transform:uppercase;">Format Legality</h4>
+                    <div id="codex-title" class="codex-title"></div>
+                    <div id="codex-type" class="codex-type"></div>
+                    <div id="codex-text" class="codex-text"></div>
+                    <h4 class="text-sub mt-15" style="font-size:12px; text-transform:uppercase;">Legality</h4>
                     <div id="codex-legality" class="legality-grid"></div>
-                    <div style="margin-top:20px; display:flex; gap:10px;"><button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close Codex</button><button onclick="window.open(window.scryfallLink, '_blank')" style="width:auto; background:#2b253a;">View on Scryfall ↗</button></div>
+                    <div class="mt-20 flex-row">
+                        <button class="secondary" onclick="document.getElementById('codex-modal').classList.add('hidden')">Close</button>
+                        <button onclick="window.open(window.scryfallLink, '_blank')" style="background:#2b253a;">Scryfall ↗</button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div id="prophecy-modal" class="modal-overlay hidden" onclick="if(event.target===this) closeProphecy()">
-        <div class="prophecy-content">
-            <h2 style="color:var(--primary); text-shadow: 0 0 10px var(--primary); margin-bottom: 10px;">🔮 The Prophecy</h2>
-            <p style="color:var(--subtext); margin-bottom: 20px;">Divining a starting hand from the ether...</p>
-            <div class="prophecy-hand" id="prophecy-hand-container"></div>
-            <div style="display: flex; gap: 20px; justify-content: center;"><button onclick="drawProphecy()" class="secondary" style="width: auto; padding: 12px 30px; background: var(--primary);">🔄 Mulligan</button><button onclick="closeProphecy()" class="secondary" style="width: auto; padding: 12px 30px;">Close Vision</button></div>
         </div>
     </div>
 
@@ -377,16 +340,13 @@
         <div class="auth-box">
             <div style="font-size:50px; margin-bottom:15px; text-shadow: 0 0 15px var(--primary);">🩸</div>
             <h2 style="margin:0 0 10px 0; color:white;">The Grimoire</h2>
-            <p style="color:var(--subtext); margin-bottom:25px; font-size:14px;">Unleash your collection's true power.</p>
-            <div class="input-group"><input type="email" id="email" placeholder="Sacrificial Email" style="padding-left: 14px;"></div>
-            <div class="input-group"><input type="password" id="password" placeholder="Runic Key" style="padding-left: 14px;"></div>
-            <button onclick="handleAuthAction()" id="auth-btn">Summon Session</button>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; font-size:12px;">
-                <div style="text-align: left; max-width: 60%;">
-                    <span id="auth-msg" style="color:var(--subtext); display:block;">First time? A pact will be forged upon login.</span>
-                    <a href="privacy.html" target="_blank" style="color:var(--subtext); opacity: 0.6; text-decoration: underline; margin-top: 4px; display: inline-block;">Privacy Policy</a>
-                </div>
-                <span id="forgot-link" style="color:var(--primary); cursor:pointer; font-weight:600;" onclick="toggleResetMode()">Forgot Password?</span>
+            <p class="text-sub mb-20" style="font-size:14px;">Unleash your collection.</p>
+            <div class="input-group"><input type="email" id="email" placeholder="Email" style="padding-left: 14px;"></div>
+            <div class="input-group"><input type="password" id="password" placeholder="Password" style="padding-left: 14px;"></div>
+            <button onclick="handleAuthAction(this)" id="auth-btn">Enter</button>
+            <div class="flex-between mt-15" style="font-size:12px;">
+                <span id="auth-msg" class="text-sub">First time? We'll create an account.</span>
+                <span id="forgot-link" style="color:var(--primary); cursor:pointer;" onclick="toggleResetMode()">Forgot?</span>
             </div>
         </div>
     </div>
@@ -401,7 +361,6 @@
                     <div id="user-email" class="user-email-txt">Loading...</div>
                 </div>
             </div>
-            
             <div class="nav-item active" onclick="nav('dashboard', 'dashboard')">🏠 Dashboard</div>
             <div class="nav-item" onclick="nav('add', 'add')">➕ Add Card</div>
             <div class="nav-item" onclick="nav('collection', 'collection')">📚 Collection</div>
@@ -409,304 +368,160 @@
             <div class="nav-item" onclick="nav('decks', 'decks')">📋 Decklists</div>
             <div class="nav-item" onclick="nav('settings', 'settings')">⚙️ Settings</div>
             <div style="flex-grow:1;"></div>
-            
-            <button class="secondary" style="margin-bottom: 10px; background: rgba(220, 38, 38, 0.1); color: var(--red); border: 1px solid var(--red);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
-
+            <button class="secondary mb-10" style="color:var(--red); border:1px solid var(--red); background:rgba(220,38,38,0.1);" onclick="document.getElementById('report-modal').classList.remove('hidden')">🪲 Report Bug</button>
             <div style="padding:15px 0; border-top:1px solid var(--border); margin-top:10px;">
-                <div style="font-size: 10px; color: var(--subtext); margin-bottom: 5px;">v9.3.1</div>
-                <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile & Logout</button>
+                <div class="text-sub mb-5" style="font-size:10px;">v9.4</div>
+                <button class="secondary" onclick="openUserOptionsModal()">🧙 Profile</button>
             </div>
         </div>
 
         <div class="main">
             <div id="view-dashboard">
-                <div class="flex-between mb-20">
-                    <h2 style="margin:0;">Dashboard</h2>
-                    <button class="secondary btn-md" onclick="exportCSV()">📉 Export CSV</button>
-                </div>
+                <div class="flex-between mb-20"><h2 style="margin:0;">Dashboard</h2><button class="secondary btn-md" onclick="exportCSV()">📉 Export CSV</button></div>
                 <div class="stat-grid">
-                    <div class="stat-card"><div class="stat-val skeleton" id="stat-count"></div><div class="stat-lbl">Cards Owned</div></div>
-                    <div class="stat-card"><div class="stat-val skeleton" id="stat-value"></div><div class="stat-lbl">Portfolio Value</div></div>
-                    <div class="stat-card"><div class="stat-val skeleton" id="stat-cost"></div><div class="stat-lbl">Total Investment</div></div>
-                    <div class="stat-card"><div class="stat-val skeleton" id="stat-oracle"></div><div class="stat-lbl">Wishlist Cost</div></div>
-                    <div class="stat-card"><div class="stat-val skeleton" id="stat-gain"></div><div class="stat-lbl">Gain/Loss (Market)</div></div>
+                    <div class="stat-card"><div class="stat-val skeleton" id="stat-count"></div><div class="stat-lbl">Cards</div></div>
+                    <div class="stat-card"><div class="stat-val skeleton" id="stat-value"></div><div class="stat-lbl">Value</div></div>
+                    <div class="stat-card"><div class="stat-val skeleton" id="stat-cost"></div><div class="stat-lbl">Cost</div></div>
+                    <div class="stat-card"><div class="stat-val skeleton" id="stat-oracle"></div><div class="stat-lbl">Wishlist</div></div>
+                    <div class="stat-card"><div class="stat-val skeleton" id="stat-gain"></div><div class="stat-lbl">Gain</div></div>
                 </div>
                 <div class="dashboard-split">
-                    <div class="card-box"><h3>🏆 Top 5 High-Value Assets</h3><div id="top-assets-list"></div></div>
-                    <div class="card-box"><h3>Recent Acquisitions</h3><div class="collection-grid" id="recent-grid"></div></div>
+                    <div class="card-box"><h3>🏆 Top Assets</h3><div id="top-assets-list"></div></div>
+                    <div class="card-box"><h3>Recent</h3><div class="collection-grid" id="recent-grid"></div></div>
                 </div>
             </div>
 
             <div id="view-settings" class="hidden">
                 <div class="card-box" style="max-width: 500px; margin: 0 auto;">
-                    <h2>🧙‍♂️ Wizard Identity</h2>
+                    <h2>🧙‍♂️ Identity</h2>
                     <div style="text-align:center; margin-bottom:20px;">
-                        <img id="settings-avatar" class="avatar-circle" style="width:100px; height:100px; margin-bottom:15px;" src="https://svgshare.com/i/10gq.svg">
-                        <br>
-                        <button onclick="openAvatarModal()" class="secondary" style="width:auto;">Change Avatar from Collection</button>
+                        <img id="settings-avatar" class="avatar-circle" style="width:100px; height:100px; margin-bottom:15px;" src="https://svgshare.com/i/10gq.svg"><br>
+                        <button onclick="openAvatarModal()" class="secondary btn-sm">Change Avatar</button>
                     </div>
-                    
-                    <div class="input-group"><span class="input-icon">👤</span><input type="text" id="settings-username" placeholder="Display Name (e.g. Jace Beleren)"></div>
-                    <button onclick="saveProfile()" style="margin-bottom:30px; background:var(--green);">💾 Save Identity</button>
-                    
-                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🎨 Grimoire Theme</h3>
+                    <div class="input-group"><span class="input-icon">👤</span><input type="text" id="settings-username" placeholder="Display Name"></div>
+                    <button onclick="saveProfile(this)" class="mb-20" style="background:var(--green);">💾 Save</button>
+                    <h3 class="mt-20" style="border-top:1px solid var(--border); padding-top:20px;">🎨 Theme</h3>
                     <div class="theme-grid">
-                        <div class="theme-btn" style="background:#a78bfa;" onclick="applyTheme('purple')" title="Arcane (Default)"></div> 
-                        <div class="theme-btn" style="background:#fcd34d;" onclick="applyTheme('white')" title="White"></div> 
-                        <div class="theme-btn" style="background:#60a5fa;" onclick="applyTheme('blue')" title="Blue"></div> 
-                        <div class="theme-btn" style="background:#18181b; border-color:#52525b;" onclick="applyTheme('black')" title="Black"></div> 
-                        <div class="theme-btn" style="background:#f87171;" onclick="applyTheme('red')" title="Red"></div> 
-                        <div class="theme-btn" style="background:#34d399;" onclick="applyTheme('green')" title="Green"></div> 
+                        <div class="theme-btn" style="background:#a78bfa;" onclick="applyTheme('purple')"></div> 
+                        <div class="theme-btn" style="background:#fcd34d;" onclick="applyTheme('white')"></div> 
+                        <div class="theme-btn" style="background:#60a5fa;" onclick="applyTheme('blue')"></div> 
+                        <div class="theme-btn" style="background:#18181b; border-color:#52525b;" onclick="applyTheme('black')"></div> 
+                        <div class="theme-btn" style="background:#f87171;" onclick="applyTheme('red')"></div> 
+                        <div class="theme-btn" style="background:#34d399;" onclick="applyTheme('green')"></div> 
                     </div>
-
-                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">💵 Default Price Source</h3>
-                    <div class="input-group" style="padding-left: 0; margin-bottom: 30px;">
-                        <span class="input-icon">💰</span>
-                        <select id="settingsPriceSource" style="padding-left: 40px; margin-bottom: 0;">
-                            <option value="usd">USD (TCGplayer Market)</option>
-                            <option value="usd_foil">USD Foil (TCGplayer Market)</option>
-                            <option value="eur">EUR (Cardmarket)</option>
-                            <option value="tix">TIX (MTGO)</option>
-                        </select>
-                    </div>
-                    <button onclick="savePrefs()" style="margin-bottom:30px; background:var(--green);">💾 Save Preferences</button>
-
-                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🏷️ Collection Tags</h3>
-                    <p style="color:var(--subtext); font-size:12px; margin-bottom:10px;">Define tags for quick access.</p>
-                    <div class="input-group">
-                        <input type="text" id="new-tag-input" placeholder="New Tag Name (e.g. Foil)...">
-                        <button class="secondary" onclick="addCustomTag()" style="width:auto; margin-left:10px; padding: 10px 20px;">Add</button>
-                    </div>
-                    <div id="settings-tags-list" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:30px;"></div>
-
-                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔢 Default Add Quantity</h3>
-                    <p style="color:var(--subtext); font-size:12px; margin-bottom:10px;">Set the default number for the "Add Card" screen.</p>
-                    <div class="input-group">
-                        <input type="number" id="settingsDefaultQty" placeholder="1" value="1">
-                    </div>
-
-                    <h3 style="border-top:1px solid var(--border); padding-top:20px;">🔐 Security</h3>
-                    <div class="input-group"><span class="input-icon">🔑</span><input type="password" id="new-password" placeholder="New Password"></div>
-                    <button onclick="updatePassword()">Update Password</button>
+                    <h3 class="mt-20">💰 Price Source</h3>
+                    <select id="settingsPriceSource" class="mb-20"><option value="usd">USD</option><option value="eur">EUR</option><option value="tix">TIX</option></select>
+                    <button onclick="savePrefs(this)" class="mb-20" style="background:var(--green);">💾 Save Prefs</button>
                 </div>
             </div>
 
             <div id="view-add" class="hidden">
                 <div class="card-box" style="max-width:500px; margin:0 auto;">
-                    <div class="flex-between mb-20">
-                        <h2 style="margin:0;">Add Card</h2>
-                        <button class="secondary btn-sm" onclick="openBulkModal()">📜 Bulk Import</button>
-                    </div>
-                    <div class="input-group"><span class="input-icon">🔍</span><input type="text" id="search" placeholder="Search Card Name, or SET XXX (e.g., KTK 16)" oninput="debounceSearch()"></div>
+                    <div class="flex-between mb-20"><h2 style="margin:0;">Add Card</h2><button class="secondary btn-sm" onclick="openBulkModal()">📜 Bulk</button></div>
+                    <div class="input-group"><span class="input-icon">🔍</span><input type="text" id="search" placeholder="Name or SET 123" oninput="debounceSearch()"></div>
                     <div class="mb-15 text-bold" style="font-size:12px; color:var(--primary); min-height:15px;" id="search-status"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-15" style="padding-left: 14px;"></select>
-                    
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-15" style="padding-left:14px;"></select>
                     <div class="flex-row mb-15">
-                        <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
-                        <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left: 14px;">
-                        <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left: 14px;">
+                        <input id="set" placeholder="SET" readonly style="opacity:0.6; width:30%; padding-left:14px;">
+                        <input id="num" placeholder="#" readonly style="opacity:0.6; width:30%; padding-left:14px;">
+                        <input type="number" id="qty" placeholder="Qty" value="1" style="width:40%; padding-left:14px;">
                     </div>
-                    
-                    <div class="input-group quantity-group"> 
-                        <span class="input-icon">💰</span>
-                        <input type="number" id="cost" placeholder="Acquisition Cost ($)" step="0.01" style="padding-left: 40px;">
-                    </div>
-                    
-                    <div class="input-group quantity-group">
-                        <span class="input-icon">🏷️</span>
-                        <input type="text" id="add-tags" placeholder="Tags (e.g. Foil, Trade)..." style="padding-left: 40px;">
-                    </div>
-                    
-                    <div id="quick-tags-area" class="flex-row" style="flex-wrap:wrap; gap:5px; margin-bottom:15px;"></div>
-
+                    <div class="input-group quantity-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Cost ($)" step="0.01" style="padding-left:40px;"></div>
+                    <div class="input-group quantity-group"><span class="input-icon">🏷️</span><input type="text" id="add-tags" placeholder="Tags..." style="padding-left:40px;"></div>
+                    <div id="quick-tags-area" class="flex-row mb-15" style="flex-wrap:wrap;"></div>
                     <div class="flex-between mb-15 text-sub">
-                        <div class="flex-row"><span>Price Source:</span>
-                            <select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px 8px; margin:0; font-size:11px;">
-                                <option value="usd">🇺🇸 USD (TCG Market)</option>
-                                <option value="usd_foil">✨ USD Foil (TCG Market)</option>
-                                <option value="eur">🇪🇺 EUR (Cardmarket)</option>
-                                <option value="tix">💻 TIX (MTGO)</option>
-                                <option value="global">🌎 Global Avg (US+EU)</option>
-                            </select>
-                        </div>
+                        <select id="priceSource" onchange="updateSelectedVersion(); savePrefs();" style="width:auto; padding:4px; font-size:11px;"><option value="usd">USD</option><option value="eur">EUR</option></select>
                         <span id="marketPrice" class="text-green text-bold">--</span>
                     </div>
-                    <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--border);"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"><span id="preview-text" class="text-sub">Card Preview</span></div>
+                    <div style="text-align:center; min-height:200px; background:rgba(0,0,0,0.2); border-radius:10px; margin-bottom:20px;"><img id="preview" style="max-width:90%; border-radius:8px; display:none; margin:10px 0;"></div>
                     <div class="flex-row">
-                        <button onclick="addCard(false)" style="flex:2;">Bind to Collection</button>
-                        <button onclick="addCard(true)" class="secondary" style="flex:1; border:1px solid var(--blue); color:var(--blue);">👁️ Wishlist</button>
+                        <button onclick="addCard(this, false)" style="flex:2;">Bind</button>
+                        <button onclick="addCard(this, true)" class="secondary" style="flex:1;">Wishlist</button>
                     </div>
                 </div>
             </div>
             
             <div id="view-collection" class="hidden">
                 <div class="flex-between mb-20">
-                    <h2>Card Collection</h2>
-                    <div class="flex-row">
-                        <button id="btn-appraise" class="secondary btn-md" style="background:var(--green); color:white;" onclick="appraiseCollection()">🔄 Appraise</button>
-                        <button class="secondary btn-md" onclick="loadCollection()">Refresh</button>
-                    </div>
+                    <h2>Collection</h2>
+                    <div class="flex-row"><button id="btn-appraise" class="secondary btn-md" style="background:var(--green); color:white;" onclick="appraiseCollection(this)">🔄 Appraise</button><button class="secondary btn-md" onclick="loadCollection()">Refresh</button></div>
                 </div>
                 <div id="appraisal-status" class="hidden mb-15 text-sub"></div>
-                
                 <div class="mb-20">
-                    <div class="input-group mb-10">
-                        <span class="input-icon">🔍</span>
-                        <input id="vaultSearch" placeholder="Search Names or Tags..." oninput="filterVault()" style="margin-bottom:0; padding-left: 40px;">
-                    </div>
-                    
+                    <div class="input-group mb-10"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search..." oninput="filterVault()" style="padding-left:40px;"></div>
                     <div class="flex-row" style="flex-wrap:wrap;">
-                        <select id="filterColor" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🎨 Color (All)</option><option value="W">⚪ White</option><option value="U">🔵 Blue</option><option value="B">⚫ Black</option><option value="R">🔴 Red</option><option value="G">🟢 Green</option><option value="C">🌐 Colorless</option><option value="M">🌈 Multicolor</option>
-                        </select>
-                        <select id="filterRarity" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">💎 Rarity (All)</option><option value="common">Common</option><option value="uncommon">Uncommon</option><option value="rare">Rare</option><option value="mythic">Mythic</option>
-                        </select>
-                        <select id="filterType" onchange="filterVault()" style="flex:1; min-width: 100px; font-size:12px; padding: 10px;">
-                            <option value="all">🃏 Type (All)</option><option value="Creature">Creature</option><option value="Instant">Instant</option><option value="Sorcery">Sorcery</option><option value="Artifact">Artifact</option><option value="Enchantment">Enchantment</option><option value="Land">Land</option><option value="Planeswalker">Planeswalker</option>
-                        </select>
-                    </div>
-
-                    <div class="flex-between mt-10">
-                        <select id="vaultSort" onchange="filterVault(); savePrefs();" style="width:auto; min-width: 150px; margin-bottom:0; padding-left: 14px;">
-                            <option value="date-new">Date (Newest)</option><option value="price-high">Value (High $)</option><option value="name">Name (A-Z)</option>
-                        </select>
-                        <div class="view-toggle">
-                            <div id="view-grid-btn" class="view-btn active" onclick="toggleVaultView('grid')">Grid</div>
-                            <div id="view-list-btn" class="view-btn" onclick="toggleVaultView('list')">List</div>
-                        </div>
+                        <select id="filterColor" onchange="filterVault()" style="flex:1; padding:10px;"><option value="all">Color</option><option value="W">White</option><option value="U">Blue</option><option value="B">Black</option><option value="R">Red</option><option value="G">Green</option><option value="M">Multi</option></select>
+                        <select id="filterRarity" onchange="filterVault()" style="flex:1; padding:10px;"><option value="all">Rarity</option><option value="mythic">Mythic</option><option value="rare">Rare</option></select>
+                        <select id="vaultSort" onchange="filterVault()" style="flex:1; padding:10px;"><option value="date-new">Newest</option><option value="price-high">Value</option></select>
+                        <div class="view-toggle"><div id="view-grid-btn" class="view-btn active" onclick="toggleVaultView('grid')">Grid</div><div id="view-list-btn" class="view-btn" onclick="toggleVaultView('list')">List</div></div>
                     </div>
                 </div>
-
-                <div id="collection-grid" class="collection-grid">
-                    <div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div><div class="grid-card skeleton"></div>
-                </div>
+                <div id="collection-grid" class="collection-grid"></div>
             </div>
 
             <div id="view-oracle" class="hidden">
-                <div class="flex-between mb-20"><h2 style="color:var(--blue);">👁️ Wishlist</h2><button class="secondary btn-md" onclick="loadOracle()">Refresh</button></div>
-                <p class="text-sub mb-20">Cards observed in the ether (Quantity: 0).</p>
-                <div class="collection-grid" id="oracle-grid">
-                    <div class="grid-card skeleton"></div><div class="grid-card skeleton" style="opacity:0.7;"></div><div class="grid-card skeleton" style="opacity:0.5;"></div>
-                </div>
+                <div class="flex-between mb-20"><h2 style="color:var(--blue);">Wishlist</h2><button class="secondary btn-md" onclick="loadOracle()">Refresh</button></div>
+                <div class="collection-grid" id="oracle-grid"></div>
             </div>
 
             <div id="view-decks" class="hidden">
                 <div id="deck-library">
-                    <div class="flex-between mb-20">
-                        <h2 style="margin:0;">Decklist Library</h2>
-                        <div class="input-group" style="width:250px; margin:0;"><span class="input-icon">🔍</span><input id="deckSearch" placeholder="Search Decklists..." oninput="filterDecks()" style="margin:0; padding-left: 40px;"></div>
-                    </div>
+                    <div class="flex-between mb-20"><h2 style="margin:0;">Library</h2><div class="input-group" style="width:200px;"><span class="input-icon">🔍</span><input id="deckSearch" oninput="filterDecks()" style="padding-left:40px;"></div></div>
                     <div id="deck-grid-container" class="deck-grid"></div>
                 </div>
-
                 <div id="deck-workspace" class="hidden">
-                    <button onclick="closeDeck()" class="secondary btn-sm mb-15">← Back to Library</button>
-                    
+                    <button onclick="closeDeck()" class="secondary btn-sm mb-15">← Library</button>
                     <div id="editor-mode" class="hidden">
                         <div class="card-box">
                             <div class="editor-header">
-                                <input id="deckName" placeholder="Deck Name (e.g. Eldrazi Aggro)" style="margin:0; flex-grow:2; margin-right: 10px;">
-                                <div class="input-group" style="margin:0; flex-grow:2;">
-                                    <span class="input-icon">👑</span>
-                                    <input type="text" id="deckCommander" placeholder="Commander Name (Optional)" style="padding-left: 40px;">
-                                </div>
-                                <select id="deckFormat" style="margin:0; flex-grow:1; width:auto;">
-                                    <option value="Casual">Casual</option><option value="Commander">Commander</option><option value="Modern">Modern</option><option value="Standard">Standard</option><option value="Pauper">Pauper</option><option value="Legacy">Legacy</option>
-                                </select>
+                                <input id="deckName" placeholder="Deck Name" style="flex-grow:2;">
+                                <input id="deckCommander" placeholder="Commander" style="flex-grow:2;">
+                                <select id="deckFormat"><option value="Casual">Casual</option><option value="Commander">Commander</option></select>
                                 <button class="secondary clear-btn" onclick="clearDeckEditor()">🗑️</button>
                             </div>
-                            
-                            <div class="card-box" style="padding: 10px; margin-bottom: 20px; background: rgba(0,0,0,0.2);">
-                                <div class="flex-between mb-10">
-                                    <span class="text-sub text-bold" style="text-transform: uppercase;">⚡ Live Curve (Local Cache)</span>
-                                    <span id="editor-card-count" style="font-size: 12px; color: white;">0 Cards</span>
-                                </div>
-                                <div style="height: 100px; width: 100%;">
-                                    <canvas id="editorManaChart"></canvas>
-                                </div>
+                            <div class="card-box" style="padding:10px; margin-bottom:20px; background:rgba(0,0,0,0.2);">
+                                <div class="flex-between mb-10"><span class="text-sub text-bold">Live Curve</span><span id="editor-card-count" style="font-size:12px;">0</span></div>
+                                <div style="height:100px;"><canvas id="editorManaChart"></canvas></div>
                             </div>
-
                             <div class="editor-split">
-                                <div class="editor-column"><div class="editor-label">Mainboard</div><textarea id="deckMain" placeholder="1 Sol Ring..."></textarea></div>
-                                <div class="editor-column"><div class="editor-label">Sideboard</div><textarea id="deckSide" placeholder="15 Island..."></textarea></div>
+                                <div class="editor-column"><div class="editor-label">Main</div><textarea id="deckMain" placeholder="1 Sol Ring..."></textarea></div>
+                                <div class="editor-column"><div class="editor-label">Side</div><textarea id="deckSide"></textarea></div>
                             </div>
-                            <div class="flex-row mt-15">
-                                <button id="validateDeckBtn" onclick="validateDeck()">✅ Validate & Resolve</button>
-                                <button onclick="saveDeck()" style="background:var(--green);">💾 Save Decklist</button>
-                            </div>
+                            <div class="flex-row mt-15"><button id="validateDeckBtn" onclick="validateDeck(this)">✅ Validate</button><button onclick="saveDeck(this)" style="background:var(--green);">💾 Save</button></div>
                         </div>
                     </div>
-                    
                     <div id="detail-mode" class="deck-area-detail hidden">
                         <div class="card-box">
                             <div class="flex-between mb-15">
-                                <div style="flex-grow:1; display:flex; gap: 20px; align-items: flex-start;">
-                                    <img id="detail-commander-img" style="width: 70px; height: 98px; border-radius: 6px; box-shadow: var(--shadow); display: none;">
+                                <div style="flex-grow:1; display:flex; gap:20px;">
+                                    <img id="detail-commander-img" style="width:70px; height:98px; border-radius:6px; display:none;">
                                     <div>
-                                        <h3 id="detail-deck-name" style="margin:0; font-size:1.5rem; color:var(--primary);"></h3>
-                                        <div id="detail-commander" style="font-size:14px; color:white; margin-bottom: 10px;"></div>
-                                        
-                                        <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; margin-top: 10px;">
-                                            <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px; color:var(--subtext);">
-                                                <span>OWNERSHIP: <span id="detail-owned-percent" class="text-bold text-white">0%</span></span>
-                                                <span>MISSING VALUE: <span id="detail-missing-cost" class="text-bold text-red">$0.00</span></span>
-                                            </div>
-                                            <div class="progress-bg" style="width:100%; height:8px; margin:0;">
-                                                <div id="detail-owned-bar" class="progress-fill" style="width:0%"></div>
-                                            </div>
-                                            <div style="text-align: right; font-size: 10px; color: var(--subtext); margin-top: 4px;">
-                                                <span id="detail-total-value">Total Value: $0.00</span>
-                                            </div>
+                                        <h3 id="detail-deck-name" style="margin:0; color:var(--primary);"></h3>
+                                        <div id="detail-commander" class="text-white mb-10" style="font-size:14px;"></div>
+                                        <div style="background:rgba(0,0,0,0.3); padding:10px; border-radius:6px;">
+                                            <div class="flex-between mb-5 text-sub" style="font-size:11px;"><span>Owned: <b id="detail-owned-percent" class="text-white">0%</b></span><span>Missing: <b id="detail-missing-cost" class="text-red">$0</b></span></div>
+                                            <div class="progress-bg"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
                                         </div>
-
                                     </div>
                                 </div>
                                 <div class="flex-row">
-                                    <button class="btn-md" style="background:var(--primary); color:white;" onclick="initBattlefield()">⚔️ Playtest</button>
-                                    <button class="btn-md" style="background:var(--green);" onclick="saveDeck()">💾 Save</button>
-
-                                    <div class="input-group" style="width: auto; margin: 0; position: relative;">
-                                        <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width: 100%; padding: 8px 14px; padding-left: 40px; font-size: 12px; height: 35px; background: rgba(255, 255, 255, 0.1); color: white;">
-                                            <option value="">⚙️ Tools & Export</option>
-                                            <option value="edit">✍️ Edit Decklist</option>
-                                            <option value="view_toggle">👁️ Toggle Visual/Text View</option>
-                                            <option disabled>––––––––––––––––––––––</option>
-                                            <option value="copy_missing">📋 Copy Missing Cards</option>
-                                            <option value="buy">🛒 Buy Missing Cards (TCGPlayer)</option>
-                                            <option value="print">🖨️ Print Proxies</option>
-                                            <option disabled>––––––––––––––––––––––</option>
-                                            <option value="export_arena">🎮 Export MTG Arena</option>
-                                            <option value="export_text">📤 Export Text List</option>
-                                        </select>
-                                        <span class="input-icon" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px;">⚙️</span>
-                                    </div>
+                                    <button class="btn-md" style="background:var(--primary);" onclick="initBattlefield()">⚔️ Play</button>
+                                    <button class="btn-md" style="background:var(--green);" onclick="saveDeck(this)">💾 Save</button>
+                                    <select id="tools-dropdown" onchange="handleDeckTool(this.value)" style="width:40px;">
+                                        <option value="">⚙️</option><option value="edit">Edit</option><option value="view_toggle">Toggle View</option><option value="copy_missing">Copy Missing</option><option value="buy">Buy Missing</option><option value="print">Proxies</option>
+                                    </select>
                                 </div>
                             </div>
                             <div id="detail-visual-grid" class="hidden visual-grid-container"></div>
-                            <div class="deck-list-viewer" id="detail-decklist-viewer">Card list will appear here...</div>
+                            <div class="deck-list-viewer" id="detail-decklist-viewer"></div>
                         </div>
                         <div class="card-box">
-                            <h3>Deck Analysis</h3>
-                            <div class="flex-between mb-15" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;">
-                                <span class="text-sub text-bold" style="text-transform:uppercase;">Estimated Value</span>
-                                <span id="detail-deck-price" class="text-green text-bold" style="font-size:18px;">$0.00</span>
-                            </div>
-                            <div class="mb-15">
-                                <button onclick="openLandCalculator()" class="secondary w-full" style="border:1px dashed var(--primary); color:var(--primary);">🏔️ The Geomancer (Mana Calc)</button>
-                            </div>
-                            
-                            <div id="deck-advisor" style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px;">
-                                <h4 style="margin: 0 0 15px 0; color: var(--primary);">🧙‍♂️ The Advisor</h4>
-                                <div id="advisor-grid" style="display: grid; gap: 10px;">
-                                    </div>
-                                <div style="font-size: 10px; color: var(--subtext); margin-top: 10px; font-style: italic;">
-                                    *Categories estimated based on card text analysis.
-                                </div>
-                            </div>
-
-                            <div id="detail-analysis-results" class="text-sub mt-15" style="font-size:13px;">Metrics will appear here.</div>
-                            <div id="deck-charts" class="hidden"><div style="position:relative;"><canvas id="colorChart"></canvas></div><div style="position:relative;"><canvas id="typeChart"></canvas></div><div style="position:relative;"><canvas id="manaCurve"></canvas></div></div>
+                            <h3>Analysis</h3>
+                            <div class="flex-between mb-15" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px;"><span class="text-sub text-bold">Value</span><span id="detail-deck-price" class="text-green text-bold" style="font-size:18px;">$0</span></div>
+                            <button onclick="openLandCalculator()" class="secondary w-full mb-15" style="border:1px dashed var(--primary); color:var(--primary);">🏔️ Geomancer</button>
+                            <div id="deck-advisor" class="mt-20 pt-15" style="border-top:1px solid var(--border);"><h4 style="color:var(--primary);">The Advisor</h4><div id="advisor-grid"></div></div>
+                            <div id="detail-analysis-results" class="text-sub mt-15"></div>
+                            <div id="deck-charts" class="hidden"><canvas id="colorChart"></canvas><canvas id="typeChart"></canvas><canvas id="manaCurve"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -714,659 +529,280 @@
 
             <div id="view-battlefield" class="hidden">
                 <div class="bf-hud">
-                    <button class="secondary" style="width:auto; padding:5px 15px;" onclick="exitBattlefield()">← Exit</button>
-                    <div class="bf-stat"><span style="color:var(--subtext);">Life:</span> <span id="bf-life" style="color:white; font-size:20px;">20</span> <div style="display:flex; gap:2px;"><button style="width:25px; padding:2px; font-size:12px;" onclick="updateLife(1)">+</button><button style="width:25px; padding:2px; font-size:12px;" onclick="updateLife(-1)">-</button></div></div>
-                    <div class="bf-stat"><span style="color:var(--subtext);">Turn:</span> <span id="bf-turn">1</span> <button style="width:auto; padding:2px 8px; font-size:10px;" onclick="nextTurn()">Next</button></div>
-                    <div class="bf-stat"><button style="width:auto; padding:5px 15px; background:var(--blue);" onclick="createToken()">+ Token</button> <button style="width:auto; padding:5px 15px; background:var(--red);" onclick="initBattlefield()">Reset Game</button></div>
+                    <button class="secondary" style="width:auto;" onclick="exitBattlefield()">← Exit</button>
+                    <div class="bf-stat"><span class="text-sub">Life:</span> <span id="bf-life" class="text-white" style="font-size:20px;">20</span> <button onclick="updateLife(1)">+</button><button onclick="updateLife(-1)">-</button></div>
+                    <div class="bf-stat"><span class="text-sub">Turn:</span> <span id="bf-turn">1</span> <button onclick="nextTurn()">Next</button></div>
+                    <div class="bf-stat"><button style="background:var(--blue);" onclick="createToken()">Token</button> <button style="background:var(--red);" onclick="initBattlefield()">Reset</button></div>
                 </div>
                 <div class="bf-main">
-                    <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="bf-row-label">Combat / Spells</div>
-                    </div>
-                    <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div class="bf-row-label">Lands / Mana</div>
-                    </div>
+                    <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"><div class="bf-row-label">Front</div></div>
+                    <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"><div class="bf-row-label">Back</div></div>
                 </div>
                 <div class="bf-hand-area">
-                    <div class="bf-zone-btn" onclick="drawCard()" ondrop="drop(event, 'library')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div>📚 Library</div>
-                        <div id="bf-lib-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
-                    <div class="bf-zone-btn" style="border-color:var(--red);" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div>💀 Graveyard</div>
-                        <div id="bf-grave-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
-                    <div class="bf-zone-btn" style="border-color:var(--blue);" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
-                        <div>🌀 Exile</div>
-                        <div id="bf-exile-count" style="font-size:18px; font-weight:700;">0</div>
-                    </div>
-                    <div id="bf-hand" style="display:flex; gap:10px; overflow-x:auto; padding:5px; flex:1;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)"></div>
+                    <div class="bf-zone-btn" onclick="drawCard()" ondrop="drop(event, 'library')" ondragover="allowDrop(event)">Lib <div id="bf-lib-count">0</div></div>
+                    <div class="bf-zone-btn" style="border-color:var(--red);" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)">Grave <div id="bf-grave-count">0</div></div>
+                    <div class="bf-zone-btn" style="border-color:var(--blue);" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)">Exile <div id="bf-exile-count">0</div></div>
+                    <div id="bf-hand" style="display:flex; gap:10px; overflow-x:auto; flex:1;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)"></div>
                 </div>
             </div>
         </div>
-
         <div class="bottom-nav">
-            <div class="b-item active" onclick="nav('dashboard', 'dashboard')"><span class="b-icon">🏠</span>Dash</div>
-            <div class="b-item" onclick="nav('add', 'add')"><span class="b-icon">➕</span>Add</div>
-            <div class="b-item" onclick="nav('collection', 'collection')"><span class="b-icon">📚</span>Coll</div>
-            <div class="b-item" onclick="nav('decks', 'decks')"><span class="b-icon">📋</span>Decks</div>
+            <div class="b-item active" onclick="nav('dashboard', 'dashboard')">🏠</div>
+            <div class="b-item" onclick="nav('add', 'add')">➕</div>
+            <div class="b-item" onclick="nav('collection', 'collection')">📚</div>
+            <div class="b-item" onclick="nav('decks', 'decks')">📋</div>
         </div>
-        
         <button class="fab-btn" onclick="nav('add', 'add')">+</button>
     </div>
 
     <script>
-        // --- CONFIGURATION ---
+        // --- CONFIG ---
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
+        let sb; try { sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e){ alert("Database Error"); }
         
-        // Ensure Supabase is loaded before using it
-        let sb;
-        try {
-            sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        } catch (e) {
-            console.error("Supabase failed to init:", e);
-            alert("Critical Error: Database library not loaded. Check internet connection.");
-        }
-        
-        const EMAILJS_SERVICE_ID = 'service_n9utr47';
-        const EMAILJS_TEMPLATE_ID = 'template_xtth5gu';
-        const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf';
+        const EMAILJS_SERVICE_ID='service_n9utr47', EMAILJS_TEMPLATE_ID='template_xtth5gu', EMAILJS_PUBLIC_KEY='ohGLAW9gp3OUPH0uf';
 
         // --- GLOBAL STATE ---
-        let vaultLookup = {};
-        let typeChartInstance = null, manaCurveInstance = null, colorChartInstance = null, editorChartInstance = null;
-        let session=null, tempCardData=null, allVersions=[], searchTimer, cardsCache=[];
-        let currentViewedDeckId=null, isResetMode=false;
-        let currentDeckCache=[], currentDeckCoverUrl='';
-        let currentDeckStructuredList = null;
+        let vaultLookup = {}, typeChartInstance, manaCurveInstance, colorChartInstance, editorChartInstance;
+        let session, tempCardData, allVersions=[], searchTimer, cardsCache=[];
+        let currentViewedDeckId, currentDeckCache=[], currentDeckCoverUrl='', currentDeckStructuredList;
         let vaultViewMode = localStorage.getItem('grimoire_view') || 'grid';
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
-        let suggestedLands = [];
-        let gameState = { lib: [], hand: [], field: [], grave: [], exile: [], life: 20, turn: 1 };
-        let customTags = JSON.parse(localStorage.getItem('grimoire_custom_tags')) || ['Foil', 'Trade', 'Damaged', 'Signed'];
+        let suggestedLands=[], gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
+        let customTags = JSON.parse(localStorage.getItem('grimoire_custom_tags')) || ['Foil', 'Trade', 'Damaged'];
 
-        // --- V9.3: THE GUARD (Button Safety) ---
-        function setLoading(btn, isLoading) {
-            if (!btn) return;
-            if (isLoading) {
-                btn.classList.add('btn-loading');
-                btn.dataset.originalText = btn.innerText; 
-            } else {
-                btn.classList.remove('btn-loading');
-            }
+        // --- HELPERS ---
+        function setLoading(btn, isLoading) { if(!btn) return; if(isLoading){ btn.classList.add('btn-loading'); btn.dataset.originalText=btn.innerText; } else { btn.classList.remove('btn-loading'); } }
+        function showToast(m,t='info'){ let c=document.getElementById('toast-container'); if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} const el=document.createElement('div'); el.className=`toast ${t}`; el.innerHTML=`<span>${m}</span>`; c.appendChild(el); setTimeout(()=>{el.remove()},3000); }
+        function getCardImage(c) { 
+            if(!c) return ''; const set=c.set_code||c.set; const num=c.collector_number||c.num;
+            if(!set||!num) return c.image_url||(c.image_uris?c.image_uris.normal:null)||(c.card_faces?c.card_faces[0].image_uris.normal:'')||'';
+            return c.image_url||`https://cards.scryfall.io/normal/front/${set[0]}/${set[1]}/${set}/${num}.jpg`; // Fallback approximate
         }
-
-        // --- UTILITIES ---
         function openUserOptionsModal() { document.getElementById('user-options-modal').classList.remove('hidden'); }
         function closeUserOptionsModal() { document.getElementById('user-options-modal').classList.add('hidden'); }
-        
-        function savePrefs() { 
-            localStorage.setItem('grimoire_view', vaultViewMode); 
-            localStorage.setItem('grimoire_sort', document.getElementById('vaultSort').value); 
-            if (document.getElementById('settingsPriceSource')) localStorage.setItem('grimoire_default_price_source', document.getElementById('settingsPriceSource').value);
-            if (document.getElementById('priceSource')) document.getElementById('priceSource').value = localStorage.getItem('grimoire_default_price_source') || 'usd';
-            if (document.getElementById('settingsDefaultQty')) localStorage.setItem('grimoire_default_qty', document.getElementById('settingsDefaultQty').value);
-            showToast("Preferences saved!", "success");
+
+        // --- CHART FUNCTIONS (Moved up for safety) ---
+        function clearCharts() { 
+            [typeChartInstance, manaCurveInstance, colorChartInstance].forEach(c => { if(c) c.destroy(); });
+            document.getElementById('deck-charts').classList.add('hidden'); 
+        }
+        function renderTypeChart(d) { 
+            const ctx=document.getElementById('typeChart').getContext('2d'); if(typeChartInstance) typeChartInstance.destroy();
+            typeChartInstance = new Chart(ctx, { type:'doughnut', data:{labels:Object.keys(d),datasets:[{data:Object.values(d),backgroundColor:CHART_COLORS,borderWidth:0}]}, options:{plugins:{legend:{position:'right',labels:{color:'#a1a1aa'}}}} });
+        }
+        function renderManaCurve(d) {
+            const ctx=document.getElementById('manaCurve').getContext('2d'); if(manaCurveInstance) manaCurveInstance.destroy();
+            const l=['0','1','2','3','4','5','6','7+']; const v=l.map((_,i)=>d[i]||0);
+            manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
+        }
+        function renderColorChart(c) {
+            const ctx=document.getElementById('colorChart').getContext('2d'); if(colorChartInstance) colorChartInstance.destroy();
+            const l=['White','Blue','Black','Red','Green','Colorless']; const d=[c.W,c.U,c.B,c.R,c.G,c.C];
+            colorChartInstance = new Chart(ctx, { type:'polarArea', data:{labels:l,datasets:[{data:d,backgroundColor:['#f0f2c0','#b3ceea','#a69f9d','#ea9f82','#c4d3ca','#d8d8d8']}]}, options:{scales:{r:{grid:{color:'#333'},ticks:{display:false}}}} });
+        }
+        function renderEditorChart(d) {
+            const ctx=document.getElementById('editorManaChart').getContext('2d'); if(editorChartInstance) editorChartInstance.destroy();
+            editorChartInstance = new Chart(ctx, { type:'bar', data:{labels:['0','1','2','3','4','5','6','7+'],datasets:[{data:Object.values(d),backgroundColor:'#3b82f6',borderRadius:2}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{display:false}}} });
         }
 
-        function loadPrefs() { 
-            const defaultPriceSource = localStorage.getItem('grimoire_default_price_source') || 'usd';
-            const defaultQty = localStorage.getItem('grimoire_default_qty') || '1';
-            if(localStorage.getItem('grimoire_sort') && document.getElementById('vaultSort')) document.getElementById('vaultSort').value = localStorage.getItem('grimoire_sort'); 
-            if(document.getElementById('priceSource')) document.getElementById('priceSource').value = defaultPriceSource;
-            if(document.getElementById('settingsPriceSource')) document.getElementById('settingsPriceSource').value = defaultPriceSource;
-            if(document.getElementById('settingsDefaultQty')) document.getElementById('settingsDefaultQty').value = defaultQty;
-            if(document.getElementById('qty')) document.getElementById('qty').value = defaultQty;
-            if(localStorage.getItem('grimoire_theme')) applyTheme(localStorage.getItem('grimoire_theme')); 
-            toggleVaultView(vaultViewMode); 
-        }
-
-        function showToast(m,t='info'){ 
-            let c=document.getElementById('toast-container');
-            if(!c){c=document.createElement('div');c.id='toast-container';document.body.appendChild(c)} 
-            const el=document.createElement('div'); el.className=`toast ${t}`;
-            el.innerHTML=`<span>${m}</span><span style="cursor:pointer;opacity:0.5;" onclick="this.parentElement.remove()">✕</span>`;
-            c.appendChild(el);
-            setTimeout(()=>{ el.classList.add('hiding'); el.addEventListener('transitionend',()=>el.remove()); }, 3000); 
-        }
-
-        function getCardImage(c) { 
-            if(!c) return ''; 
-            const setCode = c.set_code || c.set;
-            const num = c.collector_number || c.num;
-            if (!setCode || !num) return c.image_url || (c.image_uris && c.image_uris.normal) || (c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) || '';
-            const cacheKey = `img_cache_${setCode}_${num}`;
-            const cachedUrl = localStorage.getItem(cacheKey);
-            if (cachedUrl) return cachedUrl;
-            let imageUrl = '';
-            if(c.image_url) imageUrl = c.image_url; 
-            else if(c.image_uris && c.image_uris.normal) imageUrl = c.image_uris.normal; 
-            else if(c.card_faces && c.card_faces[0].image_uris && c.card_faces[0].image_uris.normal) imageUrl = c.card_faces[0].image_uris.normal; 
-            if (imageUrl) localStorage.setItem(cacheKey, imageUrl);
-            return imageUrl; 
-        }
-
-        // --- CHART FUNCTIONS (Must be defined before use) ---
-        function clearCharts() {
-            if (typeChartInstance) { typeChartInstance.destroy(); typeChartInstance = null; }
-            if (manaCurveInstance) { manaCurveInstance.destroy(); manaCurveInstance = null; }
-            if (colorChartInstance) { colorChartInstance.destroy(); colorChartInstance = null; }
-            document.getElementById('deck-charts').classList.add('hidden');
-        }
-
-        function renderTypeChart(typeData) {
-            if (typeChartInstance) typeChartInstance.destroy();
-            const ctx = document.getElementById('typeChart').getContext('2d');
-            typeChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: Object.keys(typeData), datasets: [{ data: Object.values(typeData), backgroundColor: CHART_COLORS, borderWidth: 0 }] },
-                options: { plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } } } }
-            });
-        }
-
-        function renderManaCurve(cmcData) {
-            if (manaCurveInstance) manaCurveInstance.destroy();
-            const ctx = document.getElementById('manaCurve').getContext('2d');
-            const labels = ['0','1','2','3','4','5','6','7+'];
-            const data = labels.map((l, i) => cmcData[i] || 0); 
-            manaCurveInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: labels, datasets: [{ label: 'Count', data: data, backgroundColor: '#a78bfa' }] },
-                options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#a1a1aa' } }, y: { ticks: { color: '#a1a1aa' } } } }
-            });
-        }
-
-        function renderColorChart(colors) {
-            if (colorChartInstance) colorChartInstance.destroy();
-            const ctx = document.getElementById('colorChart').getContext('2d');
-            const labels = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'];
-            const data = [colors['W']||0, colors['U']||0, colors['B']||0, colors['R']||0, colors['G']||0, colors['C']||0];
-            const bg = ['#f0f2c0', '#b3ceea', '#a69f9d', '#ea9f82', '#c4d3ca', '#d8d8d8'];
-            colorChartInstance = new Chart(ctx, {
-                type: 'polarArea',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: bg, borderWidth: 0 }] },
-                options: { plugins: { legend: { position: 'right', labels: { color: '#a1a1aa' } }, scales: { r: { ticks: { display: false }, grid: { color: 'rgba(255,255,255,0.1)' } } } } }
-            });
-        }
-
-        function renderEditorChart(data) {
-            const ctx = document.getElementById('editorManaChart').getContext('2d');
-            if (editorChartInstance) editorChartInstance.destroy();
-            editorChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: { labels: ['0','1','2','3','4','5','6','7+'], datasets: [{ data: Object.values(data), backgroundColor: '#3b82f6', borderRadius: 2 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#a1a1aa', font: { size: 9 } }, grid: { display: false } }, y: { display: false, grid: { display: false } } }, animation: { duration: 0 } }
-            });
-        }
-
-        // --- AUTH ---
-        function toggleResetMode(){ isResetMode=!isResetMode; const g=document.getElementById('password').parentElement; if(isResetMode){g.classList.add('hidden');document.getElementById('auth-btn').innerText="Send Recovery";document.getElementById('forgot-link').innerText="Back";}else{g.classList.remove('hidden');document.getElementById('auth-btn').innerText="Summon Session";document.getElementById('forgot-link').innerText="Forgot Password?";}}
-        async function handleAuthAction(){if(isResetMode){const e=document.getElementById('email').value;const{error}=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.href});if(error)showToast(error.message,"error");else showToast("Check email!","success")}else{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){if(error.message.includes("Invalid login credentials")){showToast("Creating account...","info");const sup=await sb.auth.signUp({email:e,password:p});if(sup.error){showToast(sup.error.message,"error");}else{if(sup.data.session)finalizeLogin(sup.data.session);else showToast("Account created! Check email.","success");}}else{showToast(error.message,"error");}}else{finalizeLogin(data.session);}}}
-        function finalizeLogin(s){ session=s; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText=s.user.email; loadData(); loadPrefs(); loadProfile(); }
-        async function handleLogout(){ await sb.auth.signOut(); window.location.reload(); }
-        async function loadProfile() { const { data } = await sb.from('profiles').select('*').eq('id', session.user.id).single(); if (data) { if(data.username) document.getElementById('settings-username').value = data.username; if(data.avatar_url) document.getElementById('sidebar-avatar').src = data.avatar_url; } }
-        async function saveProfile() { const username = document.getElementById('settings-username').value; const avatar = document.getElementById('sidebar-avatar').src; const { error } = await sb.from('profiles').upsert({ id: session.user.id, username, avatar_url: avatar, updated_at: new Date() }); if(error) showToast("Error saving profile", "error"); else showToast("Identity Updated!", "success"); }
-        async function updatePassword() { const p = document.getElementById('new-password').value; if(!p) return; const { error } = await sb.auth.updateUser({ password: p }); if(error) showToast(error.message, "error"); else showToast("Password updated!", "success"); }
-
-        // --- NAVIGATION ---
+        // --- CORE LOGIC ---
         function nav(v,i){ 
             document.querySelectorAll('.main > div').forEach(d=>d.classList.add('hidden')); 
-            const view = document.getElementById('view-'+v);
-            if(view) view.classList.remove('hidden'); 
-            
-            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active')); 
-            document.querySelectorAll('.b-item').forEach(el=>el.classList.remove('active')); 
-            
-            if (i) {
-                const bItem = document.querySelector(`.b-item[onclick="nav('${v}', '${i}')"]`);
-                if(bItem) bItem.classList.add('active');
-            } else {
-                const nItem = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
-                if(nItem) nItem.classList.add('active');
-            }
-
-            if(v==='decks'){ 
-                loadDecks(); 
-            } else { 
-                document.getElementById('deck-workspace').classList.add('hidden'); 
-                document.getElementById('deck-library').classList.remove('hidden'); 
-                showRitualEditor(false); 
-            } 
-            if(v==='collection') loadCollection(); 
-            if(v==='oracle') loadOracle(); 
-            if(v==='settings') renderTagManager();
-            if(v==='add') renderQuickTags();
+            const view = document.getElementById('view-'+v); if(view) view.classList.remove('hidden');
+            if(v==='decks') loadDecks(); else { document.getElementById('deck-workspace').classList.add('hidden'); document.getElementById('deck-library').classList.remove('hidden'); showRitualEditor(false); }
+            if(v==='collection') loadCollection(); if(v==='oracle') loadOracle(); if(v==='add') renderQuickTags();
         }
 
-        // --- DATA LOADING & SEARCH (Fixed!) ---
-        async function loadData() { 
-            // V9.3.1 Safety: Catch errors in data loading to prevent crashing dashboard
+        async function loadData() {
             try {
-                const { data: cards, error } = await sb.from('cards').select('*').order('created_at', { ascending: false }); 
+                const { data, error } = await sb.from('cards').select('*').order('created_at', { ascending: false });
                 if(error) throw error;
-                
-                cardsCache = cards; 
-                vaultLookup = {};
-                
-                cardsCache.forEach(c => { 
-                    if (!c.name) return; // Skip bad data
-                    const key = `${c.name.toLowerCase().trim()}_${c.set_code || c.set}_${c.collector_number || c.num}`;
-                    vaultLookup[key] = (vaultLookup[key] || 0) + c.quantity;
+                cardsCache = data; vaultLookup = {};
+                let count=0, val=0, cost=0;
+                cardsCache.forEach(c => {
+                    const key = `${c.name.toLowerCase()}_${c.set_code}_${c.collector_number}`;
+                    vaultLookup[key] = (vaultLookup[key]||0) + c.quantity;
+                    if(c.quantity>0) { count+=c.quantity; val+=(c.market_price_usd||0)*c.quantity; cost+=(c.buy_price||0)*c.quantity; }
                 });
-
-                let count=0, totalVal=0;
-                cards.forEach(c => { 
-                    if(c.quantity>0) { 
-                        count += c.quantity; 
-                        totalVal += (c.market_price_usd||0) * c.quantity; 
-                    } 
-                });
-
                 document.getElementById('stat-count').innerText = count;
-                document.getElementById('stat-value').innerText = "$"+totalVal.toFixed(2);
+                document.getElementById('stat-value').innerText = "$"+val.toFixed(2);
+                document.getElementById('stat-cost').innerText = "$"+cost.toFixed(2);
                 document.querySelectorAll('.stat-val').forEach(el => el.classList.remove('skeleton'));
                 
-                // Populate recent grid (Fixed click handler)
-                const owned = cards.filter(c=>c.quantity>0).slice(0,5);
-                document.getElementById('recent-grid').innerHTML = owned.map(c => `
-                    <div class="grid-card animate-in" onclick="openCodex('${c.set_code || c.set}', '${c.collector_number || c.num}')">
-                        <img src="${getCardImage(c)}" loading="lazy">
-                        <div class="overlay"><span>${c.name}</span></div>
-                    </div>`).join('');
-            
-            } catch (e) {
-                console.error("Load Data Error:", e);
-                showToast("Failed to load collection data.", "error");
-            }
-        }
-
-        function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(fetchCardMeta,500); }
-        
-        // V9.3.1 Fix: Restored regex for "KTK 16" style searches
-        async function fetchCardMeta(){ 
-            const n = document.getElementById('search').value.trim(); 
-            if(n.length < 3) return;
-            
-            document.getElementById('search-status').innerText = "Consulting Scryfall...";
-            
-            let apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(n)}&unique=prints`;
-            
-            // Check for "SET 123" pattern
-            const setNumMatch = n.match(/^([a-z]{3,4})\s*(\d+)$/i);
-            if (setNumMatch) {
-                const setCode = setNumMatch[1].toLowerCase();
-                const collectorNumber = setNumMatch[2];
-                apiUrl = `https://api.scryfall.com/cards/${setCode}/${collectorNumber}`;
-            }
-
-            try{ 
-                const res = await fetch(apiUrl); 
-                const d = await res.json(); 
+                // Recent
+                const recent = cardsCache.filter(c=>c.quantity>0).slice(0,5);
+                document.getElementById('recent-grid').innerHTML = recent.map(c => `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')"><img src="${getCardImage(c)}" loading="lazy"><div class="overlay"><span>${c.name}</span></div></div>`).join('');
                 
-                // Handle different Scryfall return shapes (List vs Single Object)
-                if (d.object === 'error') {
-                    allVersions = [];
-                    document.getElementById('search-status').innerText = "No cards found.";
-                    return;
-                }
-
-                if (d.object === 'card') {
-                    allVersions = [d]; // Direct hit (set code search)
-                } else if (d.data) {
-                    allVersions = d.data; // Search results
-                } else {
-                    allVersions = [];
-                }
-
-                document.getElementById('search-status').innerText = `${allVersions.length} versions found.`;
-                const s = document.getElementById('versionSelect'); 
-                s.innerHTML = ''; 
-                allVersions.forEach((v,i)=>{ 
-                    const o = document.createElement('option'); 
-                    o.value = i; 
-                    o.text = `${v.set_name} - $${v.prices.usd||'N/A'}`; 
-                    s.appendChild(o); 
-                }); 
-                updateSelectedVersion(); 
-            } catch(e){ 
-                document.getElementById('search-status').innerText = "Network Error."; 
-            } 
+                // Top Assets
+                const top = [...cardsCache].filter(c=>c.quantity>0).sort((a,b)=>b.market_price_usd-a.market_price_usd).slice(0,5);
+                document.getElementById('top-assets-list').innerHTML = top.map(c => `<div class="asset-row"><div class="asset-info"><img src="${getCardImage(c)}" class="asset-img"><div><div class="text-bold">${c.name}</div><div class="text-sub">${c.set_code} #${c.collector_number}</div></div></div><div class="asset-val">$${c.market_price_usd}</div></div>`).join('');
+            } catch(e) { console.error(e); showToast("Load Error","error"); }
         }
 
-        function updateSelectedVersion(){ 
-            const index = document.getElementById('versionSelect').value;
-            const v = allVersions[index];
-            if(!v) return;
-            const price = parseFloat(v.prices.usd||0);
-            document.getElementById('set').value = v.set.toUpperCase(); 
-            document.getElementById('num').value = v.collector_number; 
-            document.getElementById('marketPrice').innerHTML = `$${price.toFixed(2)}`; 
-            document.getElementById('preview').src = getCardImage(v); 
-            document.getElementById('preview').style.display = 'block'; 
-            document.getElementById('preview-text').style.display = 'none'; 
-            
-            tempCardData = { 
-                name: v.name, set: v.set.toUpperCase(), num: v.collector_number, img: getCardImage(v), 
-                market_price: price, type_line: v.type_line, rarity: v.rarity, colors: v.colors||[], cmc: v.cmc||0 
-            }; 
-            document.getElementById('qty').readOnly = false;
+        // --- SEARCH FIX (V9.3.1) ---
+        function debounceSearch(){ clearTimeout(searchTimer); searchTimer=setTimeout(fetchCardMeta,500); }
+        async function fetchCardMeta(){ 
+            const n = document.getElementById('search').value.trim(); if(n.length < 3) return;
+            document.getElementById('search-status').innerText = "Searching...";
+            let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(n)}&unique=prints`;
+            const match = n.match(/^([a-z]{3,4})\s*(\d+)$/i);
+            if(match) url = `https://api.scryfall.com/cards/${match[1].toLowerCase()}/${match[2]}`;
+
+            try {
+                const res = await fetch(url); const d = await res.json();
+                if(d.object==='error') { document.getElementById('search-status').innerText = "Not found."; allVersions=[]; return; }
+                allVersions = d.object==='list' ? d.data : [d];
+                document.getElementById('search-status').innerText = `${allVersions.length} versions.`;
+                const s = document.getElementById('versionSelect'); s.innerHTML='';
+                allVersions.forEach((v,i) => { const o=document.createElement('option'); o.value=i; o.text=`${v.set_name} ($${v.prices.usd||'0'})`; s.appendChild(o); });
+                updateSelectedVersion();
+            } catch(e) { document.getElementById('search-status').innerText = "Error."; }
         }
 
-        async function addCard(isWishlist = false) { 
-            const btn = document.querySelector(`button[onclick="addCard(${isWishlist})"]`);
-            if(!tempCardData) return showToast("Select a card first", "error"); 
+        function updateSelectedVersion(){
+            const v = allVersions[document.getElementById('versionSelect').value]; if(!v) return;
+            document.getElementById('set').value = v.set.toUpperCase();
+            document.getElementById('num').value = v.collector_number;
+            document.getElementById('marketPrice').innerText = `$${v.prices.usd||'0.00'}`;
+            document.getElementById('preview').src = getCardImage(v); document.getElementById('preview').style.display='block';
+            tempCardData = { name:v.name, set:v.set.toUpperCase(), num:v.collector_number, img:getCardImage(v), market_price: parseFloat(v.prices.usd||0), type_line:v.type_line, rarity:v.rarity, colors:v.colors||[], cmc:v.cmc||0 };
+        }
+
+        // --- BUTTON FIX (The Guard) ---
+        async function addCard(btn, isWishlist) {
+            if(!tempCardData) return showToast("Select a card first", "error");
             setLoading(btn, true);
             try {
                 const qty = isWishlist ? 0 : (parseInt(document.getElementById('qty').value)||1);
-                const cost = document.getElementById('cost').value ? parseFloat(document.getElementById('cost').value) : null;
+                const cost = parseFloat(document.getElementById('cost').value)||null;
                 const tags = document.getElementById('add-tags').value.split(',').filter(t=>t.trim());
-                
-                const { error } = await sb.from('cards').insert({ 
-                    user_id: session.user.id, name: tempCardData.name, set_code: tempCardData.set, collector_number: tempCardData.num, 
-                    image_url: tempCardData.img, buy_price: cost, quantity: qty, market_price_usd: tempCardData.market_price, 
-                    tags: tags, last_price_update: new Date().toISOString(), type_line: tempCardData.type_line, rarity: tempCardData.rarity, 
-                    colors: tempCardData.colors, cmc: tempCardData.cmc 
-                });
-                
-                if(!error) { 
-                    showToast(isWishlist ? "Wishlist Updated" : "Card Added!", "success"); 
-                    document.getElementById('search').value=""; 
-                    tempCardData=null; 
-                    loadData(); 
-                } else showToast(error.message, "error");
-            } catch(e) { showToast("Error adding card", "error"); } 
-            finally { setLoading(btn, false); }
+                await sb.from('cards').insert({ user_id:session.user.id, name:tempCardData.name, set_code:tempCardData.set, collector_number:tempCardData.num, image_url:tempCardData.img, buy_price:cost, quantity:qty, market_price_usd:tempCardData.market_price, tags:tags, type_line:tempCardData.type_line, rarity:tempCardData.rarity, colors:tempCardData.colors, cmc:tempCardData.cmc });
+                showToast("Saved!", "success"); loadData();
+            } catch(e){ showToast("Error", "error"); } finally { setLoading(btn, false); }
         }
 
-        // --- DECK MANAGEMENT ---
-        async function loadDecks() {
-            document.getElementById('deck-workspace').classList.add('hidden');
-            document.getElementById('deck-library').classList.remove('hidden');
-            try {
-                const { data, error } = await sb.from('decks').select('*').order('updated_at', { ascending: false });
-                if(error) throw error;
-                const grid = document.getElementById('deck-grid-container');
-                window.myDecks = data || [];
-                let html = `<div class="deck-card new-deck-card" onclick="showRitualEditor()"><span style="font-size:30px;">➕</span><span>New Deck</span></div>`;
-                if (data) html += data.map(d => `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}')"><div class="deck-card-content"><h4>${d.name}</h4><div class="deck-card-meta"><span>${d.card_count} Cards</span><span class="format-badge">${d.format}</span></div></div></div>`).join('');
-                grid.innerHTML = html;
-            } catch (e) {
-                console.error("Load Decks Error:", e);
-                showToast("Failed to load decks.", "error");
-            }
+        // --- DECKS ---
+        function showRitualEditor(keep) { 
+            document.getElementById('deck-library').classList.add('hidden'); 
+            document.getElementById('deck-workspace').classList.remove('hidden'); 
+            document.getElementById('detail-mode').classList.add('hidden'); 
+            document.getElementById('editor-mode').classList.remove('hidden');
+            if(!keep) { document.getElementById('deckName').value=''; document.getElementById('deckMain').value=''; }
+            initEditorListeners();
         }
-
-        async function validateDeck() {
-            let allMatchedCards = []; 
-            let allUnmatched = [];    
-            
-            const name = document.getElementById('deckName').value;
-            const commander = document.getElementById('deckCommander').value; 
-            const format = document.getElementById('deckFormat').value; 
-            const main = document.getElementById('deckMain').value;
-            const side = document.getElementById('deckSide').value;
-            const listText = main + '\n' + side;
-            const btn = document.getElementById('validateDeckBtn');
-            
-            if (!listText.trim() && !commander.trim()) return showToast("Decklist is empty.", "error");
-
-            document.getElementById('deck-library').classList.add('hidden');
-            document.getElementById('deck-workspace').classList.remove('hidden');
-            document.getElementById('editor-mode').classList.add('hidden');
-            document.getElementById('detail-mode').classList.remove('hidden');
-            document.getElementById('detail-deck-name').innerText = name || "New Decklist";
-            
-            analyzeOwnership(listText);
-
-            if (window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
-                 processDeckData(window.currentDeckStructuredList, commander, format, document.getElementById('detail-analysis-results'), [], []);
-                 return;
-            }
-
-            const { cards: parsedCards } = parseDeckList(listText);
-            const cardsToResolve = [...parsedCards];
-            if (commander.trim()) cardsToResolve.push({ qty: 1, name: commander });
-
-            if (cardsToResolve.length === 0) return showToast("No cards to resolve.", "error");
-
-            if (btn) { btn.innerText = "Resolving..."; btn.disabled = true; }
-
-            try {
-                const identifiers = cardsToResolve.map(c => ({ name: c.name }));
-                const chunkSize = 75;
-                const totalChunks = Math.ceil(identifiers.length / chunkSize);
-                
-                for (let i = 0; i < totalChunks; i++) {
-                    const chunk = identifiers.slice(i * chunkSize, (i + 1) * chunkSize);
-                    const res = await fetch('https://api.scryfall.com/cards/collection', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ identifiers: chunk }) });
-                    const data = await res.json();
-                    if (data.data) allMatchedCards = allMatchedCards.concat(data.data);
-                    if (data.not_found) allUnmatched = allUnmatched.concat(data.not_found);
-                }
-                
-                processDeckData(allMatchedCards, commander, format, document.getElementById('detail-analysis-results'), parsedCards, allUnmatched);
-
-            } catch (e) { showToast("Validation Error", "error"); } 
-            finally { if(btn) { btn.innerText = "✅ Validate"; btn.disabled = false; } }
-        }
-
-        function processDeckData(matchedCards, commander, format, resultsEl, parsedCards, allUnmatched) {
-            let structuredDeck = [];
-            let totalDeckPrice = 0;
-            let typeAgg = {}, cmcAgg = {};
-            window.currentDeckStats = { W: 0, U: 0, B: 0, R: 0, G: 0, C: 0 };
-            currentDeckCache = []; 
-
-            matchedCards.forEach(card => {
-                let qty = 1;
-                const req = parsedCards.find(p => p.name.toLowerCase() === card.name.toLowerCase());
-                if (req) qty = req.qty;
-                
-                const price = parseFloat(card.prices.usd||0);
-                structuredDeck.push({
-                    name: card.name, qty: qty, set: card.set, num: card.collector_number,
-                    img: getCardImage(card), type: card.type_line, cmc: card.cmc, 
-                    price: price, identity: card.color_identity
-                });
-                
-                currentDeckCache.push({ ...card, quantity: qty }); 
-                totalDeckPrice += (price * qty);
-
-                const type = card.type_line.split('—')[0].trim();
-                typeAgg[type] = (typeAgg[type]||0) + qty;
-                if(!type.includes('Land')) {
-                    const cmc = Math.floor(card.cmc||0);
-                    cmcAgg[cmc] = (cmcAgg[cmc]||0) + qty;
-                }
-                if(card.mana_cost) {
-                    window.currentDeckStats['W'] += (card.mana_cost.match(/{W}/g)||[]).length * qty;
-                    window.currentDeckStats['U'] += (card.mana_cost.match(/{U}/g)||[]).length * qty;
-                    window.currentDeckStats['B'] += (card.mana_cost.match(/{B}/g)||[]).length * qty;
-                    window.currentDeckStats['R'] += (card.mana_cost.match(/{R}/g)||[]).length * qty;
-                    window.currentDeckStats['G'] += (card.mana_cost.match(/{G}/g)||[]).length * qty;
-                }
-            });
-
-            window.currentDeckStructuredList = structuredDeck;
-            document.getElementById('detail-deck-price').innerText = `$${totalDeckPrice.toFixed(2)}`;
-            
-            clearCharts();
-            document.getElementById('deck-charts').classList.remove('hidden');
-            renderTypeChart(typeAgg);
-            renderManaCurve(cmcAgg);
-            renderColorChart(window.currentDeckStats);
-            analyzeDeckStructure(currentDeckCache); 
-            analyzeOwnership(document.getElementById('deckMain').value); 
-        }
-
-        // --- V9.0 & V9.1 HELPERS ---
-        function analyzeDeckStructure(deckList) {
-            const stats = { lands:{count:0,target:36}, ramp:{count:0,target:10}, draw:{count:0,target:10}, removal:{count:0,target:10}, wipes:{count:0,target:3} };
-            deckList.forEach(c => {
-                const txt = (c.oracle_text||"").toLowerCase(), type=(c.type_line||"").toLowerCase(), qty=c.quantity||1;
-                if(type.includes('land')) { stats.lands.count+=qty; return; }
-                if((txt.includes('add ')||txt.includes('search your library')) && (txt.includes('mana')||txt.includes('land'))) stats.ramp.count+=qty;
-                if(txt.includes('draw') && txt.includes('card') && !txt.includes('draw step')) {
-                    if(txt.indexOf('draw') < txt.indexOf('card')) stats.draw.count+=qty;
-                }
-                if((txt.includes('destroy')||txt.includes('exile')) && txt.includes('target')) stats.removal.count+=qty;
-                
-                const isDestructionWipe = (txt.includes("destroy") || txt.includes("exile")) && (txt.includes(" all ") || txt.includes(" each "));
-                const isDamageWipe = txt.includes("deals") && txt.includes("damage") && (txt.includes(" all ") || txt.includes(" each ")) && txt.includes("creature");
-                if (isDestructionWipe || isDamageWipe) stats.wipes.count += qty;
-            });
-            renderAdvisor(stats);
-        }
-
-        function renderAdvisor(stats) {
-            let html='';
-            for(const [k,d] of Object.entries(stats)) {
-                const pct = Math.min(100, (d.count/d.target)*100);
-                let color = 'var(--red)';
-                const r = d.count/d.target;
-                if(r >= 0.8 && r <= 1.2) color='var(--green)'; else if(r >= 0.5) color='var(--yellow)';
-                html+=`<div class="mb-5"><div class="flex-between text-sub"><span style="text-transform:capitalize;">${k}</span><span>${d.count}/${d.target}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:${color};"></div></div></div>`;
-            }
-            document.getElementById('advisor-grid').innerHTML = html;
-        }
-
-        function initEditorListeners() {
-            const h = () => { clearTimeout(searchTimer); searchTimer=setTimeout(updateLiveEditorStats, 500); };
-            document.getElementById('deckMain').addEventListener('input', h);
-        }
+        function initEditorListeners() { document.getElementById('deckMain').addEventListener('input', () => setTimeout(updateLiveEditorStats, 500)); }
         function updateLiveEditorStats() {
-            const txt = document.getElementById('deckMain').value;
-            const lines = txt.split('\n');
-            const data = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0};
-            let total=0;
+            const txt = document.getElementById('deckMain').value; const lines = txt.split('\n');
+            const data = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0}; let total=0;
             lines.forEach(l => {
                 const m = l.match(/^(\d+)\s+(.+)/);
                 if(m) {
-                    const q=parseInt(m[1]), n=m[2].trim().toLowerCase();
-                    total+=q;
+                    const q=parseInt(m[1]), n=m[2].trim().toLowerCase(); total+=q;
                     const c = cardsCache.find(x=>x.name.toLowerCase()===n);
-                    if(c && c.cmc !== undefined) {
-                        let bucket = Math.floor(c.cmc); if(bucket>7) bucket=7;
-                        data[bucket]+=q;
-                    }
+                    if(c && c.cmc !== undefined) { let b=Math.floor(c.cmc); if(b>7)b=7; data[b]+=q; }
                 }
             });
-            document.getElementById('editor-card-count').innerText = `${total} Cards`;
-            renderEditorChart(data);
+            document.getElementById('editor-card-count').innerText = total; renderEditorChart(data);
         }
 
-        function showRitualEditor(keepData = false) {
-            document.getElementById('deck-library').classList.add('hidden');
-            document.getElementById('deck-workspace').classList.remove('hidden');
-            document.getElementById('detail-mode').classList.add('hidden');
-            document.getElementById('editor-mode').classList.remove('hidden');
-            clearCharts();
-            currentViewedDeckId = null;
-            window.currentDeckStructuredList = null; 
-            if (!keepData) {
-                document.getElementById('deckName').value = '';
-                document.getElementById('deckCommander').value = ''; 
-                document.getElementById('deckMain').value = '';
-                document.getElementById('deckSide').value = '';
+        async function validateDeck(btn) {
+            const main = document.getElementById('deckMain').value;
+            if(!main.trim()) return showToast("Empty deck", "error");
+            
+            setLoading(btn, true);
+            
+            // Check cache
+            if(window.currentDeckStructuredList && window.currentDeckStructuredList.length > 0) {
+                processDeckData(window.currentDeckStructuredList); setLoading(btn, false); return;
             }
-            initEditorListeners();
-            updateLiveEditorStats();
+
+            // API Resolve
+            const lines = main.split('\n').filter(l=>l.trim());
+            const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x);
+            
+            try {
+                const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:idents})});
+                const d = await res.json();
+                processDeckData(d.data || []);
+            } catch(e) { showToast("Validation Error"); } finally { setLoading(btn, false); }
         }
 
-        // --- LAND CALCULATOR ---
-        function openLandCalculator() {
-            document.getElementById('land-modal').classList.remove('hidden');
-            recalcLands();
-        }
-        function recalcLands() {
-            const target = parseInt(document.getElementById('target-land-count').value) || 36;
-            if (!window.currentDeckStats) return;
-            const s = window.currentDeckStats;
-            const total = s.W+s.U+s.B+s.R+s.G;
-            if(total===0) { document.getElementById('land-results').innerHTML="No symbols found."; return; }
-            let html='';
-            suggestedLands=[];
-            const types=[{n:'Plains',c:'pip-w',v:s.W},{n:'Island',c:'pip-u',v:s.U},{n:'Swamp',c:'pip-b',v:s.B},{n:'Mountain',c:'pip-r',v:s.R},{n:'Forest',c:'pip-g',v:s.G}];
-            types.forEach(t=>{
-                if(t.v>0) {
-                    const count = Math.round((t.v/total)*target);
-                    if(count>0) {
-                        suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
-                    }
+        function processDeckData(data) {
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
+            document.getElementById('detail-deck-name').innerText = document.getElementById('deckName').value || "New Deck";
+            
+            let totalVal=0, types={}, cmcs={}, colors={W:0,U:0,B:0,R:0,G:0,C:0};
+            let cache = [];
+            
+            data.forEach(c => {
+                const price = parseFloat(c.prices.usd||0); totalVal += price;
+                const type = c.type_line.split('—')[0].trim();
+                types[type] = (types[type]||0)+1;
+                if(!type.includes('Land')) { let b=Math.floor(c.cmc||0); if(b>7)b=7; cmcs[b]=(cmcs[b]||0)+1; }
+                if(c.mana_cost) {
+                    colors.W += (c.mana_cost.match(/{W}/g)||[]).length;
+                    colors.U += (c.mana_cost.match(/{U}/g)||[]).length;
+                    colors.B += (c.mana_cost.match(/{B}/g)||[]).length;
+                    colors.R += (c.mana_cost.match(/{R}/g)||[]).length;
+                    colors.G += (c.mana_cost.match(/{G}/g)||[]).length;
                 }
+                cache.push({ ...c, quantity:1 }); // Simplified for logic
             });
-            document.getElementById('land-results').innerHTML=html;
-        }
-        function applyLands() {
-            const box = document.getElementById('deckMain');
-            let txt = box.value.trim();
-            if(txt) txt+='\n';
-            suggestedLands.forEach(l => txt+=`${l.qty} ${l.name}\n`);
-            box.value=txt;
-            document.getElementById('land-modal').classList.add('hidden');
-            showToast("Lands added!");
-            updateLiveEditorStats();
+
+            document.getElementById('detail-deck-price').innerText = "$"+totalVal.toFixed(2);
+            document.getElementById('deck-charts').classList.remove('hidden');
+            renderTypeChart(types); renderManaCurve(cmcs); renderColorChart(colors);
+            
+            // Advisor
+            const stats = { lands:{count:0,target:36}, ramp:{count:0,target:10}, draw:{count:0,target:10}, removal:{count:0,target:10}, wipes:{count:0,target:3} };
+            cache.forEach(c => {
+                const t=(c.oracle_text||"").toLowerCase(), ty=(c.type_line||"").toLowerCase();
+                if(ty.includes('land')) stats.lands.count++;
+                if(t.includes('add') && t.includes('mana')) stats.ramp.count++;
+                if(t.includes('draw') && t.includes('card')) stats.draw.count++;
+                if((t.includes('destroy')||t.includes('exile')) && t.includes('target')) stats.removal.count++;
+                if(t.includes('destroy') && t.includes('all')) stats.wipes.count++;
+            });
+            let advHtml = "";
+            for(const [k,d] of Object.entries(stats)) {
+                let col = 'var(--red)'; if(d.count/d.target > 0.8) col='var(--green)';
+                advHtml += `<div class="mb-5 flex-between text-sub" style="font-size:10px;"><span style="text-transform:capitalize">${k}</span><span>${d.count}/${d.target}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${Math.min(100, (d.count/d.target)*100)}%; background:${col}"></div></div>`;
+            }
+            document.getElementById('advisor-grid').innerHTML = advHtml;
+            currentDeckCache = cache;
         }
 
-        function parseDeckList(t){ const l=t.split('\n'); const cards=[]; let c=0; l.forEach(x=>{ const m=x.match(/^(\d+)\s+(.+)/); if(m){ const q=parseInt(m[1]); cards.push({qty:q, name:m[2].trim()}); c+=q; } }); return {totalCount:c, cards:cards}; }
-        function viewRitualDetails(id) { 
-            currentViewedDeckId=id; 
-            const d = window.myDecks.find(x => x.id == id);
-            if (!d) return showToast("Deck not found", "error");
-            document.getElementById('deckName').value = d.name;
-            document.getElementById('deckCommander').value = d.commander || '';
-            const parts = (d.card_list || '').split('// Sideboard');
-            document.getElementById('deckMain').value = parts[0].trim();
-            document.getElementById('deckSide').value = parts[1] ? parts[1].trim() : '';
-            document.getElementById('deckFormat').value = d.format || 'Casual';
-            currentDeckCoverUrl = d.cover_url;
-            if (d.structured_list) window.currentDeckStructuredList = d.structured_list;
-            validateDeck(); 
-        } 
-        function analyzeOwnership(t) { document.getElementById('detail-decklist-viewer').innerText = t; } 
-        
-        function openCodex(set, num) {
-            document.getElementById('codex-modal').classList.remove('hidden');
-            document.getElementById('codex-content').classList.add('hidden');
-            document.getElementById('codex-loading').classList.remove('hidden');
-            
-            const apiUrl = `https://api.scryfall.com/cards/${set}/${num}`;
-            
-            fetch(apiUrl).then(r => r.json()).then(d => {
-                document.getElementById('codex-img').src = getCardImage(d);
-                document.getElementById('codex-title').innerText = d.name;
-                document.getElementById('codex-type').innerText = d.type_line;
-                document.getElementById('codex-text').innerText = d.oracle_text || "";
-                
-                let legHtml = "";
-                if(d.legalities) {
-                    for(const [fmt, status] of Object.entries(d.legalities)) {
-                        if(['standard','commander','modern','pauper','legacy'].includes(fmt)) {
-                            const color = status==='legal' ? 'var(--green)' : (status==='banned' ? 'var(--red)' : 'var(--subtext)');
-                            legHtml += `<div style="display:flex; justify-content:space-between; font-size:11px; border-bottom:1px solid rgba(255,255,255,0.05); padding:4px 0;"><span>${fmt.charAt(0).toUpperCase()+fmt.slice(1)}</span><span style="color:${color}">${status.toUpperCase()}</span></div>`;
-                        }
-                    }
-                }
-                document.getElementById('codex-legality').innerHTML = legHtml;
-                window.scryfallLink = d.scryfall_uri;
-                
-                document.getElementById('codex-loading').classList.add('hidden');
-                document.getElementById('codex-content').classList.remove('hidden');
-            });
+        async function saveDeck(btn) {
+            setLoading(btn, true);
+            const name = document.getElementById('deckName').value;
+            const main = document.getElementById('deckMain').value;
+            try {
+                if(!name) throw new Error("Name required");
+                const { error } = await sb.from('decks').insert({ user_id:session.user.id, name:name, card_list:main, format:document.getElementById('deckFormat').value });
+                if(error) throw error;
+                showToast("Saved!", "success"); loadDecks();
+            } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
         }
+
+        // --- AUTH ---
+        async function handleAuthAction(btn){ 
+            setLoading(btn, true);
+            const e=document.getElementById('email').value, p=document.getElementById('password').value;
+            const { data, error } = await sb.auth.signInWithPassword({email:e,password:p});
+            if(error) {
+                const sup = await sb.auth.signUp({email:e,password:p});
+                if(sup.data.session) finalizeLogin(sup.data.session); else showToast("Check email to confirm signup.", "success");
+            } else finalizeLogin(data.session);
+            setLoading(btn, false);
+        }
+        function finalizeLogin(s){ session=s; document.getElementById('auth-screen').classList.add('hidden'); document.getElementById('app').classList.remove('hidden'); document.getElementById('user-email').innerText=s.user.email; loadData(); }
+        async function handleLogout(){ await sb.auth.signOut(); window.location.reload(); }
 
         // --- INIT ---
-        sb.auth.getSession().then(({ data: { session: s } }) => {
-            if (s) {
-                session = s;
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
-                document.getElementById('user-email').innerText = s.user.email;
-                loadData(); loadPrefs(); loadProfile();
-            }
-        });
+        sb.auth.getSession().then(({ data: { session: s } }) => { if (s) finalizeLogin(s); });
     </script>
 </body>
 </html>
