@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.1 (Cover Artist)</title>
+    <title>The Grimoire | v14.2 (The Accountant)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -902,12 +902,19 @@
                 setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
             } else {
                 setHTML('deck-grid-container', window.myDecks.map(d => {
-                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
-                    let bg = d.cover_url || CARD_BACK_URL;
-                    // V14.0 FIX: Auto-upgrade old CDN links
-                    if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                    // V14.2 FIX: Parse full quantities instead of just lines
+                    let count = 0;
+                    if(d.card_count) count = d.card_count;
+                    else if(d.card_list) {
+                         const lines = d.card_list.split('\n');
+                         lines.forEach(l => {
+                             const match = l.trim().match(/^(\d+)\s+/);
+                             count += (match ? parseInt(match[1]) : 1);
+                         });
+                    }
                     
-                    // V14.1 FIX: SMART LOAD fallback
+                    let bg = d.cover_url || CARD_BACK_URL;
+                    if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
                     if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                         bg = d.structured_list[0].img;
                     }
@@ -959,7 +966,6 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
-                 // Smart Load Fallback
                  if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                     bg = d.structured_list[0].img;
                  }
@@ -1380,6 +1386,16 @@
             try {
                 if(!name) throw new Error("Deck Name is required");
                 if(!session || !session.user) throw new Error("You must be logged in");
+
+                // V14.2 FIX: Calculate true card count (summing quantities)
+                let trueCount = 0;
+                if(main) {
+                    const lines = main.split('\n');
+                    lines.forEach(l => {
+                        const match = l.trim().match(/^(\d+)\s+/);
+                        trueCount += (match ? parseInt(match[1]) : 1);
+                    });
+                }
                 
                 // V14.1: Ensure we have data for the cover image
                 let structured = window.currentDeckStructuredList || [];
@@ -1407,7 +1423,7 @@
                     format: document.getElementById('deckFormat').value || "Standard",
                     cover_url: cover, 
                     structured_list: window.currentDeckStructuredList ? window.currentDeckStructuredList : [],
-                    card_count: (main.split('\n').filter(x=>x.trim()).length) || 0
+                    card_count: trueCount // V14.2: Storing the correct sum
                 };
                 
                 let error;
