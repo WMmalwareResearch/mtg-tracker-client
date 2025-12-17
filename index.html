@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v11.2 (Face-Down Fix)</title>
+    <title>The Grimoire | v11.3 (Official Back)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -212,7 +212,7 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* --- BATTLEFIELD V11.2 LAYOUT --- */
+        /* --- BATTLEFIELD V11.2 (OFFICIAL BACK) --- */
         .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
         .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
         
@@ -227,7 +227,7 @@
         .pile-card { width: 100%; aspect-ratio: 2.5/3.5; border-radius: 8px; background: #1a1a1a; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 2px 4px 10px rgba(0,0,0,0.5); }
         .pile-card:hover { border-color: var(--primary); transform: scale(1.03); }
         
-        /* Stack Effect (Pseudo-elements make it look like a deck) */
+        /* Stack Effect */
         .pile-card::before { content:''; position:absolute; top:-3px; left:-3px; width:100%; height:100%; border-radius:8px; background:#1a1a1a; border:1px solid #333; z-index:-1; }
         .pile-card::after { content:''; position:absolute; top:-6px; left:-6px; width:100%; height:100%; border-radius:8px; background:#1a1a1a; border:1px solid #333; z-index:-2; }
 
@@ -581,7 +581,7 @@
         const EMAILJS_SERVICE_ID = 'service_n9utr47';
         const EMAILJS_TEMPLATE_ID = 'template_xtth5gu';
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf';
-        const CARD_BACK_URL = "https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg";
+        const CARD_BACK_URL = "https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg";
 
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -775,7 +775,7 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.2' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.3' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
@@ -1300,7 +1300,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
@@ -1317,16 +1317,102 @@
             updateLiveEditorStats();
         }
 
+        // --- BATTLEFIELD (RESTORED V9.0) ---
+        function initBattlefield() {
+            document.getElementById('view-decks').classList.add('hidden');
+            document.getElementById('view-battlefield').classList.remove('hidden');
+            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:20, turn:1 };
+            currentDeckCache.forEach(c => {
+                for(let i=0; i<c.qty; i++) gameState.lib.push({ uid:Math.random(), ...c, tapped:false });
+            });
+            // Shuffle
+            for(let i=gameState.lib.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
+            for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
+            renderBF();
+        }
+        function renderBF() {
+            setText('bf-lib-count', gameState.lib.length);
+            setText('bf-grave-count', gameState.grave.length);
+            setText('bf-exile-count', gameState.exile.length);
+            setText('bf-life', gameState.life);
+            setText('bf-turn', gameState.turn);
+
+            setHTML('bf-hand', gameState.hand.map(c => 
+                `<div class="bf-card" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="playCard('${c.uid}')"><img src="${c.img}" draggable="false"></div>`
+            ).join(''));
+            
+            const cardHTML = (c) => `
+                <div class="bf-card ${c.tapped?'bf-tapped':''}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}', event)">
+                    ${c.counters ? `<div class="counter-badge">${c.counters}</div>` : ''}
+                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff;">${c.name}</div>` : `<img src="${c.img}" draggable="false">`}
+                </div>
+            `;
+            
+            const lands = gameState.field.filter(c => c.type && c.type.includes('Land'));
+            const spells = gameState.field.filter(c => !c.type || !c.type.includes('Land'));
+            
+            setHTML('bf-backline', lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', spells.map(cardHTML).join(''));
+        }
+        
+        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-zone-btn')?.classList.add('drag-over'); }
+        function drop(ev, target) {
+            ev.preventDefault();
+            document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
+            const uid = ev.dataTransfer.getData("uid");
+            
+            // Find card
+            let card, sourceArr;
+            ['hand','field','grave','exile','lib'].forEach(z => {
+                const idx = gameState[z].findIndex(c => c.uid == uid);
+                if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
+            });
+            
+            if(card) {
+                if(target === 'library') gameState.lib.push(card);
+                else gameState[target].push(card);
+                renderBF();
+            }
+        }
+        
+        function playCard(uid) {
+            const idx = gameState.hand.findIndex(c => c.uid == uid);
+            if(idx > -1) { gameState.field.push(gameState.hand.splice(idx, 1)[0]); renderBF(); }
+        }
+        function tapCard(uid) { const c = gameState.field.find(c => c.uid == uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
+        function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
+        function updateLife(n) { gameState.life += n; renderBF(); }
+        function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
+        function killCard(uid, e) { 
+            e.preventDefault(); 
+            const idx = gameState.field.findIndex(c => c.uid == uid);
+            if(idx > -1) { 
+                const c = gameState.field.splice(idx, 1)[0]; 
+                c.tapped = false; gameState.grave.push(c); 
+                renderBF(); 
+            } 
+        }
+        function createToken() {
+            const n = prompt("Token Name");
+            if(n) { gameState.field.push({ uid:Math.random(), name:n, isToken:true, type:'Creature' }); renderBF(); }
+        }
+        
         function viewRitualDetails(id) { 
             const d = window.myDecks.find(x => x.id == id);
+            
+            // UI Switch (This was the missing piece causing the "Nothing Happens" bug)
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
+
             currentViewedDeckId = id;
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckMain').value = d.card_list;
             window.currentDeckStructuredList = d.structured_list;
+            
+            // Trigger validate to populate visuals
             validateDeck();
         }
         
