@@ -1219,25 +1219,49 @@
             manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
         }
 
-        async function saveDeck(btn) {
-            setLoading(btn, true);
-            const name = getValue('deckName');
-            const main = getValue('deckMain');
-            try {
-                if(!name) throw new Error("Name required");
-                const payload = { 
-                    user_id:session.user.id, name:name, card_list:main, 
-                    format:document.getElementById('deckFormat').value,
-                    cover_url: currentDeckCache[0]?.img || '',
-                    structured_list: window.currentDeckStructuredList
-                };
-                
-                if(currentViewedDeckId) await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
-                else await sb.from('decks').insert(payload);
-                
-                showToast("Saved!", "success"); loadDecks();
-            } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
+       async function saveDeck(btn) {
+    setLoading(btn, true);
+    const name = getValue('deckName');
+    const main = getValue('deckMain');
+    
+    try {
+        if(!name) throw new Error("Deck Name is required");
+        if(!session || !session.user) throw new Error("You must be logged in");
+
+        const payload = { 
+            user_id: session.user.id, 
+            name: name, 
+            card_list: main, 
+            format: document.getElementById('deckFormat').value,
+            cover_url: currentDeckCache[0]?.img || 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg',
+            structured_list: window.currentDeckStructuredList
+        };
+        
+        let error;
+        if(currentViewedDeckId) {
+            // Update existing
+            const res = await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
+            error = res.error;
+        } else {
+            // Insert new
+            const res = await sb.from('decks').insert(payload);
+            error = res.error;
         }
+
+        if(error) {
+            console.error("Supabase Error:", error); // Check your browser console!
+            throw new Error(error.message);
+        }
+        
+        showToast("Deck Saved Successfully!"); 
+        loadDecks(); // Refresh the grid
+    } catch(e) { 
+        console.error(e);
+        showToast("Save Failed: " + e.message); 
+    } finally { 
+        setLoading(btn, false); 
+    }
+}
 
         // --- TOOLS ---
         function handleDeckTool(action) {
@@ -1434,3 +1458,4 @@
     </script>
 </body>
 </html>
+
