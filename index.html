@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.9 (The Accountant)</title>
+    <title>The Grimoire | v10.10 (Curator)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -230,13 +230,12 @@
 
         /* Badges */
         .gain-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); color: var(--green); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 5; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        
-        /* QTY BADGE (NEW V10.9) */
         .qty-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); color: white; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 5; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        
+
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 12px; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); display:flex; justify-content: space-between; align-items: flex-end; opacity: 0; transition: 0.2s; }
         .grid-card:hover .overlay { opacity: 1; }
         
+        .tag-container { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
         .format-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -425,7 +424,7 @@
                     <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
                     <input id="add-tags" placeholder="Tags (foil, trade)...">
                     <div class="flex-between mb-20 mt-20" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
+                        <span>Market: <strong id="marketPrice" style="color:var(--green); font-size:18px;">--</strong></span>
                         <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
                     </div>
                     <div class="flex-row">
@@ -439,7 +438,7 @@
             <div id="view-collection" class="hidden view-section">
                 <div class="flex-between mb-20">
                     <h2>Collection</h2>
-                    <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise All</button>
+                    <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Sync & Appraise</button>
                 </div>
                 <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()" style="padding-left:40px;"></div>
                 
@@ -692,7 +691,7 @@
             const templateParams = {
                 bug_description: txt,
                 user_email: session ? session.user.email : 'Anonymous',
-                app_version: 'v10.9'
+                app_version: 'v10.10'
             };
 
             try {
@@ -778,6 +777,7 @@
             else setHTML('oracle-grid', oracle.map(c => `<div class="grid-card"><div class="overlay"><button onclick="deleteCard('${c.id}', event)">🗑️</button></div><img src="${getCardImage(c)}" loading="lazy" onerror="this.src='https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg'"></div>`).join(''));
         }
 
+        // V10.10 FILTER LOGIC
         function filterVault() {
             const search = getValue('vaultSearch').toLowerCase();
             const fColor = getValue('filterColor');
@@ -786,11 +786,16 @@
             
             let filtered = cardsCache.filter(c => c.quantity > 0 && c.name.toLowerCase().includes(search));
             
-            // Apply Filters (V9.9.6 Logic)
             if(fColor !== 'all') {
-                if(fColor==='C') filtered = filtered.filter(c => (!c.colors || c.colors.length===0));
-                else if(fColor==='M') filtered = filtered.filter(c => (c.colors && c.colors.length>1));
-                else filtered = filtered.filter(c => (c.colors && c.colors.includes(fColor)));
+                filtered = filtered.filter(c => {
+                    // Smart Logic: Use Color Identity for Lands, Colors for Spells
+                    const isLand = c.type_line && c.type_line.toLowerCase().includes('land');
+                    const basis = isLand ? (c.color_identity || []) : (c.colors || []);
+                    
+                    if(fColor==='C') return basis.length===0;
+                    if(fColor==='M') return basis.length>1;
+                    return basis.includes(fColor);
+                });
             }
             if(fRarity !== 'all') filtered = filtered.filter(c => c.rarity === fRarity);
             if(fType !== 'all') filtered = filtered.filter(c => c.type_line && c.type_line.includes(fType));
@@ -806,28 +811,36 @@
             ).join(''));
         }
 
+        // V10.10 DATA HEALER
         async function appraiseCollection(btn) {
             setLoading(btn, true);
-            const ids=cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
-            const totalChunks=Math.ceil(ids.length/75);
+            const ids = cardsCache.map(c=>({set:c.set_code.toLowerCase(),collector_number:c.collector_number}));
+            const totalChunks = Math.ceil(ids.length/75);
             try {
                 for(let i=0; i<totalChunks; i++){
                     const chunk = ids.slice(i*75,(i+1)*75);
-                    const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})});
-                    const d=await res.json();
+                    const res = await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})});
+                    const d = await res.json();
                     if(d.data) {
                         for(const sc of d.data){
-                            const local=cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
+                            const local = cardsCache.find(c=>c.set_code.toLowerCase()===sc.set && c.collector_number===sc.collector_number);
                             if(local){
-                                const np=parseFloat(sc.prices.usd||0);
-                                await sb.from('cards').update({market_price_usd:np}).eq('id',local.id);
+                                // Update ALL metadata to fix old cards
+                                await sb.from('cards').update({
+                                    market_price_usd: parseFloat(sc.prices.usd||0),
+                                    colors: sc.colors,
+                                    color_identity: sc.color_identity,
+                                    type_line: sc.type_line,
+                                    rarity: sc.rarity,
+                                    cmc: sc.cmc
+                                }).eq('id', local.id);
                             }
                         }
                     }
                 }
-                showToast("Appraisal Complete");
+                showToast("Collection Synced & Appraised!");
                 loadData();
-            } catch(e) { showToast("Error"); }
+            } catch(e) { showToast("Error syncing data."); }
             setLoading(btn, false);
         }
         
@@ -951,7 +964,9 @@
                 tags: tags,
                 cmc: tempCardData.cmc || 0,
                 type_line: tempCardData.type_line,
-                colors: tempCardData.colors
+                colors: tempCardData.colors,
+                color_identity: tempCardData.color_identity,
+                rarity: tempCardData.rarity
             });
             
             setLoading(btn, false);
@@ -995,7 +1010,8 @@
              for(const c of allCards) {
                  await sb.from('cards').insert({
                      user_id:session.user.id, name:c.name, set_code:c.set, collector_number:c.collector_number,
-                     image_url:getCardImage(c), quantity:1, market_price_usd:parseFloat(c.prices.usd||0)
+                     image_url:getCardImage(c), quantity:1, market_price_usd:parseFloat(c.prices.usd||0),
+                     colors: c.colors, color_identity: c.color_identity, type_line: c.type_line, rarity: c.rarity, cmc: c.cmc
                  });
              }
              showToast(`Imported ${allCards.length} cards`);
