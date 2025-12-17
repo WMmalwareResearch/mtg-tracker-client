@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.3 (The Insectarium)</title>
+    <title>The Grimoire | v14.4 (The Shapeshifter)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -306,6 +306,15 @@
         .avatar-option { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: 0.2s; object-fit: cover; opacity: 0.5; }
         .avatar-option:hover { opacity: 1; transform: scale(1.1); }
         .avatar-option.selected { border-color: var(--primary); opacity: 1; box-shadow: 0 0 15px var(--primary-glow); }
+        
+        .upload-btn {
+            width: 100%; aspect-ratio: 1; border-radius: 50%; 
+            border: 2px dashed var(--subtext); color: var(--subtext);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; cursor: pointer; transition: 0.2s;
+            background: rgba(255,255,255,0.02);
+        }
+        .upload-btn:hover { border-color: var(--primary); color: var(--primary); }
         
         .setting-section { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 20px; }
         
@@ -790,6 +799,8 @@
                         <input id="settings-username" placeholder="Wizard Name">
                         <div class="text-sub mb-10">Choose Avatar</div>
                         <div class="avatar-grid" id="avatar-grid">
+                            <div class="upload-btn" onclick="triggerAvatarUpload()">+</div>
+                            <input type="file" id="avatar-upload" hidden accept="image/*" onchange="handleAvatarUpload(this)">
                             </div>
                         <button onclick="saveProfile(this)" class="mt-20">Save Profile</button>
                     </div>
@@ -887,8 +898,7 @@
         // HAND SIM STATE
         let simDeck = [];
 
-        // --- CORE FUNCTIONS (MOVED TO TOP) ---
-        
+        // --- CORE FUNCTIONS ---
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             const view = document.getElementById('view-'+v);
@@ -910,7 +920,6 @@
         async function loadDecks() {
             const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             if(error) { console.error("Load Error:", error); return; } 
-            
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
             
@@ -920,14 +929,10 @@
                 setHTML('deck-grid-container', window.myDecks.map(d => {
                     const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
                     let bg = d.cover_url || CARD_BACK_URL;
-                    // V14.0 FIX: Auto-upgrade old CDN links
                     if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
-                    
-                    // V14.1 FIX: SMART LOAD fallback
                     if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                         bg = d.structured_list[0].img;
                     }
-                    
                     return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
                         <div class="deck-card-content">
                             <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
@@ -975,7 +980,6 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
-                 // Smart Load Fallback
                  if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                     bg = d.structured_list[0].img;
                  }
@@ -1005,8 +1009,6 @@
              if(c.image_uris?.normal) url = c.image_uris.normal;
              else if(c.card_faces?.[0]?.image_uris?.normal) url = c.card_faces[0].image_uris.normal;
              else if(c.image_url && c.image_url.includes('http')) url = c.image_url;
-             
-             // V14.0 FIX: Auto-upgrade old CDN links
              if(url.includes('c1.scryfall.com')) url = url.replace('c1.scryfall.com', 'cards.scryfall.io');
              return url;
         }
@@ -1051,32 +1053,74 @@
                 setText('sidebar-username', data.username);
                 document.getElementById('settings-username').value = data.username;
             }
+            if(data && data.avatar_url) {
+                document.getElementById('sidebar-avatar').src = data.avatar_url;
+                localStorage.setItem('grimoire_avatar', data.avatar_url);
+            }
             setText('user-email', session.user.email);
         }
 
         function renderAvatarGrid() {
             const grid = document.getElementById('avatar-grid');
-            grid.innerHTML = AVATARS.map(url => `<img src="${url}" class="avatar-option" onclick="changeAvatar('${url}')">`).join('');
+            // Keep Upload Button + SVGs
+            const uploadBtn = `<div class="upload-btn" onclick="triggerAvatarUpload()">+</div><input type="file" id="avatar-upload" hidden accept="image/*" onchange="handleAvatarUpload(this)">`;
+            grid.innerHTML = uploadBtn + AVATARS.map(url => `<img src="${url}" class="avatar-option" onclick="changeAvatar('${url}')">`).join('');
         }
         
         function changeAvatar(url) {
             localStorage.setItem('grimoire_avatar', url);
             document.getElementById('sidebar-avatar').src = url;
-            document.querySelectorAll('.avatar-option').forEach(img => img.classList.remove('selected'));
-            event.target.classList.add('selected');
-            showToast("Avatar Updated");
+            // Also save to DB for persistence across devices
+            sb.from('profiles').upsert({id:session.user.id, avatar_url: url}).then(()=>{ showToast("Avatar Updated"); });
+        }
+
+        // V14.4 CUSTOM AVATAR LOGIC
+        function triggerAvatarUpload() { document.getElementById('avatar-upload').click(); }
+
+        function handleAvatarUpload(input) {
+            const file = input.files[0];
+            if(!file) return;
+            
+            // Limit file size (e.g., 2MB check before processing)
+            if(file.size > 2000000) { showToast("Image too large. Max 2MB."); return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Resize to 150x150 square
+                    const size = 150;
+                    canvas.width = size;
+                    canvas.height = size;
+                    
+                    // Center Crop Logic
+                    const ratio = Math.max(size / img.width, size / img.height);
+                    const centerShift_x = (size - img.width * ratio) / 2;
+                    const centerShift_y = (size - img.height * ratio) / 2;
+                    
+                    ctx.drawImage(img, 0, 0, img.width, img.height, centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+                    
+                    // Compress to JPEG 0.7 quality
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Save
+                    changeAvatar(dataUrl);
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
         }
 
         async function sendBugReport(btn) {
-            const cat = getValue('bug-category'); // V14.3
+            const cat = getValue('bug-category');
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            
-            // Combine category and description
             const fullMsg = `[${cat}] ${txt}`;
-            
-            const templateParams = { bug_description: fullMsg, user_email: session ? session.user.email : 'Anonymous', app_version: 'v14.3' };
+            const templateParams = { bug_description: fullMsg, user_email: session ? session.user.email : 'Anonymous', app_version: 'v14.4' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
