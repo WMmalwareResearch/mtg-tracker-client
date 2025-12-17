@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v13.1 (The Grand Library)</title>
+    <title>The Grimoire | v13.2 (The Overseer)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -162,58 +162,19 @@
         
         /* Grids & Cards */
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        
-        /* UPDATED DECK GRID (V13.1) */
         .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         
         .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 12px; overflow: hidden; cursor: pointer; background: rgba(0,0,0,0.3); border: 1px solid var(--border); transition: transform 0.2s; }
         .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px -5px var(--primary-glow); }
         .grid-card img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* DECK CARD (Premium Look V13.1) */
-        .deck-card { 
-            background: rgba(255,255,255,0.03); 
-            border: 1px solid var(--border); 
-            border-radius: 16px; 
-            height: 340px; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: flex-end; 
-            position: relative; 
-            overflow: hidden; 
-            cursor: pointer; 
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
-            background-size: cover; 
-            background-position: center; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
-        }
-        .deck-card:hover { 
-            border-color: var(--primary); 
-            transform: translateY(-8px) scale(1.02); 
-            box-shadow: 0 20px 50px -10px var(--primary-glow); 
-        }
-        .deck-card::after { 
-            content: ''; 
-            position: absolute; 
-            bottom: 0; left: 0; width: 100%; height: 100%; 
-            background: linear-gradient(to top, #050308 10%, rgba(5, 3, 8, 0.85) 40%, transparent 100%); 
-            z-index: 1; 
-        }
-        .deck-card-content { 
-            position: relative; 
-            z-index: 2; 
-            padding: 20px; 
-            border-top: 1px solid rgba(255,255,255,0.05); 
-            backdrop-filter: blur(10px);
-            background: rgba(0,0,0,0.4);
-        }
+        .deck-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; height: 340px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); background-size: cover; background-position: center; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .deck-card:hover { border-color: var(--primary); transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 50px -10px var(--primary-glow); }
+        .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, #050308 10%, rgba(5, 3, 8, 0.85) 40%, transparent 100%); z-index: 1; }
+        .deck-card-content { position: relative; z-index: 2; padding: 20px; border-top: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); background: rgba(0,0,0,0.4); }
         .deck-card h4 { margin: 0 0 5px 0; font-size: 18px; color: white; text-shadow: 0 2px 4px black; }
         
-        .deck-actions { 
-            position: absolute; top: 15px; right: 15px; z-index: 10; 
-            opacity: 0; transition: 0.2s; 
-            display: flex; gap: 8px;
-        }
+        .deck-actions { position: absolute; top: 15px; right: 15px; z-index: 10; opacity: 0; transition: 0.2s; display: flex; gap: 8px; }
         .deck-card:hover .deck-actions { opacity: 1; }
         .action-btn { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); color: white; cursor: pointer; }
         .action-btn:hover { background: var(--red); border-color: var(--red); }
@@ -230,12 +191,20 @@
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .format-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
-        /* Dashboard Stats */
+        /* Dashboard Stats V13.2 */
         .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--border); }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--border); transition: 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); border-color: var(--primary); }
         .stat-val { font-size: 32px; font-weight: 800; color: white; margin-bottom: 4px; }
         .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 700; letter-spacing: 1px; }
 
+        .dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+        
+        .highlight-card { display: flex; align-items: center; gap: 15px; padding: 12px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s; cursor: pointer; }
+        .highlight-card:hover { background: rgba(255,255,255,0.05); }
+        .highlight-img { width: 50px; border-radius: 4px; }
+        
         /* Utilities */
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .flex-row { display: flex; gap: 12px; align-items: center; }
@@ -434,14 +403,57 @@
             <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
             
             <div id="view-dashboard" class="view-section">
-                <div class="flex-between mb-20"><h2>Dashboard</h2><button class="secondary btn-sm" onclick="exportCSV()">CSV Export</button></div>
-                <div class="stat-grid">
-                    <div class="stat-card"><div class="stat-val" id="stat-count">0</div><div class="stat-lbl">Cards</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-value">$0</div><div class="stat-lbl">Value</div></div>
-                    <div class="stat-card"><div class="stat-val" id="stat-cost">$0</div><div class="stat-lbl">Cost</div></div>
+                <div class="flex-between mb-20">
+                    <h2>Dashboard</h2>
+                    <div class="flex-row">
+                        <button class="secondary btn-sm" onclick="nav('add')">Quick Add</button>
+                        <button class="secondary btn-sm" onclick="exportCSV()">CSV Export</button>
+                    </div>
                 </div>
-                <h3>Recent Acquisitions</h3>
-                <div id="recent-grid" class="collection-grid mt-20"></div>
+                
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-count">0</div>
+                        <div class="stat-lbl">Cards Owned</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-value">$0</div>
+                        <div class="stat-lbl">Total Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-profit" style="color:var(--green)">$0</div>
+                        <div class="stat-lbl">Net Profit</div>
+                    </div>
+                </div>
+
+                <div class="dash-grid">
+                    <div>
+                        <div class="card-box" style="height:350px;">
+                            <div class="flex-between mb-10">
+                                <h3>Portfolio Value</h3>
+                                <span class="tag-pill">Live</span>
+                            </div>
+                            <div style="height:280px; position:relative;">
+                                <canvas id="valueChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="flex-between mt-20 mb-10">
+                             <h3>Recent Decks</h3>
+                             <span class="text-sub" style="cursor:pointer;" onclick="nav('decks')">View All →</span>
+                        </div>
+                        <div class="deck-grid" id="dash-recent-decks" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                            </div>
+                    </div>
+                    
+                    <div class="dash-col-side">
+                        <div class="card-box">
+                            <h3 class="mb-20">💎 Vault Highlights</h3>
+                            <div id="top-cards-list">
+                                </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="view-add" class="hidden view-section">
@@ -506,19 +518,9 @@
             <div id="view-decks" class="hidden view-section">
                 <div id="deck-library">
                     <div class="flex-between mb-20">
-                        <h2>Library</h2>
+                        <h2>Decks</h2>
                         <button onclick="showRitualEditor()" class="secondary btn-sm">+ New Deck</button>
                     </div>
-                    
-                    <div class="flex-row mb-20" style="background:rgba(255,255,255,0.03); padding:10px; border-radius:12px; border:1px solid var(--border);">
-                        <input id="deck-search" placeholder="Search decks..." oninput="loadDecks()" style="margin:0; border:none; background:transparent;">
-                        <select id="deck-sort" onchange="loadDecks()" style="margin:0; width:140px; background:rgba(0,0,0,0.5); border:none;">
-                            <option value="new">Newest First</option>
-                            <option value="old">Oldest First</option>
-                            <option value="az">Name (A-Z)</option>
-                        </select>
-                    </div>
-
                     <div id="deck-grid-container" class="deck-grid"></div>
                 </div>
 
@@ -716,7 +718,7 @@
 
         // STATE
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId, pendingDeleteId;
-        let typeChartInstance, manaCurveInstance, editorChartInstance;
+        let typeChartInstance, manaCurveInstance, editorChartInstance, valueChartInstance;
         let currentDeckCache=[], currentDeckStructuredList=[], currentDeckCoverUrl='';
         let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:40,turn:1};
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
@@ -753,57 +755,22 @@
         }
 
         async function loadDecks() {
-            // V13.1 SEARCH/FILTER LOGIC
-            const search = (document.getElementById('deck-search')?.value || '').toLowerCase();
-            const sort = document.getElementById('deck-sort')?.value || 'new';
-            
             const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             if(error) { console.error("Load Error:", error); return; } 
             
             window.myDecks = data||[];
+            const grid = document.getElementById('deck-grid-container');
             
-            // Filter in memory
-            let displayDecks = window.myDecks.filter(d => d.name.toLowerCase().includes(search));
-            
-            // Sort in memory
-            if(sort === 'old') displayDecks.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-            if(sort === 'az') displayDecks.sort((a,b) => a.name.localeCompare(b.name));
-            // 'new' is default from DB
-            
-            if(displayDecks.length === 0) {
-                setHTML('deck-grid-container', '<div class="empty-state">No decks found.</div>');
+            if(window.myDecks.length === 0) {
+                setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
             } else {
-                setHTML('deck-grid-container', displayDecks.map(d => {
+                setHTML('deck-grid-container', window.myDecks.map(d => {
                     const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
                     const bg = d.cover_url || CARD_BACK_URL;
-                    const date = new Date(d.updated_at).toLocaleDateString();
-                    
-                    // MANA IDENTITY CALCULATION
-                    let colors = {W:0, U:0, B:0, R:0, G:0};
-                    if(d.structured_list) {
-                        d.structured_list.forEach(c => {
-                            if(c.identity) c.identity.forEach(col => colors[col] = 1);
-                        });
-                    }
-                    let pipHtml = '';
-                    ['W','U','B','R','G','C'].forEach(c => {
-                        if(colors[c]) pipHtml += `<span class="mana-pip pip-${c.toLowerCase()}"></span>`;
-                    });
-
                     return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
-                        <div class="deck-actions">
-                            <div class="action-btn" onclick="askDeleteDeck('${d.id}', event)">✕</div>
-                        </div>
                         <div class="deck-card-content">
-                            <div class="flex-between" style="align-items:flex-start;">
-                                <h4 style="margin-bottom:2px;">${d.name}</h4>
-                                <span class="format-badge">${d.format}</span>
-                            </div>
-                            <div style="font-size:11px; opacity:0.7; margin-bottom:10px;">Updated ${date}</div>
-                            <div class="flex-between">
-                                <div class="deck-mana-row">${pipHtml}</div>
-                                <div style="font-weight:700; font-size:12px;">${count} Cards</div>
-                            </div>
+                            <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
+                            <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
                         </div>
                     </div>`;
                 }).join(''));
@@ -821,15 +788,96 @@
                 if(c.quantity > 0) { count += c.quantity; val += (c.market_price_usd||0)*c.quantity; cost += (c.buy_price||0)*c.quantity; }
             });
             setText('stat-count', count); setText('stat-value', "$"+val.toFixed(2)); setText('stat-cost', "$"+cost.toFixed(2));
-            const recent = cardsCache.filter(c=>c.quantity>0).slice(0, 5);
-            if(recent.length === 0) setHTML('recent-grid', '<div class="empty-state">No cards yet. Click "Add Card".</div>');
-            else setHTML('recent-grid', recent.map(c => 
-                `<div class="grid-card animate-in" onclick="openCodex('${c.set_code}','${c.collector_number}')">
-                    <div class="qty-badge">x${c.quantity}</div>
-                    <div class="gain-badge">$${c.market_price_usd}</div>
-                    <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='${CARD_BACK_URL}'">
-                </div>`
-            ).join(''));
+            
+            // New V13.2 Logic for Profit
+            const profit = val - cost;
+            const pEl = document.getElementById('stat-profit');
+            if(pEl) {
+                pEl.innerText = (profit>=0?"+":"") + "$" + profit.toFixed(2);
+                pEl.style.color = profit >= 0 ? "var(--green)" : "var(--red)";
+            }
+
+            // V13.2 Dashboard Updates
+            renderDashboardStats(val);
+        }
+        
+        // V13.2 DASHBOARD RENDERER
+        function renderDashboardStats(totalValue) {
+             // 1. Top Cards
+             const topCards = [...cardsCache].filter(c=>c.quantity>0).sort((a,b)=> (b.market_price_usd||0) - (a.market_price_usd||0)).slice(0, 5);
+             if(document.getElementById('top-cards-list')) {
+                 if(topCards.length === 0) setHTML('top-cards-list', '<div class="text-sub">Add cards to see highlights.</div>');
+                 else {
+                     setHTML('top-cards-list', topCards.map(c => `
+                        <div class="highlight-card" onclick="openCodex('${c.set_code}','${c.collector_number}')">
+                            <img src="${getCardImage(c)}" class="highlight-img">
+                            <div style="flex:1;">
+                                <div style="font-weight:700;">${c.name}</div>
+                                <div class="text-green">$${c.market_price_usd}</div>
+                            </div>
+                        </div>
+                     `).join(''));
+                 }
+             }
+
+             // 2. Recent Decks
+             if(document.getElementById('dash-recent-decks')) {
+                  loadRecentDecksForDash();
+             }
+
+             // 3. Render Chart
+             initValueChart(totalValue);
+        }
+        
+        async function loadRecentDecksForDash() {
+            const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false}).limit(4);
+            const container = document.getElementById('dash-recent-decks');
+            if(!container) return;
+            if(!data || data.length === 0) { container.innerHTML = '<div class="text-sub">No decks yet.</div>'; return; }
+            
+            container.innerHTML = data.map(d => {
+                 const bg = d.cover_url || CARD_BACK_URL;
+                 return `<div class="deck-card" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}'); height:200px;">
+                    <div class="deck-card-content">
+                        <div style="font-weight:700;">${d.name}</div>
+                        <div class="text-sub" style="font-size:10px;">${d.format}</div>
+                    </div>
+                 </div>`
+            }).join('');
+        }
+
+        function initValueChart(currentVal) {
+            const ctx = document.getElementById('valueChart');
+            if(!ctx) return;
+            if(valueChartInstance) valueChartInstance.destroy();
+            
+            // Mock historical data for visual effect (In production, you'd store daily snapshots)
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Today'];
+            const data = [currentVal*0.8, currentVal*0.85, currentVal*0.82, currentVal*0.9, currentVal*0.95, currentVal*0.92, currentVal];
+            
+            valueChartInstance = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Collection Value',
+                        data: data,
+                        borderColor: '#a78bfa',
+                        backgroundColor: 'rgba(167, 139, 250, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        x: { ticks: { color: '#666' }, grid: { display: false } },
+                        y: { ticks: { color: '#666' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
         }
 
         // --- HELPERS ---
@@ -919,7 +967,7 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v13.1' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v13.2' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
@@ -1190,7 +1238,7 @@
              loadData();
         }
 
-        // --- DECK SAVE LOGIC (V12.6: SAFE SAVE) ---
+        // --- DECK SAVE LOGIC (V12.6) ---
         async function saveDeck(btn) {
             setLoading(btn, true);
             const name = getValue('deckName');
@@ -1206,7 +1254,6 @@
                     card_list: main || "", 
                     format: document.getElementById('deckFormat').value || "Standard",
                     cover_url: currentDeckCache[0]?.img || CARD_BACK_URL, 
-                    // SAFE JSON SERIALIZATION
                     structured_list: window.currentDeckStructuredList ? window.currentDeckStructuredList : [],
                     card_count: (main.split('\n').filter(x=>x.trim()).length) || 0
                 };
@@ -1566,6 +1613,19 @@
             document.getElementById('deckMain').value = d.card_list;
             window.currentDeckStructuredList = d.structured_list;
             validateDeck();
+        }
+        
+        function openCodex(set, num) {
+            document.getElementById('codex-modal').classList.remove('hidden');
+            fetch(`https://api.scryfall.com/cards/${set}/${num}`).then(r=>r.json()).then(d=>{
+                document.getElementById('codex-img').src=getCardImage(d);
+                setText('codex-title', d.name);
+                setText('codex-type', d.type_line);
+                setText('codex-text', d.oracle_text);
+                let h=''; if(d.legalities) for(const[k,v] of Object.entries(d.legalities)) if(['standard','commander'].includes(k)) h+=`<div>${k}: ${v}</div>`;
+                setHTML('codex-legality', h);
+                window.scryfallLink=d.scryfall_uri;
+            })
         }
 
         // --- INIT ---
