@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v11.3 (Official Back)</title>
+    <title>The Grimoire | v11.4 (Librarian Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -499,7 +499,7 @@
 
                     <div class="bf-side-zone">
                         <div class="pile-card" onclick="drawCard()">
-                            <img src="https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg">
+                            <img src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg">
                             <div class="pile-count" id="bf-lib-count">99</div>
                             <div class="pile-label">Library</div>
                         </div>
@@ -581,7 +581,7 @@
         const EMAILJS_SERVICE_ID = 'service_n9utr47';
         const EMAILJS_TEMPLATE_ID = 'template_xtth5gu';
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf';
-        const CARD_BACK_URL = "https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg";
+        const CARD_BACK_URL = "https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg";
 
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -593,13 +593,14 @@
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
-        // --- HELPERS ---
+        // --- HELPERS (CRASH PROOF) ---
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='toast'; e.innerHTML=`<span>${msg}</span>`; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function setText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val; }
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
+        // FIXED IMAGE LOADER (V11.4: LIBRARIAN)
         function getCardImage(c) {
              if(!c) return CARD_BACK_URL;
              if(c.image_uris?.normal) return c.image_uris.normal;
@@ -613,132 +614,7 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- BATTLEFIELD V11.0 LOGIC ---
-        function initBattlefield() {
-            document.getElementById('view-decks').classList.add('hidden');
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:40, turn:1 };
-            
-            // Build library from current deck
-            currentDeckCache.forEach(c => {
-                for(let i=0; i<c.qty; i++) {
-                    gameState.lib.push({ uid: Math.random().toString(36).substr(2, 9), ...c, tapped:false, counters:0 });
-                }
-            });
-            // Shuffle
-            for(let i=gameState.lib.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
-            
-            // Draw 7
-            for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
-            renderBF();
-        }
-
-        function renderBF() {
-            setText('bf-lib-count', gameState.lib.length);
-            setText('bf-grave-count', gameState.grave.length);
-            setText('bf-exile-count', gameState.exile.length);
-            setText('bf-life', gameState.life);
-            setText('bf-turn', gameState.turn);
-
-            // Hand
-            setHTML('bf-hand', gameState.hand.map(c => 
-                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
-                    <img src="${getCardImage(c)}" draggable="false">
-                </div>`
-            ).join(''));
-            
-            const cardHTML = (c) => `
-                <div class="bf-card ${c.tapped?'bf-tapped':''}" id="${c.uid}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="handleCardContext(event, '${c.uid}')">
-                    ${c.counters > 0 ? `<div class="counter-badge">+${c.counters}</div>` : ''}
-                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff; border-radius:9px; font-weight:bold; font-size:12px; text-align:center; padding:5px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`}
-                </div>
-            `;
-            
-            const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
-            const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
-            
-            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
-            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
-        }
-
-        // Context Menu Logic
-        function handleCardContext(e, uid) {
-            e.preventDefault();
-            const menu = document.getElementById('card-ctx-menu');
-            menu.style.top = e.clientY + 'px';
-            menu.style.left = e.clientX + 'px';
-            menu.classList.remove('hidden');
-            
-            menu.innerHTML = `
-                <div class="ctx-item" onclick="modifyCard('${uid}', 'counter')">Add Counter 🎲</div>
-                <div class="ctx-item" onclick="modifyCard('${uid}', 'untap')">Untap 🔄</div>
-                <div class="ctx-item" onclick="modifyCard('${uid}', 'bounce')">Bounce to Hand ✋</div>
-                <div class="ctx-divider"></div>
-                <div class="ctx-item" onclick="modifyCard('${uid}', 'grave')" style="color:var(--red);">Destroy 💀</div>
-                <div class="ctx-item" onclick="modifyCard('${uid}', 'exile')" style="color:var(--blue);">Exile ✨</div>
-            `;
-        }
-        
-        function hideContextMenu() { document.getElementById('card-ctx-menu').classList.add('hidden'); }
-        
-        function modifyCard(uid, action) {
-            const idx = gameState.field.findIndex(c => c.uid === uid);
-            if(idx === -1) return;
-            const card = gameState.field[idx];
-            
-            if(action === 'counter') card.counters = (card.counters || 0) + 1;
-            if(action === 'untap') card.tapped = false;
-            if(action === 'bounce') { gameState.field.splice(idx, 1); gameState.hand.push(card); }
-            if(action === 'grave') { gameState.field.splice(idx, 1); gameState.grave.push(card); }
-            if(action === 'exile') { gameState.field.splice(idx, 1); gameState.exile.push(card); }
-            
-            renderBF();
-            hideContextMenu();
-        }
-
-        function openTokenMenu() {
-            const tokens = ['Soldier 1/1', 'Goblin 1/1', 'Zombie 2/2', 'Angel 4/4', 'Treasure', 'Clue', 'Food'];
-            setHTML('token-grid', tokens.map(t => `<button onclick="spawnToken('${t}')">${t}</button>`).join(''));
-            document.getElementById('token-modal').classList.remove('hidden');
-        }
-        
-        function spawnToken(name) {
-            gameState.field.push({ uid: Math.random().toString(36), name: name, isToken: true, type: 'Creature Token', tapped: false });
-            document.getElementById('token-modal').classList.add('hidden');
-            renderBF();
-        }
-        
-        function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
-        function tapCard(uid) { const c = gameState.field.find(c => c.uid === uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
-        function updateLife(n) { gameState.life += n; renderBF(); }
-        function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
-        function exitBattlefield() { nav('decks'); }
-
-        // Drag & Drop
-        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
-        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
-        function drop(ev, target) {
-            ev.preventDefault();
-            document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
-            const uid = ev.dataTransfer.getData("uid");
-            
-            // Find card source
-            let card, sourceArr;
-            ['hand','field','grave','exile','lib'].forEach(z => {
-                const idx = gameState[z].findIndex(c => c.uid === uid);
-                if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
-            });
-            
-            if(card) {
-                if(target === 'field') gameState.field.push(card);
-                else if(target === 'hand') gameState.hand.push(card);
-                else if(target === 'grave') gameState.grave.push(card);
-                else if(target === 'exile') gameState.exile.push(card);
-                renderBF();
-            }
-        }
-        
-        // --- STANDARD APP LOGIC (V10.10) ---
+        // --- AUTH ---
         async function handleAuthAction(btn) {
             setLoading(btn, true);
             const e=getValue('email'), p=getValue('password');
@@ -771,15 +647,17 @@
             setText('user-email', session.user.email);
         }
 
+        // --- BUG REPORT ---
         async function sendBugReport(btn) {
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.3' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.4' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
 
+        // --- NAVIGATION ---
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             const view = document.getElementById('view-'+v);
@@ -790,7 +668,7 @@
                 view.classList.add('view-section');
             }
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
             if(active) active.classList.add('active');
             if(v === 'decks') loadDecks();
             if(v === 'collection') loadCollection();
@@ -812,6 +690,7 @@
             localStorage.setItem('grimoire_theme', theme);
         }
 
+        // --- DATA ---
         async function loadData() {
             const { data } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             cardsCache = data || [];
@@ -1062,19 +941,29 @@
              loadData();
         }
 
+        // --- V11.4 LIBRARIAN FIX ---
         async function loadDecks() {
-            const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+            const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+            if(error) { console.error("Load Error:", error); return; } 
+            
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
-            if(window.myDecks.length === 0) setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
-            else setHTML('deck-grid-container', window.myDecks.map(d => 
-                `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${d.cover_url}');">
-                    <div class="deck-card-content">
-                        <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)">✕</span></div>
-                        <div class="deck-card-meta"><span>${d.card_count} Cards</span><span class="format-badge">${d.format}</span></div>
-                    </div>
-                </div>`
-            ).join(''));
+            
+            if(window.myDecks.length === 0) {
+                setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
+            } else {
+                setHTML('deck-grid-container', window.myDecks.map(d => {
+                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
+                    const bg = d.cover_url || CARD_BACK_URL;
+                    
+                    return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
+                        <div class="deck-card-content">
+                            <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
+                            <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
+                        </div>
+                    </div>`;
+                }).join(''));
+            }
         }
         
         function showRitualEditor(keep) {
@@ -1219,49 +1108,48 @@
             manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
         }
 
-       async function saveDeck(btn) {
-    setLoading(btn, true);
-    const name = getValue('deckName');
-    const main = getValue('deckMain');
-    
-    try {
-        if(!name) throw new Error("Deck Name is required");
-        if(!session || !session.user) throw new Error("You must be logged in");
+        // V11.4: SAVE FIX WITH DEBUGGING
+        async function saveDeck(btn) {
+            setLoading(btn, true);
+            const name = getValue('deckName');
+            const main = getValue('deckMain');
+            
+            try {
+                if(!name) throw new Error("Deck Name is required");
+                if(!session || !session.user) throw new Error("You must be logged in");
 
-        const payload = { 
-            user_id: session.user.id, 
-            name: name, 
-            card_list: main, 
-            format: document.getElementById('deckFormat').value,
-            cover_url: currentDeckCache[0]?.img || 'https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg',
-            structured_list: window.currentDeckStructuredList
-        };
-        
-        let error;
-        if(currentViewedDeckId) {
-            // Update existing
-            const res = await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
-            error = res.error;
-        } else {
-            // Insert new
-            const res = await sb.from('decks').insert(payload);
-            error = res.error;
-        }
+                const payload = { 
+                    user_id: session.user.id, 
+                    name: name, 
+                    card_list: main, 
+                    format: document.getElementById('deckFormat').value,
+                    cover_url: currentDeckCache[0]?.img || CARD_BACK_URL, // Use default if no image
+                    structured_list: window.currentDeckStructuredList
+                };
+                
+                let error;
+                if(currentViewedDeckId) {
+                    const res = await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
+                    error = res.error;
+                } else {
+                    const res = await sb.from('decks').insert(payload);
+                    error = res.error;
+                }
 
-        if(error) {
-            console.error("Supabase Error:", error); // Check your browser console!
-            throw new Error(error.message);
+                if(error) {
+                    console.error("Supabase Error:", error);
+                    throw new Error(error.message);
+                }
+                
+                showToast("Deck Saved Successfully!"); 
+                loadDecks(); 
+            } catch(e) { 
+                console.error(e);
+                showToast("Save Failed: " + e.message); 
+            } finally { 
+                setLoading(btn, false); 
+            }
         }
-        
-        showToast("Deck Saved Successfully!"); 
-        loadDecks(); // Refresh the grid
-    } catch(e) { 
-        console.error(e);
-        showToast("Save Failed: " + e.message); 
-    } finally { 
-        setLoading(btn, false); 
-    }
-}
 
         // --- TOOLS ---
         function handleDeckTool(action) {
@@ -1324,7 +1212,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
@@ -1362,40 +1250,44 @@
             setText('bf-turn', gameState.turn);
 
             setHTML('bf-hand', gameState.hand.map(c => 
-                `<div class="bf-card" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="playCard('${c.uid}')"><img src="${c.img}" draggable="false"></div>`
+                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
+                    <img src="${getCardImage(c)}" draggable="false">
+                </div>`
             ).join(''));
             
             const cardHTML = (c) => `
-                <div class="bf-card ${c.tapped?'bf-tapped':''}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="killCard('${c.uid}', event)">
-                    ${c.counters ? `<div class="counter-badge">${c.counters}</div>` : ''}
-                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff;">${c.name}</div>` : `<img src="${c.img}" draggable="false">`}
+                <div class="bf-card ${c.tapped?'bf-tapped':''}" id="${c.uid}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="handleCardContext(event, '${c.uid}')">
+                    ${c.counters > 0 ? `<div class="counter-badge">+${c.counters}</div>` : ''}
+                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff; border-radius:9px; font-weight:bold; font-size:12px; text-align:center; padding:5px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`}
                 </div>
             `;
             
-            const lands = gameState.field.filter(c => c.type && c.type.includes('Land'));
-            const spells = gameState.field.filter(c => !c.type || !c.type.includes('Land'));
+            const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
+            const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
             
-            setHTML('bf-backline', lands.map(cardHTML).join(''));
-            setHTML('bf-frontline', spells.map(cardHTML).join(''));
+            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
         }
         
         function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
-        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-zone-btn')?.classList.add('drag-over'); }
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
         function drop(ev, target) {
             ev.preventDefault();
             document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
             const uid = ev.dataTransfer.getData("uid");
             
-            // Find card
+            // Find card source
             let card, sourceArr;
             ['hand','field','grave','exile','lib'].forEach(z => {
-                const idx = gameState[z].findIndex(c => c.uid == uid);
+                const idx = gameState[z].findIndex(c => c.uid === uid);
                 if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
             });
             
             if(card) {
-                if(target === 'library') gameState.lib.push(card);
-                else gameState[target].push(card);
+                if(target === 'field') gameState.field.push(card);
+                else if(target === 'hand') gameState.hand.push(card);
+                else if(target === 'grave') gameState.grave.push(card);
+                else if(target === 'exile') gameState.exile.push(card);
                 renderBF();
             }
         }
@@ -1424,8 +1316,6 @@
         
         function viewRitualDetails(id) { 
             const d = window.myDecks.find(x => x.id == id);
-            
-            // UI Switch (This was the missing piece causing the "Nothing Happens" bug)
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
@@ -1435,8 +1325,6 @@
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckMain').value = d.card_list;
             window.currentDeckStructuredList = d.structured_list;
-            
-            // Trigger validate to populate visuals
             validateDeck();
         }
         
@@ -1458,4 +1346,3 @@
     </script>
 </body>
 </html>
-
