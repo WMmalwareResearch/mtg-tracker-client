@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.4 (The Shapeshifter)</title>
+    <title>The Grimoire | v14.5 (Identity Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -885,20 +885,21 @@
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
-        // AVATARS
+        // AVATARS (V14.5 DICEBEAR FIX)
         const AVATARS = [
-            "https://svgshare.com/i/10gq.svg",
-            "https://svgshare.com/i/10gr.svg", 
-            "https://svgshare.com/i/10gs.svg",
-            "https://svgshare.com/i/10gt.svg",
-            "https://svgshare.com/i/10gu.svg",
-            "https://svgshare.com/i/10gv.svg"
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Felix",
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Aneka",
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Jack",
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Precious",
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Abby",
+            "https://api.dicebear.com/7.x/adventurer/svg?seed=Trouble"
         ];
         
         // HAND SIM STATE
         let simDeck = [];
 
-        // --- CORE FUNCTIONS ---
+        // --- CORE FUNCTIONS (MOVED TO TOP) ---
+        
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             const view = document.getElementById('view-'+v);
@@ -920,6 +921,7 @@
         async function loadDecks() {
             const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             if(error) { console.error("Load Error:", error); return; } 
+            
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
             
@@ -927,12 +929,26 @@
                 setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
             } else {
                 setHTML('deck-grid-container', window.myDecks.map(d => {
-                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
+                    // V14.2 FIX: Parse full quantities instead of just lines
+                    let count = 0;
+                    if(d.card_count) count = d.card_count;
+                    else if(d.card_list) {
+                         const lines = d.card_list.split('\n');
+                         lines.forEach(l => {
+                             const match = l.trim().match(/^(\d+)\s+/);
+                             count += (match ? parseInt(match[1]) : 1);
+                         });
+                    }
+                    
                     let bg = d.cover_url || CARD_BACK_URL;
+                    // V14.0 FIX: Auto-upgrade old CDN links
                     if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                    
+                    // V14.1 FIX: SMART LOAD fallback
                     if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                         bg = d.structured_list[0].img;
                     }
+                    
                     return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
                         <div class="deck-card-content">
                             <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
@@ -980,6 +996,7 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                 // Smart Load Fallback
                  if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                     bg = d.structured_list[0].img;
                  }
@@ -1009,6 +1026,8 @@
              if(c.image_uris?.normal) url = c.image_uris.normal;
              else if(c.card_faces?.[0]?.image_uris?.normal) url = c.card_faces[0].image_uris.normal;
              else if(c.image_url && c.image_url.includes('http')) url = c.image_url;
+             
+             // V14.0 FIX: Auto-upgrade old CDN links
              if(url.includes('c1.scryfall.com')) url = url.replace('c1.scryfall.com', 'cards.scryfall.io');
              return url;
         }
