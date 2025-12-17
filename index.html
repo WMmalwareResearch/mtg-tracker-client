@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v13.5 (Mobile Polish)</title>
+    <title>The Grimoire | v13.6 (The Split)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -40,7 +40,7 @@
             flex-direction: column; 
             overflow: hidden; 
             font-size: 14px;
-            user-select: none; /* Prevents text selection on drag */
+            user-select: none;
             -webkit-user-select: none;
         }
         
@@ -248,26 +248,9 @@
         
         /* Mobile Battlefield Adjustments */
         @media (max-width: 768px) {
-            .bf-grid-layout { 
-                display: flex; 
-                flex-direction: column; /* Stack HUD, Board, Zones, Hand */
-            }
-            .bf-side-zone {
-                display: flex;
-                flex-direction: row; /* Horizontal strip */
-                width: 100%;
-                height: 80px;
-                padding: 10px;
-                border-left: none;
-                border-top: 1px solid var(--border);
-                overflow-x: auto;
-                background: rgba(15, 10, 25, 0.95);
-            }
-            .pile-card {
-                width: 60px; /* Smaller piles on mobile */
-                height: 100%;
-                aspect-ratio: auto;
-            }
+            .bf-grid-layout { display: flex; flex-direction: column; }
+            .bf-side-zone { display: flex; flex-direction: row; width: 100%; height: 80px; padding: 10px; border-left: none; border-top: 1px solid var(--border); overflow-x: auto; background: rgba(15, 10, 25, 0.95); }
+            .pile-card { width: 60px; height: 100%; aspect-ratio: auto; }
             .pile-count { font-size: 14px; }
             .bf-hand-shelf { height: 140px; }
             .bf-row { padding: 10px; }
@@ -601,8 +584,9 @@
                                 <div style="flex:1"><div class="text-sub mb-10">Mainboard</div><textarea id="deckMain"></textarea></div>
                                 <div style="flex:1"><div class="text-sub mb-10">Sideboard</div><textarea id="deckSide"></textarea></div>
                             </div>
-                            <div class="flex-row mt-20">
-                                <button onclick="validateDeck(this)">Validate & Save</button>
+                            <div class="flex-row mt-20" style="gap:15px;">
+                                <button onclick="validateDeck(this)" class="secondary">Check Cards</button>
+                                <button onclick="saveDeck(this)">Save Deck</button>
                             </div>
                         </div>
                     </div>
@@ -991,6 +975,7 @@
             document.getElementById('auth-screen').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
             loadData();
+            loadDecks(); // Also load decks upfront for dashboard
             loadProfile();
             renderAvatarGrid();
             
@@ -1666,6 +1651,16 @@
                 advHtml += `<div class="mb-20"><div class="flex-between text-sub" style="font-size:10px;"><span style="text-transform:capitalize">${k}</span><span>${d.count}/${d.target}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${Math.min(100, (d.count/d.target)*100)}%; background:${col}"></div></div></div>`;
             }
             setHTML('deck-advisor', advHtml);
+        }
+
+        function renderTypeChart(d) { 
+            const ctx=document.getElementById('typeChart').getContext('2d'); if(typeChartInstance) typeChartInstance.destroy();
+            typeChartInstance = new Chart(ctx, { type:'doughnut', data:{labels:Object.keys(d),datasets:[{data:Object.values(d),backgroundColor:CHART_COLORS,borderWidth:0}]}, options:{plugins:{legend:{position:'right',labels:{color:'#a1a1aa'}}}} });
+        }
+        function renderManaCurve(d) {
+            const ctx=document.getElementById('manaCurve').getContext('2d'); if(manaCurveInstance) manaCurveInstance.destroy();
+            const l=['0','1','2','3','4','5','6','7+']; const v=l.map((_,i)=>d[i]||0);
+            manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
         }
 
         function viewRitualDetails(id) { 
