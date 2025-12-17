@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v10.7 (Polished)</title>
+    <title>The Grimoire | v10.7 (Crystal Polish)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,12 +17,12 @@
             --primary: #a78bfa; 
             --primary-dim: rgba(167, 139, 250, 0.1);
             --primary-glow: rgba(167, 139, 250, 0.5);
-            --bg-dark: #0f0a1c; 
-            --card-bg: rgba(20, 15, 30, 0.7); /* Slightly darker for better contrast */
-            --card-border: rgba(255, 255, 255, 0.1);
+            --bg-dark: #050308; /* Deeper black */
+            --card-bg: rgba(20, 15, 30, 0.65); /* More transparent */
+            --card-border: rgba(255, 255, 255, 0.08);
             --text: #f8fafc; 
             --subtext: #94a3b8; 
-            --border: rgba(167, 139, 250, 0.2); 
+            --border: rgba(167, 139, 250, 0.15); 
             --green: #d946ef; --red: #ef4444; --yellow: #fbbf24; --blue: #3b82f6; 
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
             --font: 'Inter', sans-serif;
@@ -30,7 +30,7 @@
 
         body { 
             font-family: var(--font); 
-            background: radial-gradient(circle at top left, #1a1025, var(--bg-dark)); 
+            background: radial-gradient(circle at 0% 0%, #2e1065 0%, var(--bg-dark) 60%); 
             background-attachment: fixed; 
             color: var(--text); 
             margin: 0; 
@@ -54,10 +54,10 @@
         .app-container { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
         
         .sidebar { 
-            background: rgba(15, 10, 25, 0.8); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            padding: 25px; 
+            background: rgba(10, 5, 20, 0.85); 
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+            padding: 30px 20px; 
             display: flex; 
             flex-direction: column; 
             border-right: 1px solid var(--border); 
@@ -77,29 +77,32 @@
             .app-container { grid-template-columns: 1fr; padding-bottom: 80px; } 
             .sidebar { display: none; position: fixed; top: 0; left: 0; height: 100%; width: 280px; box-shadow: 10px 0 50px black; z-index: 2000; border-right: 1px solid var(--border); background: #0f0a1c; } 
             .sidebar.mobile-open { display: flex; animation: slideRight 0.2s ease-out; }
-            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 10, 25, 0.95); border-top: 1px solid var(--border); justify-content: space-around; padding: 12px 0; z-index: 100; backdrop-filter: blur(10px); } 
+            .bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(10, 5, 20, 0.95); border-top: 1px solid var(--border); justify-content: space-around; padding: 12px 0; z-index: 100; backdrop-filter: blur(15px); } 
             .main { padding: 20px 15px; } 
             .mobile-menu-btn { display: block !important; }
         }
         
         @keyframes slideRight { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 500; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text); }
+        .mobile-menu-btn { display: none; position: absolute; top: 20px; right: 20px; z-index: 500; background: var(--card-bg); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; color: var(--text); backdrop-filter: blur(10px); }
 
         /* --- UI COMPONENTS --- */
         
-        /* Cards & Boxes */
+        /* Glass Cards */
         .card-box { 
             background: var(--card-bg); 
-            backdrop-filter: blur(12px); 
+            backdrop-filter: blur(16px); 
+            -webkit-backdrop-filter: blur(16px);
             padding: 24px; 
-            border-radius: 16px; 
+            border-radius: 20px; 
             border: 1px solid var(--card-border); 
             margin-bottom: 24px; 
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2); 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+            transition: transform 0.2s, border-color 0.2s;
         }
+        .card-box:hover { border-color: rgba(255,255,255,0.15); }
 
-        h2 { margin-top: 0; font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; letter-spacing: -0.02em; color: white; }
-        h3 { font-size: 0.85rem; font-weight: 600; color: var(--subtext); margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;}
+        h2 { margin-top: 0; font-size: 1.8rem; font-weight: 800; margin-bottom: 25px; letter-spacing: -0.03em; color: white; background: linear-gradient(135deg, #fff 0%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h3 { font-size: 0.8rem; font-weight: 700; color: var(--subtext); margin-top: 0; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px;}
         
         /* Inputs */
         .input-group { position: relative; display: flex; align-items: center; margin-bottom: 15px; width: 100%; }
@@ -107,21 +110,21 @@
         
         input, select, textarea { 
             width: 100%; 
-            padding: 12px 14px; 
-            border-radius: 8px; 
+            padding: 12px 16px; 
+            border-radius: 12px; 
             border: 1px solid var(--border); 
-            background: rgba(0,0,0,0.3); 
+            background: rgba(0,0,0,0.2); 
             color: white; 
             font-size: 14px; 
             font-family: var(--font);
             transition: all 0.2s; 
             margin-bottom: 10px;
         }
-        .input-group input { padding-left: 40px; margin-bottom: 0; }
+        .input-group input { padding-left: 42px; margin-bottom: 0; }
         
         input:focus, select:focus, textarea:focus { 
             border-color: var(--primary); 
-            background: rgba(0,0,0,0.5); 
+            background: rgba(0,0,0,0.4); 
             box-shadow: 0 0 0 2px var(--primary-dim);
         }
         input:focus + .input-icon { color: var(--primary); }
@@ -133,76 +136,78 @@
             background: var(--primary); 
             color: white; 
             border: none; 
-            border-radius: 8px; 
+            border-radius: 10px; 
             cursor: pointer; 
-            font-weight: 600; 
-            font-size: 14px; 
+            font-weight: 700; 
+            font-size: 13px; 
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
             transition: all 0.2s; 
             position: relative; 
             overflow: hidden; 
-            letter-spacing: 0.01em;
+            box-shadow: 0 4px 15px rgba(167, 139, 250, 0.25);
         }
-        button:hover { filter: brightness(110%); transform: translateY(-1px); box-shadow: 0 4px 12px var(--primary-dim); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(167, 139, 250, 0.4); filter: brightness(110%); }
         button:active { transform: translateY(0); }
         
-        button.secondary { background: rgba(255,255,255,0.08); color: var(--text); border: 1px solid transparent; }
-        button.secondary:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+        button.secondary { background: rgba(255,255,255,0.05); box-shadow: none; border: 1px solid transparent; color: var(--subtext); }
+        button.secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: white; }
         
-        .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; }
+        .btn-sm { width: auto; padding: 8px 16px; font-size: 11px; }
         
         /* Sidebar Styling */
-        .logo { font-size: 20px; font-weight: 800; color: var(--primary); margin-bottom: 30px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.03em; }
+        .logo { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 35px; display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; text-shadow: 0 0 25px var(--primary-glow); }
         
         .user-profile-section { 
-            display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding: 12px; 
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; 
+            display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding: 12px; 
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; 
             cursor: pointer; transition: 0.2s; 
         }
-        .user-profile-section:hover { background: rgba(255,255,255,0.06); border-color: var(--primary); }
+        .user-profile-section:hover { background: rgba(255,255,255,0.06); border-color: var(--primary); transform: translateY(-1px); }
         .avatar-circle { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
-        .user-name { font-weight: 600; color: white; font-size: 14px; }
+        .user-meta { display: flex; flex-direction: column; overflow: hidden; }
+        .user-name { font-weight: 700; color: white; font-size: 14px; }
         .user-email-txt { font-size: 11px; color: var(--subtext); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
 
         .nav-item { 
-            padding: 10px 14px; 
+            padding: 12px 16px; 
             cursor: pointer; 
             color: var(--subtext); 
-            font-weight: 500; 
-            border-radius: 8px; 
+            font-weight: 600; 
+            border-radius: 10px; 
             transition: all 0.2s; 
-            margin-bottom: 4px; 
+            margin-bottom: 6px; 
             display: flex; 
             align-items: center; 
             gap: 12px; 
+            font-size: 13px;
         }
         .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
-        .nav-item.active { background: var(--primary-dim); color: white; border-left: 3px solid var(--primary); }
+        .nav-item.active { background: var(--primary-dim); color: white; border-left: 3px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        .b-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--subtext); cursor: pointer; gap: 4px; }
-        .b-item.active { color: var(--primary); }
-
         /* Grids & Cards */
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
-        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
+        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
         
         .grid-card { 
             position: relative; 
             aspect-ratio: 2.5/3.5; 
-            border-radius: 10px; 
+            border-radius: 12px; 
             overflow: hidden; 
             cursor: pointer; 
             background: rgba(0,0,0,0.3); 
             border: 1px solid var(--border); 
-            transition: transform 0.2s, box-shadow 0.2s; 
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5); z-index: 2; }
+        .grid-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--primary); box-shadow: 0 15px 30px -5px var(--primary-glow); z-index: 2; }
         .grid-card img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; }
         
         .deck-card { 
             background: rgba(255,255,255,0.03); 
             border: 1px solid var(--border); 
-            border-radius: 12px; 
-            height: 280px; 
+            border-radius: 16px; 
+            height: 320px; 
             display: flex; 
             flex-direction: column; 
             justify-content: flex-end; 
@@ -212,29 +217,30 @@
             transition: all 0.3s; 
             background-size: cover; 
             background-position: center; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
         }
-        .deck-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5); }
-        .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, #0f0a1c 0%, rgba(15, 10, 28, 0.8) 50%, transparent 100%); z-index: 1; }
-        .deck-card-content { position: relative; z-index: 2; padding: 20px; }
-        .deck-card h4 { margin: 0 0 5px 0; font-size: 16px; color: white; text-shadow: 0 2px 4px black; }
+        .deck-card:hover { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 20px 40px -5px var(--primary-glow); }
+        .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, #050308 10%, rgba(5, 3, 8, 0.8) 50%, transparent 100%); z-index: 1; }
+        .deck-card-content { position: relative; z-index: 2; padding: 25px; }
+        .deck-card h4 { margin: 0 0 5px 0; font-size: 18px; color: white; text-shadow: 0 2px 10px black; }
 
-        /* Badges & Stats */
-        .gain-badge { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.9); color: var(--green); padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; z-index: 5; border: 1px solid rgba(255,255,255,0.1); }
-        .overlay { position: absolute; bottom: 0; width: 100%; padding: 8px; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); display:flex; justify-content: space-between; align-items: flex-end; opacity: 0; transition: 0.2s; }
+        /* Badges */
+        .gain-badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); color: var(--green); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 5; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .overlay { position: absolute; bottom: 0; width: 100%; padding: 12px; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); display:flex; justify-content: space-between; align-items: flex-end; opacity: 0; transition: 0.2s; }
         .grid-card:hover .overlay { opacity: 1; }
         
-        .tag-container { position: absolute; top: 6px; left: 6px; display: flex; flex-direction: column; gap: 3px; z-index: 5; align-items: flex-start; }
-        .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 700; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .format-badge { background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .tag-container { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 5; align-items: flex-start; }
+        .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+        .format-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
-        .stat-val { font-size: 26px; font-weight: 700; color: white; margin-bottom: 4px; }
-        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 600; letter-spacing: 1px; }
+        /* Dashboard Stats */
+        .stat-card { background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); padding: 25px; border-radius: 16px; text-align: center; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .stat-val { font-size: 32px; font-weight: 800; color: white; margin-bottom: 4px; text-shadow: 0 0 20px var(--primary-glow); }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--subtext); font-weight: 700; letter-spacing: 1px; }
 
         /* Utilities */
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-row { display: flex; gap: 12px; align-items: center; }
         .mt-20 { margin-top: 20px; } .mb-20 { margin-bottom: 20px; } .mb-10 { margin-bottom: 10px; }
         .text-sub { font-size: 12px; color: var(--subtext); }
         .text-green { color: var(--green); } .text-red { color: var(--red); }
@@ -248,35 +254,46 @@
         .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        .empty-state { text-align: center; color: var(--subtext); padding: 40px; border: 2px dashed var(--border); border-radius: 12px; font-size: 13px; }
+        .empty-state { text-align: center; color: var(--subtext); padding: 60px; border: 2px dashed var(--border); border-radius: 20px; background: rgba(0,0,0,0.1); }
         
         /* Deck Details Specifics */
         .deck-area-detail { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-        .deck-list-viewer { height: 60vh; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 8px; font-family: monospace; font-size: 13px; border: 1px solid var(--border); }
-        .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; display: flex; justify-content: space-between; }
-        .is-owned { border-left: 2px solid var(--green); background: rgba(217, 70, 239, 0.05); }
-        .is-partial { border-left: 2px solid var(--yellow); background: rgba(250, 204, 21, 0.05); }
-        .is-missing { border-left: 2px solid var(--red); opacity: 0.7; }
-        .progress-bg { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 5px; }
-        .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s; }
+        .deck-list-viewer { height: 60vh; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; font-family: monospace; font-size: 13px; border: 1px solid var(--border); line-height: 1.6; }
+        .deck-line { padding: 6px 12px; border-radius: 6px; margin-bottom: 4px; display: flex; justify-content: space-between; transition: 0.1s; background: rgba(255,255,255,0.02); }
+        .deck-line:hover { background: rgba(255,255,255,0.05); }
+        .is-owned { border-left: 3px solid var(--green); }
+        .is-partial { border-left: 3px solid var(--yellow); }
+        .is-missing { border-left: 3px solid var(--red); opacity: 0.8; }
+        .progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 5px; }
+        .progress-fill { height: 100%; background: var(--primary); transition: width 0.5s ease-out; }
 
         /* FAB */
-        .fab-btn { position: fixed; bottom: 30px; right: 30px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 8px 25px rgba(167, 139, 250, 0.4); font-size: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: 0.3s; }
-        .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
+        .fab-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; border: none; box-shadow: 0 8px 25px rgba(167, 139, 250, 0.4); font-size: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 100; transition: 0.3s; }
+        .fab-btn:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 15px 40px var(--primary-glow); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
         /* Animations */
         @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .animate-in { animation: fadeUp 0.3s ease-out forwards; }
+        
+        /* Battlefield */
+        .bf-hud { height: 70px; background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 100; }
+        .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle at center, #2d153c 0%, #050308 80%); }
+        .bf-row { flex: 1; padding: 25px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); overflow-y: auto; }
+        .bf-hand-area { height: 240px; background: rgba(0,0,0,0.9); border-top: 1px solid var(--border); padding: 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; }
+        .bf-card { width: 130px; border-radius: 8px; cursor: grab; position: relative; transition: 0.1s; }
+        .bf-card img { width: 100%; border-radius: 8px; box-shadow: 0 4px 10px black; }
+        .bf-card:hover { transform: translateY(-15px) scale(1.1); z-index: 10; box-shadow: 0 0 25px var(--primary); }
+        .bf-tapped { transform: rotate(5deg) translateY(10px); opacity: 0.6; filter: grayscale(50%); }
     </style>
 </head>
 <body>
-    <img id="hover-preview" style="position:fixed; z-index:3000; width:240px; border-radius:12px; display:none; pointer-events:none; border: 2px solid var(--primary); background:#000; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
-    <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
+    <img id="hover-preview" style="position:fixed; z-index:3000; width:260px; border-radius:14px; display:none; pointer-events:none; border: 2px solid var(--primary); background:#000; box-shadow: 0 20px 60px black;">
+    <div id="toast-container" style="position:fixed; bottom:30px; right:30px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
     <div id="auth-screen" class="modal-overlay">
-        <div class="card-box" style="width: 350px; text-align: center; padding: 40px 30px;">
-            <div style="font-size: 50px; margin-bottom: 20px; text-shadow: 0 0 30px var(--primary);">🩸</div>
+        <div class="card-box" style="width: 380px; text-align: center; padding: 40px 30px;">
+            <div style="font-size: 60px; margin-bottom: 20px; text-shadow: 0 0 30px var(--primary);">🩸</div>
             <h2 class="mb-20">The Grimoire</h2>
             <div class="input-group"><input type="email" id="email" placeholder="Email Address"></div>
             <div class="input-group"><input type="password" id="password" placeholder="Password"></div>
@@ -288,7 +305,7 @@
     <div id="report-modal" class="modal-overlay hidden">
         <div class="card-box" style="max-width: 400px;">
             <h2 style="color:var(--red);">Report Bug</h2>
-            <textarea id="bug-text" placeholder="Describe what went wrong..." style="height:120px; margin-bottom:20px;"></textarea>
+            <textarea id="bug-text" placeholder="Describe what went wrong..." style="height:150px; margin-bottom:20px;"></textarea>
             <div class="flex-row" style="justify-content:center;">
                 <button onclick="sendBugReport(this)" style="background:var(--red);">Send Report</button>
                 <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="secondary">Cancel</button>
@@ -369,7 +386,7 @@
             </div>
 
             <div id="view-add" class="hidden">
-                <div class="card-box" style="max-width: 500px; margin: 0 auto;">
+                <div class="card-box" style="max-width: 550px; margin: 0 auto;">
                     <div class="flex-between mb-20"><h2>Add Card</h2><button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)"></div>
                     <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
                     <div id="search-status" class="text-sub mb-20"></div>
@@ -379,11 +396,12 @@
                         <input id="num" readonly placeholder="#" style="width: 30%;">
                         <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%;">
                     </div>
-                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
-                    <input id="add-tags" placeholder="Tags (foil, trade)...">
-                    <div class="flex-between mb-20 mt-20" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        <span>Market: <strong id="marketPrice" style="color:var(--green);">--</strong></span>
-                        <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
+                    <div class="input-group"><span class="input-icon">💰</span><input type="number" id="cost" placeholder="Cost ($)" step="0.01" style="padding-left:40px;"></div>
+                    <div class="input-group"><span class="input-icon">🏷️</span><input id="add-tags" placeholder="Tags (foil, trade)..." style="padding-left:40px;"></div>
+                    
+                    <div class="flex-between mb-20 mt-20" style="background:rgba(0,0,0,0.3); padding:15px; border-radius:12px; border:1px dashed var(--border);">
+                        <span>Market: <strong id="marketPrice" style="color:var(--green); font-size:18px;">--</strong></span>
+                        <img id="preview" style="height: 80px; display: none; border-radius: 6px;">
                     </div>
                     <div class="flex-row">
                         <button onclick="addCard(this, false)">Add to Collection</button>
@@ -396,9 +414,9 @@
             <div id="view-collection" class="hidden">
                 <div class="flex-between mb-20">
                     <h2>Collection</h2>
-                    <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise</button>
+                    <button onclick="appraiseCollection(this)" class="secondary btn-sm">🔄 Appraise All</button>
                 </div>
-                <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()"></div>
+                <div class="input-group"><span class="input-icon">🔍</span><input id="vaultSearch" placeholder="Search collection..." oninput="filterVault()" style="padding-left:40px;"></div>
                 
                 <div class="flex-row mb-20" style="flex-wrap: wrap;">
                     <select id="filterColor" onchange="filterVault()" style="flex:1;"><option value="all">Color</option><option value="W">White</option><option value="U">Blue</option><option value="B">Black</option><option value="R">Red</option><option value="G">Green</option><option value="M">Multi</option><option value="C">Colorless</option></select>
@@ -432,8 +450,8 @@
                                 <input id="deckCommander" placeholder="Commander" style="flex:2;">
                                 <select id="deckFormat" style="flex:1;"><option value="Commander">Commander</option><option value="Casual">Casual</option></select>
                             </div>
-                            <div class="flex-between mb-10"><span class="text-sub" style="font-weight:700;">LIVE CURVE</span><span id="editor-card-count">0</span></div>
-                            <div style="height:100px; position:relative;"><canvas id="editorManaChart"></canvas></div>
+                            <div class="flex-between mb-10"><span class="text-sub" style="font-weight:700; letter-spacing:1px;">LIVE CURVE</span><span id="editor-card-count">0</span></div>
+                            <div style="height:120px; position:relative;"><canvas id="editorManaChart"></canvas></div>
                             <div class="flex-row mt-20" style="align-items:flex-start;">
                                 <div style="flex:1"><div class="text-sub mb-10">Mainboard</div><textarea id="deckMain"></textarea></div>
                                 <div style="flex:1"><div class="text-sub mb-10">Sideboard</div><textarea id="deckSide"></textarea></div>
@@ -1192,7 +1210,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
