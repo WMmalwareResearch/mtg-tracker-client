@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.0 (Visual Fix)</title>
+    <title>The Grimoire | v14.1 (Cover Artist)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -907,6 +907,11 @@
                     // V14.0 FIX: Auto-upgrade old CDN links
                     if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
                     
+                    // V14.1 FIX: SMART LOAD fallback
+                    if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
+                        bg = d.structured_list[0].img;
+                    }
+                    
                     return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
                         <div class="deck-card-content">
                             <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
@@ -954,6 +959,10 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                 // Smart Load Fallback
+                 if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
+                    bg = d.structured_list[0].img;
+                 }
                  return `<div class="deck-card" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}'); height:200px;"><div class="deck-card-content"><div style="font-weight:700;">${d.name}</div><div class="text-sub" style="font-size:10px;">${d.format}</div></div></div>`
             }).join('');
         }
@@ -1362,7 +1371,7 @@
              loadData();
         }
 
-        // --- DECK SAVE LOGIC (V12.6: SAFE SAVE) ---
+        // --- DECK SAVE LOGIC (V14.1: SMART SAVE) ---
         async function saveDeck(btn) {
             setLoading(btn, true);
             const name = getValue('deckName');
@@ -1371,14 +1380,32 @@
             try {
                 if(!name) throw new Error("Deck Name is required");
                 if(!session || !session.user) throw new Error("You must be logged in");
+                
+                // V14.1: Ensure we have data for the cover image
+                let structured = window.currentDeckStructuredList || [];
+                if (main && structured.length === 0) {
+                     // Auto-Fetch Logic for missing data
+                     const lines = main.split('\n').filter(l=>l.trim());
+                     const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x).slice(0, 1); // Get first card only for speed
+                     if(idents.length > 0) {
+                         const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:idents})});
+                         const d = await res.json();
+                         if(d.data && d.data.length > 0) {
+                             structured = [{ img: getCardImage(d.data[0]) }]; // Minimal struct just for image
+                         }
+                     }
+                }
+
+                // Default cover: existing cache OR first card in struct OR default back
+                let cover = currentDeckCache[0]?.img || (structured.length > 0 ? structured[0].img : CARD_BACK_URL);
+                if(cover.includes('c1.scryfall')) cover = cover.replace('c1.scryfall.com', 'cards.scryfall.io'); // V14.0 Fix
 
                 const payload = { 
                     user_id: session.user.id, 
                     name: name, 
                     card_list: main || "", 
                     format: document.getElementById('deckFormat').value || "Standard",
-                    cover_url: currentDeckCache[0]?.img || CARD_BACK_URL, 
-                    // SAFE JSON SERIALIZATION
+                    cover_url: cover, 
                     structured_list: window.currentDeckStructuredList ? window.currentDeckStructuredList : [],
                     card_count: (main.split('\n').filter(x=>x.trim()).length) || 0
                 };
