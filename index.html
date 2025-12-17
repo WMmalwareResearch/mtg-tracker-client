@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v13.7 (The Geologist)</title>
+    <title>The Grimoire | v13.8 (The Polished Geode)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -315,9 +315,39 @@
         .sim-card:hover { transform: translateY(-10px) scale(1.1); z-index: 10; }
         .sim-card img { width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         
-        /* Geologist Modal V13.7 */
-        .geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
-        .chart-box { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; border: 1px solid var(--border); height: 250px; position: relative; }
+        /* Geologist Modal V13.8 (POLISHED) */
+        .geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        @media (max-width: 900px) { .geo-grid { grid-template-columns: 1fr; } }
+        
+        .chart-box { 
+            background: rgba(255,255,255,0.03); 
+            border-radius: 16px; 
+            padding: 20px; 
+            border: 1px solid var(--border); 
+            height: 300px; 
+            position: relative; 
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .geo-stat-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: space-between;
+        }
+        
+        .geo-metric {
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 12px;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .geo-val { font-size: 24px; font-weight: 800; color: white; }
+        .geo-lbl { font-size: 10px; text-transform: uppercase; color: var(--subtext); font-weight: 700; letter-spacing: 1px; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -421,23 +451,45 @@
     </div>
     
     <div id="stats-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
-        <div class="card-box" style="width: 90vw; max-width: 1000px; max-height:90vh; overflow-y:auto;">
+        <div class="card-box" style="width: 90vw; max-width: 1000px; max-height:90vh; overflow-y:auto; padding:30px;">
             <div class="flex-between mb-20">
-                <h2>The Geologist</h2>
+                <div>
+                    <h2 style="margin-bottom:5px;">The Geologist</h2>
+                    <div class="text-sub">Deck composition analysis.</div>
+                </div>
                 <button class="secondary btn-sm" onclick="document.getElementById('stats-modal').classList.add('hidden')">Close</button>
+            </div>
+            
+            <div class="geo-stat-row">
+                <div class="geo-metric">
+                    <div class="geo-val" id="stat-avg-cmc">0.0</div>
+                    <div class="geo-lbl">Avg CMC</div>
+                </div>
+                <div class="geo-metric">
+                    <div class="geo-val" id="stat-land-count">0</div>
+                    <div class="geo-lbl">Lands</div>
+                </div>
+                <div class="geo-metric">
+                    <div class="geo-val" id="stat-pip-total">0</div>
+                    <div class="geo-lbl">Total Pips</div>
+                </div>
             </div>
             
             <div class="geo-grid">
                  <div class="chart-box">
-                     <h3 class="mb-10 text-sub">Mana Pips (Color Identity)</h3>
-                     <canvas id="statsColorChart"></canvas>
+                     <h3 class="mb-10 text-sub" style="position:absolute; top:20px; left:20px;">Color Identity</h3>
+                     <div style="height:100%; display:flex; align-items:center; justify-content:center;">
+                        <canvas id="statsColorChart"></canvas>
+                     </div>
                  </div>
                  <div class="chart-box">
-                     <h3 class="mb-10 text-sub">Card Types</h3>
-                     <canvas id="statsTypeChart"></canvas>
+                     <h3 class="mb-10 text-sub" style="position:absolute; top:20px; left:20px;">Type Distribution</h3>
+                     <div style="height:100%; display:flex; align-items:center; justify-content:center;">
+                        <canvas id="statsTypeChart"></canvas>
+                     </div>
                  </div>
-                 <div class="chart-box" style="grid-column: 1 / -1; height:300px;">
-                     <h3 class="mb-10 text-sub">Opening Hand Probability (0-7 Lands)</h3>
+                 <div class="chart-box" style="grid-column: 1 / -1; height:320px;">
+                     <h3 class="mb-10 text-sub">Opening Hand Land Probability</h3>
                      <canvas id="statsProbChart"></canvas>
                  </div>
             </div>
@@ -614,7 +666,8 @@
                                 <div style="flex:1"><div class="text-sub mb-10">Sideboard</div><textarea id="deckSide"></textarea></div>
                             </div>
                             <div class="flex-row mt-20">
-                                <button onclick="validateDeck(this)">Validate & Save</button>
+                                <button onclick="validateDeck(this)" class="secondary">Check Cards</button>
+                                <button onclick="saveDeck(this)">Save Deck</button>
                             </div>
                         </div>
                     </div>
@@ -646,6 +699,7 @@
                                 <div class="flex-between mb-10 text-sub"><span>Value</span><span id="detail-deck-price" class="text-green text-bold">$0.00</span></div>
                                 <div class="flex-between mb-10 text-sub"><span>Missing</span><span id="detail-missing-cost" class="text-red text-bold">$0.00</span></div>
                                 <div class="progress-bg mb-20"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
+                                <div id="deck-advisor" class="mt-20 pt-20" style="border-top:1px solid var(--border);"></div>
                                 <div id="deck-charts" class="mt-20"><canvas id="typeChart"></canvas><canvas id="manaCurve"></canvas></div>
                                 <button class="secondary w-full mt-20" onclick="openLandCalculator()">Geomancer</button>
                             </div>
@@ -1707,17 +1761,22 @@
         // V13.3 HAND SIMULATOR LOGIC
         function openHandSim() {
             document.getElementById('hand-sim-modal').classList.remove('hidden');
+            // Build temporary deck for sim
             simDeck = [];
             currentDeckCache.forEach(c => {
                 for(let i=0; i<c.qty; i++) {
                     simDeck.push({...c, uid: Math.random().toString(36)});
                 }
             });
+            // Shuffle
             for(let i=simDeck.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [simDeck[i],simDeck[j]]=[simDeck[j],simDeck[i]]; }
+            
+            // Draw 7
             renderSimHand(simDeck.splice(0, 7));
         }
 
         function simMulligan() {
+            // Rebuild & Shuffle
             openHandSim();
         }
         
@@ -1748,21 +1807,49 @@
             document.getElementById('sim-land-count').innerText = `Cards: ${cards.length}`;
         }
         
-        // V13.7 GEOLOGIST LOGIC
+        // V13.8 GEOLOGIST LOGIC (POLISHED)
         function openGeologist() {
             document.getElementById('stats-modal').classList.remove('hidden');
             const cards = window.currentDeckStructuredList || [];
             
-            // 1. Color Identity
             let colors = {W:0, U:0, B:0, R:0, G:0, C:0};
+            let types = {};
+            let totalCmc=0, totalCount=0, landCount=0, pipCount=0;
+
             cards.forEach(c => {
+                const q = c.qty;
+                totalCount += q;
+                if(c.cmc) totalCmc += (c.cmc * q);
+                
+                // Color Pips
                 if(c.mana_cost) {
                     ['W','U','B','R','G','C'].forEach(col => {
-                        colors[col] += (c.mana_cost.match(new RegExp(`{${col}}`, 'g')) || []).length * c.qty;
+                        const pips = (c.mana_cost.match(new RegExp(`{${col}}`, 'g')) || []).length;
+                        colors[col] += (pips * q);
+                        pipCount += (pips * q);
                     });
                 }
+                
+                // Type
+                const t = c.type.split('—')[0].trim();
+                types[t] = (types[t]||0) + q;
+                if(t.includes('Land')) landCount += q;
             });
             
+            // Update Quick Stats
+            setText('stat-avg-cmc', (totalCount>0 ? (totalCmc/totalCount).toFixed(2) : "0.00"));
+            setText('stat-land-count', landCount);
+            setText('stat-pip-total', pipCount);
+            
+            // Chart Configs
+            const commonOptions = {
+                plugins: { legend: { labels: { color: '#94a3b8', font: {family: "'Inter', sans-serif", size: 10} } } },
+                scales: {
+                    r: { grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: '#fff' } }
+                }
+            };
+            
+            // Color Chart
             const ctxColor = document.getElementById('statsColorChart').getContext('2d');
             if(statsColorChart) statsColorChart.destroy();
             statsColorChart = new Chart(ctxColor, {
@@ -1771,18 +1858,15 @@
                     labels: Object.keys(colors),
                     datasets: [{
                         data: Object.values(colors),
-                        backgroundColor: ['#f0f2c0','#b5cde3','#aca29a','#db8664','#93b483','#ccc']
+                        backgroundColor: ['#f0f2c0','#b5cde3','#aca29a','#db8664','#93b483','#ccc'],
+                        borderWidth: 0
                     }]
-                }
+                },
+                options: commonOptions
             });
             
-            // 2. Types
-            let types = {};
-            cards.forEach(c => {
-                const t = c.type.split('—')[0].trim();
-                types[t] = (types[t]||0) + c.qty;
-            });
-             const ctxType = document.getElementById('statsTypeChart').getContext('2d');
+            // Type Chart
+            const ctxType = document.getElementById('statsTypeChart').getContext('2d');
             if(statsTypeChart) statsTypeChart.destroy();
             statsTypeChart = new Chart(ctxType, {
                 type: 'pie',
@@ -1790,22 +1874,18 @@
                     labels: Object.keys(types),
                     datasets: [{
                         data: Object.values(types),
-                        backgroundColor: CHART_COLORS
+                        backgroundColor: CHART_COLORS,
+                        borderWidth: 0
                     }]
-                }
+                },
+                options: { plugins: { legend: { position: 'right', labels: { color: '#94a3b8' } } } }
             });
             
-            // 3. Hypergeometric (Opening Hand Lands)
-            const deckSize = cards.reduce((a,b)=>a+b.qty,0);
-            const landCount = cards.filter(c=>c.type.includes('Land')).reduce((a,b)=>a+b.qty,0);
+            // Probability
             const handSize = 7;
-            
             let probs = [];
             for(let k=0; k<=7; k++) {
-                // Simplified Hypergeometric: P(X=k)
-                // This is a rough estimation for UI speed, real hypergeo formula is complex
-                // Using a standard approximation distribution for visual feedback
-                let p = hyperGeo(deckSize, landCount, handSize, k);
+                let p = hyperGeo(totalCount, landCount, handSize, k);
                 probs.push(p);
             }
             
@@ -1816,29 +1896,35 @@
                 data: {
                     labels: ['0', '1', '2', '3', '4', '5', '6', '7'],
                     datasets: [{
-                        label: '% Chance',
+                        label: '% Chance to draw X Lands',
                         data: probs,
-                        backgroundColor: '#a78bfa'
+                        backgroundColor: '#a78bfa',
+                        borderRadius: 4
                     }]
                 },
-                options: { scales: { y: { beginAtZero: true, max: 100 } } }
+                options: { 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#666' } },
+                        x: { grid: { display: false }, ticks: { color: '#666' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
             });
         }
         
         function hyperGeo(N, K, n, k) {
             // N=Total, K=Successes in pop, n=Sample size, k=Successes in sample
-            // Returns percentage
             const combination = (n, k) => {
                 if (k < 0 || k > n) return 0;
                 let res = 1;
                 for (let i = 1; i <= k; i++) res = res * (n - (i - 1)) / i;
                 return res;
             };
-            
             const waysToChooseK = combination(K, k);
             const waysToChooseRest = combination(N - K, n - k);
             const totalWays = combination(N, n);
-            
             return ((waysToChooseK * waysToChooseRest) / totalWays * 100).toFixed(1);
         }
 
