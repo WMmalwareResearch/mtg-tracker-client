@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.2 (The Accountant)</title>
+    <title>The Grimoire | v14.3 (The Insectarium)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -362,12 +362,28 @@
     </div>
     
     <div id="report-modal" class="modal-overlay hidden">
-        <div class="card-box" style="max-width: 400px;">
-            <h2 style="color:var(--red);">Report Bug</h2>
-            <textarea id="bug-text" placeholder="Describe what went wrong..." style="height:150px; margin-bottom:20px;"></textarea>
-            <div class="flex-row" style="justify-content:center;">
-                <button onclick="sendBugReport(this)" style="background:var(--red);">Send Report</button>
-                <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="secondary">Cancel</button>
+        <div class="card-box" style="max-width: 500px; border-top: 4px solid var(--red);">
+            <div class="flex-between mb-20">
+                <h2 style="color:var(--red); margin:0;">🪲 Report Anomaly</h2>
+                <button class="secondary btn-sm" onclick="document.getElementById('report-modal').classList.add('hidden')">✕</button>
+            </div>
+            <p class="text-sub mb-20">Found a glitch in the matrix? Describe it below so the archivists can mend the weave.</p>
+            
+            <div class="input-group">
+                <span class="input-icon">📂</span>
+                <select id="bug-category" style="padding-left: 45px;">
+                    <option value="Visual">Visual Glitch</option>
+                    <option value="Functional">Broken Feature</option>
+                    <option value="Crash">App Crash</option>
+                    <option value="Suggestion">Feature Request</option>
+                </select>
+            </div>
+
+            <textarea id="bug-text" placeholder="Describe the steps to reproduce..." style="height:150px; margin-bottom:20px; resize:none;"></textarea>
+            
+            <div class="flex-row" style="justify-content: flex-end;">
+                <button onclick="document.getElementById('report-modal').classList.add('hidden')" class="secondary" style="width:auto;">Cancel</button>
+                <button onclick="sendBugReport(this)" style="background:var(--red); width:auto;">Transmit Report</button>
             </div>
         </div>
     </div>
@@ -902,19 +918,12 @@
                 setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
             } else {
                 setHTML('deck-grid-container', window.myDecks.map(d => {
-                    // V14.2 FIX: Parse full quantities instead of just lines
-                    let count = 0;
-                    if(d.card_count) count = d.card_count;
-                    else if(d.card_list) {
-                         const lines = d.card_list.split('\n');
-                         lines.forEach(l => {
-                             const match = l.trim().match(/^(\d+)\s+/);
-                             count += (match ? parseInt(match[1]) : 1);
-                         });
-                    }
-                    
+                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
                     let bg = d.cover_url || CARD_BACK_URL;
+                    // V14.0 FIX: Auto-upgrade old CDN links
                     if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                    
+                    // V14.1 FIX: SMART LOAD fallback
                     if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                         bg = d.structured_list[0].img;
                     }
@@ -966,6 +975,7 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                 // Smart Load Fallback
                  if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                     bg = d.structured_list[0].img;
                  }
@@ -1058,10 +1068,15 @@
         }
 
         async function sendBugReport(btn) {
+            const cat = getValue('bug-category'); // V14.3
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v14.0' };
+            
+            // Combine category and description
+            const fullMsg = `[${cat}] ${txt}`;
+            
+            const templateParams = { bug_description: fullMsg, user_email: session ? session.user.email : 'Anonymous', app_version: 'v14.3' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
