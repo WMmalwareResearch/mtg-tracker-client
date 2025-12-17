@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v11.5 (The Forge)</title>
+    <title>The Grimoire | v11.6 (The Necromancer)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -212,13 +212,18 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* Battlefield */
+        /* --- BATTLEFIELD V11.6 (NECROMANCER) --- */
         .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
         .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
+        
         .bf-board { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; background: radial-gradient(circle at center, #25103a 0%, #050308 90%); }
         .bf-zone-label { position: absolute; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: rgba(255,255,255,0.1); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 5px; pointer-events: none; }
         .bf-row { flex: 1; padding: 20px 40px; display: flex; flex-wrap: wrap; align-content: center; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); overflow-y: auto; position: relative; }
+        
+        /* The Side Zone (Library/Grave) */
         .bf-side-zone { background: rgba(0,0,0,0.4); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
+        
+        /* LIBRARY PILE */
         .pile-card { width: 100%; aspect-ratio: 2.5/3.5; border-radius: 8px; background: #1a1a1a; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 2px 4px 10px rgba(0,0,0,0.5); }
         .pile-card:hover { border-color: var(--primary); transform: scale(1.03); }
         .pile-card::before { content:''; position:absolute; top:-3px; left:-3px; width:100%; height:100%; border-radius:8px; background:#1a1a1a; border:1px solid #333; z-index:-1; }
@@ -226,10 +231,14 @@
         .pile-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
         .pile-count { position: absolute; font-size: 18px; font-weight: 800; text-shadow: 0 2px 4px black; z-index: 10; color: white; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; }
         .pile-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); margin-top: 8px; }
+
+        /* Hand Shelf */
         .bf-hand-shelf { grid-column: 1 / -1; height: 160px; background: linear-gradient(to top, #050308 80%, transparent); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: flex-end; justify-content: center; gap: -20px; z-index: 30; overflow-x: visible; }
         .bf-hand-card { width: 110px; border-radius: 8px; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: grab; transform-origin: bottom center; margin: 0 -15px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border: 1px solid #000; }
         .bf-hand-card:hover { transform: translateY(-40px) scale(1.4) !important; z-index: 100; margin: 0 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .bf-hand-card img { width: 100%; border-radius: 8px; pointer-events: none; }
+
+        /* Cards on Board */
         .bf-card { width: 100px; border-radius: 6px; cursor: grab; position: relative; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .bf-card img { width: 100%; border-radius: 6px; pointer-events: none; }
         .bf-card:hover { transform: scale(1.2); z-index: 50; box-shadow: 0 0 20px var(--primary); }
@@ -237,20 +246,18 @@
         .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid black; }
         .drag-over { background: rgba(167, 139, 250, 0.1); box-shadow: inset 0 0 20px var(--primary); }
         
+        /* Pile Inspector (V11.6) */
+        #pile-modal .card-box { width: 80vw; height: 80vh; display: flex; flex-direction: column; }
+        .pile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; overflow-y: auto; padding: 20px; flex: 1; }
+        .pile-item { cursor: grab; position: relative; transition: 0.2s; }
+        .pile-item:hover { transform: scale(1.1); z-index: 10; border: 2px solid var(--primary); border-radius: 8px; }
+        .pile-item img { width: 100%; border-radius: 8px; }
+
+        /* Context Menu */
         .context-menu { position: fixed; background: rgba(20, 15, 30, 0.95); border: 1px solid var(--border); border-radius: 8px; padding: 5px; z-index: 2000; display: flex; flex-direction: column; width: 160px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px black; }
         .ctx-item { padding: 10px 15px; cursor: pointer; color: white; font-size: 13px; font-weight: 500; border-radius: 6px; transition: 0.1s; display: flex; justify-content: space-between; }
         .ctx-item:hover { background: var(--primary); color: white; }
         .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
-        
-        /* ADD CARD FORGE V11.5 */
-        .add-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
-        @media (max-width: 900px) { .add-grid { grid-template-columns: 1fr; } }
-        
-        .session-log { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
-        .log-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--subtext); font-size: 13px; animation: fadeUp 0.3s; }
-        
-        .preview-pane { position: sticky; top: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border); padding: 20px; text-align: center; }
-        .preview-pane img { width: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -267,6 +274,17 @@
             <div class="input-group"><input type="password" id="password" placeholder="Password"></div>
             <button onclick="handleAuthAction(this)" class="mt-20">Enter the Void</button>
             <div class="mt-20 text-sub" style="cursor:pointer; font-size:12px;" onclick="toggleResetMode()">Forgot Password?</div>
+        </div>
+    </div>
+    
+    <div id="pile-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="card-box">
+            <div class="flex-between mb-20">
+                <h2 id="pile-title">Graveyard</h2>
+                <div class="text-sub">Drag cards out to return them to play</div>
+                <button class="secondary btn-sm" onclick="document.getElementById('pile-modal').classList.add('hidden')">Close</button>
+            </div>
+            <div id="pile-content" class="pile-grid"></div>
         </div>
     </div>
     
@@ -357,52 +375,27 @@
             </div>
 
             <div id="view-add" class="hidden view-section">
-                <div class="add-grid">
-                    <div>
-                        <div class="card-box">
-                            <div class="flex-between mb-20">
-                                <h2>The Forge</h2>
-                                <button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button>
-                                <input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)">
-                            </div>
-                            
-                            <div class="input-group">
-                                <span class="input-icon">🔍</span>
-                                <input id="search" placeholder="Search Card Name..." oninput="debounceSearch()" style="font-size:16px; padding:16px 16px 16px 45px;">
-                            </div>
-                            <div id="search-status" class="text-sub mb-20" style="margin-top:-10px;"></div>
-                            
-                            <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20" style="background:rgba(255,255,255,0.05);"></select>
-                            
-                            <div class="flex-row">
-                                <div style="flex:1;"><label class="text-sub">Set</label><input id="set" readonly placeholder="SET"></div>
-                                <div style="flex:1;"><label class="text-sub">#</label><input id="num" readonly placeholder="#"></div>
-                                <div style="flex:1;"><label class="text-sub">Qty</label><input type="number" id="qty" value="1"></div>
-                            </div>
-                            
-                            <div class="flex-row mt-20">
-                                <div style="flex:1;"><label class="text-sub">Cost ($)</label><input type="number" id="cost" step="0.01" placeholder="0.00"></div>
-                                <div style="flex:2;"><label class="text-sub">Tags</label><input id="add-tags" placeholder="Foil, Commander..."></div>
-                            </div>
-                            
-                            <textarea id="bulkList" class="hidden"></textarea>
-                        </div>
-                        
-                        <div class="card-box">
-                            <h3>Session History</h3>
-                            <div id="session-log" class="session-log"><div class="text-sub" style="text-align:center;">Ready to forge.</div></div>
-                        </div>
+                <div class="card-box" style="max-width: 550px; margin: 0 auto;">
+                    <div class="flex-between mb-20"><h2>Add Card</h2><button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)"></div>
+                    <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
+                    <div id="search-status" class="text-sub mb-20"></div>
+                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
+                    <div class="flex-row">
+                        <input id="set" readonly placeholder="SET" style="width: 30%;">
+                        <input id="num" readonly placeholder="#" style="width: 30%;">
+                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%;">
                     </div>
-
-                    <div class="preview-pane">
-                        <img id="preview" src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg">
-                        <div class="mt-20">
-                            <div class="text-sub mb-10">Market Price</div>
-                            <div id="marketPrice" style="font-size:24px; font-weight:800; color:var(--green); margin-bottom:20px;">--</div>
-                            <button onclick="addCard(this, false)" class="mb-10" style="background:linear-gradient(45deg, var(--primary), #d946ef); box-shadow:0 10px 20px rgba(167, 139, 250, 0.3);">Add to Collection</button>
-                            <button onclick="addCard(this, true)" class="secondary">Add to Wishlist</button>
-                        </div>
+                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
+                    <input id="add-tags" placeholder="Tags (foil, trade)...">
+                    <div class="flex-between mb-20 mt-20" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
+                        <span>Market: <strong id="marketPrice" style="color:var(--green); font-size:18px;">--</strong></span>
+                        <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
                     </div>
+                    <div class="flex-row">
+                        <button onclick="addCard(this, false)">Add to Collection</button>
+                        <button onclick="addCard(this, true)" class="secondary">Wishlist</button>
+                    </div>
+                    <textarea id="bulkList" class="hidden"></textarea>
                 </div>
             </div>
 
@@ -499,7 +492,7 @@
                         <div class="bf-hud">
                             <div class="flex-row">
                                 <button class="secondary btn-sm" onclick="exitBattlefield()">Exit</button>
-                                <div class="text-bold" style="font-size:20px; color:white;">Life: <span id="bf-life">20</span></div>
+                                <div class="text-bold" style="font-size:20px; color:white;">Life: <span id="bf-life">40</span></div>
                                 <button class="btn-sm" onclick="updateLife(1)">+</button><button class="btn-sm" onclick="updateLife(-1)">-</button>
                             </div>
                             <div class="flex-row">
@@ -520,16 +513,16 @@
                     </div>
 
                     <div class="bf-side-zone">
-                        <div class="pile-card" onclick="drawCard()">
+                        <div class="pile-card" onclick="openPileViewer('lib')">
                             <img src="https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg">
                             <div class="pile-count" id="bf-lib-count">99</div>
                             <div class="pile-label">Library</div>
                         </div>
-                        <div class="pile-card" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)">
+                        <div class="pile-card" onclick="openPileViewer('grave')" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)">
                             <div class="pile-count" id="bf-grave-count">0</div>
                             <div class="pile-label">Grave</div>
                         </div>
-                        <div class="pile-card" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)">
+                        <div class="pile-card" onclick="openPileViewer('exile')" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)">
                             <div class="pile-count" id="bf-exile-count">0</div>
                             <div class="pile-label">Exile</div>
                         </div>
@@ -610,7 +603,7 @@
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId, pendingDeleteId;
         let typeChartInstance, manaCurveInstance, editorChartInstance;
         let currentDeckCache=[], currentDeckStructuredList=[], currentDeckCoverUrl='';
-        let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:20,turn:1};
+        let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:40,turn:1};
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
@@ -634,13 +627,13 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- BATTLEFIELD V11.0 LOGIC ---
+        // --- BATTLEFIELD V11.6 LOGIC ---
         function initBattlefield() {
             document.getElementById('view-decks').classList.add('hidden');
             document.getElementById('view-battlefield').classList.remove('hidden');
             gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:40, turn:1 };
             
-            // Build library from current deck
+            // Build library
             currentDeckCache.forEach(c => {
                 for(let i=0; i<c.qty; i++) {
                     gameState.lib.push({ uid: Math.random().toString(36).substr(2, 9), ...c, tapped:false, counters:0 });
@@ -652,6 +645,17 @@
             // Draw 7
             for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
             renderBF();
+            
+            // Shortcuts
+            document.addEventListener('keydown', handleShortcuts);
+        }
+
+        function handleShortcuts(e) {
+            if(document.getElementById('view-battlefield').classList.contains('hidden')) return;
+            if(e.key === 'd' || e.key === 'D') drawCard();
+            if(e.key === 'u' || e.key === 'U') { gameState.field.forEach(c => c.tapped = false); renderBF(); }
+            if(e.key === 'l' || e.key === 'L') updateLife(1);
+            if(e.key === 'k' || e.key === 'K') updateLife(-1);
         }
 
         function renderBF() {
@@ -682,7 +686,23 @@
             setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
         }
 
-        // Context Menu Logic
+        // Pile Inspection (V11.6)
+        function openPileViewer(zone) {
+            let cards = [];
+            let title = "Library";
+            if(zone === 'lib') { cards = gameState.lib; title="Library (Click to Draw)"; }
+            if(zone === 'grave') { cards = gameState.grave; title="Graveyard"; }
+            if(zone === 'exile') { cards = gameState.exile; title="Exile"; }
+            
+            setText('pile-title', title);
+            setHTML('pile-content', cards.map(c => `
+                <div class="pile-item" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="${zone==='lib'?'drawCard();document.getElementById(\'pile-modal\').classList.add(\'hidden\')':''}">
+                    <img src="${getCardImage(c)}">
+                </div>
+            `).join(''));
+            document.getElementById('pile-modal').classList.remove('hidden');
+        }
+
         function handleCardContext(e, uid) {
             e.preventDefault();
             const menu = document.getElementById('card-ctx-menu');
@@ -733,7 +753,7 @@
         function tapCard(uid) { const c = gameState.field.find(c => c.uid === uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
         function updateLife(n) { gameState.life += n; renderBF(); }
         function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
-        function exitBattlefield() { nav('decks'); }
+        function exitBattlefield() { nav('decks'); document.removeEventListener('keydown', handleShortcuts); }
 
         // Drag & Drop
         function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
@@ -755,6 +775,9 @@
                 else if(target === 'hand') gameState.hand.push(card);
                 else if(target === 'grave') gameState.grave.push(card);
                 else if(target === 'exile') gameState.exile.push(card);
+                
+                // Close modal if dragging from pile
+                document.getElementById('pile-modal').classList.add('hidden');
                 renderBF();
             }
         }
@@ -796,7 +819,7 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.5' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.6' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
@@ -811,7 +834,7 @@
                 view.classList.add('view-section');
             }
             document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
             if(active) active.classList.add('active');
             if(v === 'decks') loadDecks();
             if(v === 'collection') loadCollection();
@@ -1014,16 +1037,6 @@
             tempCardData = v;
         }
 
-        // V11.5 SESSION HISTORY
-        function appendToSessionLog(name) {
-            const log = document.getElementById('session-log');
-            if(log.innerText === "Ready to forge.") log.innerHTML = "";
-            const div = document.createElement('div');
-            div.className = 'log-item';
-            div.innerHTML = `<span>${name}</span> <span style="color:var(--green)">✓ Added</span>`;
-            log.prepend(div);
-        }
-
         async function addCard(btn, isWishlist) {
             if(!tempCardData) return showToast("Select card");
             setLoading(btn, true);
@@ -1047,12 +1060,7 @@
                 rarity: tempCardData.rarity
             });
             setLoading(btn, false);
-            if(error) showToast("Error"); 
-            else { 
-                showToast("Saved"); 
-                appendToSessionLog(tempCardData.name); 
-                loadData(); 
-            }
+            if(error) showToast("Error"); else { showToast("Saved"); loadData(); }
         }
         
         function handleCSVUpload(input) {
@@ -1099,20 +1107,27 @@
         }
 
         async function loadDecks() {
-            const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+            const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+            if(error) { console.error("Load Error:", error); return; } 
+            
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
-            if(window.myDecks.length === 0) setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
-            else setHTML('deck-grid-container', window.myDecks.map(d => {
-                const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
-                const bg = d.cover_url || CARD_BACK_URL;
-                return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
-                    <div class="deck-card-content">
-                        <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)">✕</span></div>
-                        <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
-                    </div>
-                </div>`;
-            }).join(''));
+            
+            if(window.myDecks.length === 0) {
+                setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
+            } else {
+                setHTML('deck-grid-container', window.myDecks.map(d => {
+                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
+                    const bg = d.cover_url || CARD_BACK_URL;
+                    
+                    return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
+                        <div class="deck-card-content">
+                            <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
+                            <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
+                        </div>
+                    </div>`;
+                }).join(''));
+            }
         }
         
         function showRitualEditor(keep) {
