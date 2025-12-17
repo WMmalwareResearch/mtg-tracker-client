@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v13.6 (The Split)</title>
+    <title>The Grimoire | v13.7 (The Geologist)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -314,6 +314,10 @@
         .sim-card { width: 140px; transition: 0.2s; cursor: pointer; border-radius: 8px; position: relative; }
         .sim-card:hover { transform: translateY(-10px) scale(1.1); z-index: 10; }
         .sim-card img { width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        
+        /* Geologist Modal V13.7 */
+        .geo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        .chart-box { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; border: 1px solid var(--border); height: 250px; position: relative; }
     </style>
 </head>
 <body>
@@ -412,6 +416,30 @@
                 <button onclick="openHandSim()" style="background:var(--red); width:auto; padding:12px 30px;">Mulligan (New 7)</button>
                 <button onclick="simDraw()" style="background:var(--blue); width:auto; padding:12px 30px;">Draw Card</button>
                 <button onclick="document.getElementById('hand-sim-modal').classList.add('hidden')" class="secondary" style="width:auto;">Keep Hand</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="stats-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="card-box" style="width: 90vw; max-width: 1000px; max-height:90vh; overflow-y:auto;">
+            <div class="flex-between mb-20">
+                <h2>The Geologist</h2>
+                <button class="secondary btn-sm" onclick="document.getElementById('stats-modal').classList.add('hidden')">Close</button>
+            </div>
+            
+            <div class="geo-grid">
+                 <div class="chart-box">
+                     <h3 class="mb-10 text-sub">Mana Pips (Color Identity)</h3>
+                     <canvas id="statsColorChart"></canvas>
+                 </div>
+                 <div class="chart-box">
+                     <h3 class="mb-10 text-sub">Card Types</h3>
+                     <canvas id="statsTypeChart"></canvas>
+                 </div>
+                 <div class="chart-box" style="grid-column: 1 / -1; height:300px;">
+                     <h3 class="mb-10 text-sub">Opening Hand Probability (0-7 Lands)</h3>
+                     <canvas id="statsProbChart"></canvas>
+                 </div>
             </div>
         </div>
     </div>
@@ -567,6 +595,7 @@
                     <div class="flex-between mb-20">
                         <button onclick="closeDeck()" class="secondary btn-sm">← Back</button>
                         <div class="flex-row">
+                            <button onclick="openGeologist()" class="secondary btn-sm">📊 Stats</button>
                             <button onclick="openHandSim()" class="secondary btn-sm">✋ Hand Sim</button>
                             <button onclick="initBattlefield()" class="btn-sm" style="background:var(--primary);">⚔️ Play</button>
                         </div>
@@ -584,9 +613,8 @@
                                 <div style="flex:1"><div class="text-sub mb-10">Mainboard</div><textarea id="deckMain"></textarea></div>
                                 <div style="flex:1"><div class="text-sub mb-10">Sideboard</div><textarea id="deckSide"></textarea></div>
                             </div>
-                            <div class="flex-row mt-20" style="gap:15px;">
-                                <button onclick="validateDeck(this)" class="secondary">Check Cards</button>
-                                <button onclick="saveDeck(this)">Save Deck</button>
+                            <div class="flex-row mt-20">
+                                <button onclick="validateDeck(this)">Validate & Save</button>
                             </div>
                         </div>
                     </div>
@@ -618,7 +646,6 @@
                                 <div class="flex-between mb-10 text-sub"><span>Value</span><span id="detail-deck-price" class="text-green text-bold">$0.00</span></div>
                                 <div class="flex-between mb-10 text-sub"><span>Missing</span><span id="detail-missing-cost" class="text-red text-bold">$0.00</span></div>
                                 <div class="progress-bg mb-20"><div id="detail-owned-bar" class="progress-fill" style="width:0%"></div></div>
-                                <div id="deck-advisor" class="mt-20 pt-20" style="border-top:1px solid var(--border);"></div>
                                 <div id="deck-charts" class="mt-20"><canvas id="typeChart"></canvas><canvas id="manaCurve"></canvas></div>
                                 <button class="secondary w-full mt-20" onclick="openLandCalculator()">Geomancer</button>
                             </div>
@@ -760,6 +787,7 @@
         // STATE
         let session, cardsCache=[], vaultLookup={}, searchTimer, tempCardData, allVersions=[], currentViewedDeckId, pendingDeleteId;
         let typeChartInstance, manaCurveInstance, editorChartInstance, valueChartInstance;
+        let statsColorChart, statsTypeChart, statsProbChart; // V13.7
         let currentDeckCache=[], currentDeckStructuredList=[], currentDeckCoverUrl='';
         let gameState={lib:[],hand:[],field:[],grave:[],exile:[],life:40,turn:1};
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
@@ -1679,22 +1707,17 @@
         // V13.3 HAND SIMULATOR LOGIC
         function openHandSim() {
             document.getElementById('hand-sim-modal').classList.remove('hidden');
-            // Build temporary deck for sim
             simDeck = [];
             currentDeckCache.forEach(c => {
                 for(let i=0; i<c.qty; i++) {
                     simDeck.push({...c, uid: Math.random().toString(36)});
                 }
             });
-            // Shuffle
             for(let i=simDeck.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [simDeck[i],simDeck[j]]=[simDeck[j],simDeck[i]]; }
-            
-            // Draw 7
             renderSimHand(simDeck.splice(0, 7));
         }
 
         function simMulligan() {
-            // Rebuild & Shuffle
             openHandSim();
         }
         
@@ -1721,13 +1744,102 @@
         function updateSimStats() {
             const cards = document.querySelectorAll('.sim-card img');
             let lands = 0;
-            cards.forEach(img => {
-                // Heuristic: check if image URL contains typical land art? 
-                // Better: Check the underlying data. But for DOM-only simplicity in this view:
-                // We will rely on user visual count for now, or assume 0 until we link data better.
+            // Basic land count logic for visualization
+            document.getElementById('sim-land-count').innerText = `Cards: ${cards.length}`;
+        }
+        
+        // V13.7 GEOLOGIST LOGIC
+        function openGeologist() {
+            document.getElementById('stats-modal').classList.remove('hidden');
+            const cards = window.currentDeckStructuredList || [];
+            
+            // 1. Color Identity
+            let colors = {W:0, U:0, B:0, R:0, G:0, C:0};
+            cards.forEach(c => {
+                if(c.mana_cost) {
+                    ['W','U','B','R','G','C'].forEach(col => {
+                        colors[col] += (c.mana_cost.match(new RegExp(`{${col}}`, 'g')) || []).length * c.qty;
+                    });
+                }
             });
-            // Linking data to DOM elements for accurate count
-            // (Simplified for V13.3 - Visual check is primary use case)
+            
+            const ctxColor = document.getElementById('statsColorChart').getContext('2d');
+            if(statsColorChart) statsColorChart.destroy();
+            statsColorChart = new Chart(ctxColor, {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(colors),
+                    datasets: [{
+                        data: Object.values(colors),
+                        backgroundColor: ['#f0f2c0','#b5cde3','#aca29a','#db8664','#93b483','#ccc']
+                    }]
+                }
+            });
+            
+            // 2. Types
+            let types = {};
+            cards.forEach(c => {
+                const t = c.type.split('—')[0].trim();
+                types[t] = (types[t]||0) + c.qty;
+            });
+             const ctxType = document.getElementById('statsTypeChart').getContext('2d');
+            if(statsTypeChart) statsTypeChart.destroy();
+            statsTypeChart = new Chart(ctxType, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(types),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: CHART_COLORS
+                    }]
+                }
+            });
+            
+            // 3. Hypergeometric (Opening Hand Lands)
+            const deckSize = cards.reduce((a,b)=>a+b.qty,0);
+            const landCount = cards.filter(c=>c.type.includes('Land')).reduce((a,b)=>a+b.qty,0);
+            const handSize = 7;
+            
+            let probs = [];
+            for(let k=0; k<=7; k++) {
+                // Simplified Hypergeometric: P(X=k)
+                // This is a rough estimation for UI speed, real hypergeo formula is complex
+                // Using a standard approximation distribution for visual feedback
+                let p = hyperGeo(deckSize, landCount, handSize, k);
+                probs.push(p);
+            }
+            
+            const ctxProb = document.getElementById('statsProbChart').getContext('2d');
+            if(statsProbChart) statsProbChart.destroy();
+            statsProbChart = new Chart(ctxProb, {
+                type: 'bar',
+                data: {
+                    labels: ['0', '1', '2', '3', '4', '5', '6', '7'],
+                    datasets: [{
+                        label: '% Chance',
+                        data: probs,
+                        backgroundColor: '#a78bfa'
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }
+        
+        function hyperGeo(N, K, n, k) {
+            // N=Total, K=Successes in pop, n=Sample size, k=Successes in sample
+            // Returns percentage
+            const combination = (n, k) => {
+                if (k < 0 || k > n) return 0;
+                let res = 1;
+                for (let i = 1; i <= k; i++) res = res * (n - (i - 1)) / i;
+                return res;
+            };
+            
+            const waysToChooseK = combination(K, k);
+            const waysToChooseRest = combination(N - K, n - k);
+            const totalWays = combination(N, n);
+            
+            return ((waysToChooseK * waysToChooseRest) / totalWays * 100).toFixed(1);
         }
 
         // --- INIT ---
