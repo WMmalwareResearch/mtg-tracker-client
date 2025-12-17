@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v12.3 (Stabilized)</title>
+    <title>The Grimoire | v12.4 (The Missing Link)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -249,7 +249,7 @@
         .pile-item:hover { transform: scale(1.05); z-index: 10; border: 2px solid var(--primary); border-radius: 8px; }
         .pile-item img { width: 100%; border-radius: 8px; }
 
-        /* ADD CARD FORGE (Restored V11.5 + V11.8 Fix) */
+        /* ADD CARD FORGE V11.8 */
         .add-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
         @media (max-width: 900px) { .add-grid { grid-template-columns: 1fr; } }
         
@@ -259,7 +259,7 @@
         .preview-pane { position: sticky; top: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border); padding: 20px; text-align: center; }
         .preview-pane img { width: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* Settings V11.9 (Artificer) */
+        /* Settings V11.9 */
         .theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
         .theme-btn { aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
         .theme-btn:hover { transform: scale(1.1); box-shadow: 0 0 10px currentColor; }
@@ -667,7 +667,7 @@
             "https://svgshare.com/i/10gv.svg"
         ];
 
-        // --- CORE FUNCTIONS (MOVED TO TOP TO PREVENT REFERENCE ERRORS) ---
+        // --- CORE FUNCTIONS (MOVED TO TOP) ---
         
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
@@ -752,7 +752,7 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- AUTH & PROFILE V11.9 ---
+        // --- AUTH & PROFILE ---
         async function handleAuthAction(btn) {
             setLoading(btn, true);
             const e=getValue('email'), p=getValue('password');
@@ -773,7 +773,7 @@
                  await sb.from('profiles').upsert({id:session.user.id, username:u}); 
                  setLoading(btn,false); 
                  showToast("Saved");
-                 loadProfile(); // Refresh
+                 loadProfile(); 
              }
         }
         
@@ -784,13 +784,11 @@
             loadProfile();
             renderAvatarGrid();
             
-            // Load saved theme
             const savedTheme = localStorage.getItem('grimoire_theme');
             if(savedTheme) applyTheme(savedTheme);
         }
         
         async function loadProfile() {
-            // Load Avatar from Local Storage (Fast)
             const savedAvatar = localStorage.getItem('grimoire_avatar') || AVATARS[0];
             document.getElementById('sidebar-avatar').src = savedAvatar;
 
@@ -812,7 +810,6 @@
         function changeAvatar(url) {
             localStorage.setItem('grimoire_avatar', url);
             document.getElementById('sidebar-avatar').src = url;
-            // Visual feedback
             document.querySelectorAll('.avatar-option').forEach(img => img.classList.remove('selected'));
             event.target.classList.add('selected');
             showToast("Avatar Updated");
@@ -822,7 +819,7 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.9' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v12.3' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
@@ -1287,6 +1284,260 @@
                 setHTML('codex-legality', h);
                 window.scryfallLink=d.scryfall_uri;
             })
+        }
+        
+        // V12.4 RESTORED FUNCTIONS
+        function showRitualEditor(keep) {
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('detail-mode').classList.add('hidden');
+            document.getElementById('editor-mode').classList.remove('hidden');
+            currentViewedDeckId = null;
+            if(!keep) {
+                document.getElementById('deckName').value = '';
+                document.getElementById('deckMain').value = '';
+            }
+            initEditorListeners();
+            updateLiveEditorStats();
+        }
+        
+        function closeDeck() {
+            document.getElementById('deck-workspace').classList.add('hidden');
+            document.getElementById('deck-library').classList.remove('hidden');
+        }
+        
+        function clearDeckEditor() { document.getElementById('deckMain').value = ''; }
+        function initEditorListeners() { document.getElementById('deckMain').addEventListener('input', () => setTimeout(updateLiveEditorStats, 500)); }
+        function updateLiveEditorStats() {
+            const txt = getValue('deckMain'); const lines = txt.split('\n');
+            const data = {0:0,1:0,2:0,3:0,4:0,5:0,6:0,7:0}; let total=0;
+            lines.forEach(l => {
+                const m = l.match(/^(\d+)\s+(.+)/);
+                if(m) {
+                    const q=parseInt(m[1]), n=m[2].trim().toLowerCase(); total+=q;
+                    const c = cardsCache.find(x=>x.name.toLowerCase()===n);
+                    if(c && c.cmc !== undefined) { let b=Math.floor(c.cmc); if(b>7)b=7; data[b]+=q; }
+                }
+            });
+            setText('editor-card-count', total);
+            renderEditorChart(data);
+        }
+        function renderEditorChart(d) {
+            const ctx=document.getElementById('editorManaChart').getContext('2d'); if(editorChartInstance) editorChartInstance.destroy();
+            editorChartInstance = new Chart(ctx, { type:'bar', data:{labels:['0','1','2','3','4','5','6','7+'],datasets:[{data:Object.values(d),backgroundColor:'#3b82f6',borderRadius:2}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{display:false}}} });
+        }
+
+        async function validateDeck(btn) {
+            setLoading(btn, true);
+            const main = getValue('deckMain');
+            const lines = main.split('\n').filter(l=>l.trim());
+            const idents = lines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : null }).filter(x=>x);
+            try {
+                let allCards = [];
+                for(let i=0; i<idents.length; i+=75) {
+                    const chunk = idents.slice(i, i+75);
+                    const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:chunk})});
+                    const d = await res.json();
+                    if(d.data) allCards = allCards.concat(d.data);
+                }
+                const structured = allCards.map(c => {
+                    const req = lines.find(l => l.toLowerCase().includes(c.name.toLowerCase()));
+                    const qty = req ? parseInt(req.match(/^(\d+)/)[1]) : 1;
+                    return {
+                        name: c.name, qty: qty, set: c.set, num: c.collector_number,
+                        img: getCardImage(c), type: c.type_line, cmc: c.cmc || 0,
+                        price: parseFloat(c.prices.usd || 0), identity: c.color_identity,
+                        mana_cost: c.mana_cost, oracle_text: c.oracle_text
+                    };
+                });
+                window.currentDeckStructuredList = structured;
+                processDeckData(structured);
+            } catch(e) { showToast("Validation Error"); } finally { setLoading(btn, false); }
+        }
+
+        function processDeckData(data) {
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
+            setText('detail-deck-name', getValue('deckName') || "New Deck");
+            
+            let totalVal=0, types={}, cmcs={}, colors={W:0,U:0,B:0,R:0,G:0,C:0};
+            let ownedVal=0, missingVal=0, ownedCount=0, totalCount=0;
+            
+            const listHtml = data.map(c => {
+                const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
+                const have = vaultLookup[key] || 0;
+                const isBasic = ['plains','island','swamp','mountain','forest'].some(x => c.name.toLowerCase().includes(x));
+                const effectiveHave = isBasic ? c.qty : have;
+                const match = Math.min(effectiveHave, c.qty);
+                const missing = c.qty - match;
+                
+                ownedCount += match; totalCount += c.qty;
+                totalVal += c.price * c.qty;
+                missingVal += missing * c.price;
+                
+                const status = match >= c.qty ? 'is-owned' : (match > 0 ? 'is-partial' : 'is-missing');
+                
+                const type = c.type.split('—')[0].trim(); types[type] = (types[type]||0)+c.qty;
+                if(!type.includes('Land')) { let b=Math.floor(c.cmc); if(b>7)b=7; cmcs[b]=(cmcs[b]||0)+c.qty; }
+                if(c.mana_cost) {
+                    colors.W += (c.mana_cost.match(/{W}/g)||[]).length * c.qty;
+                    colors.U += (c.mana_cost.match(/{U}/g)||[]).length * c.qty;
+                    colors.B += (c.mana_cost.match(/{B}/g)||[]).length * c.qty;
+                    colors.R += (c.mana_cost.match(/{R}/g)||[]).length * c.qty;
+                    colors.G += (c.mana_cost.match(/{G}/g)||[]).length * c.qty;
+                }
+                
+                return `<div class="deck-line ${status}" data-name="${c.name}" data-qty="${missing}"><b>${c.qty}</b> ${c.name} <span style="float:right; opacity:0.6;">$${c.price.toFixed(2)} (${effectiveHave}/${c.qty})</span></div>`;
+            }).join('');
+
+            setHTML('detail-decklist-viewer', listHtml);
+            setText('detail-deck-price', "$"+totalVal.toFixed(2));
+            setText('detail-missing-cost', "$"+missingVal.toFixed(2));
+            
+            const pct = Math.round((ownedCount/totalCount)*100) || 0;
+            setText('detail-owned-percent', pct+"%");
+            const bar = document.getElementById('detail-owned-bar'); if(bar) bar.style.width = pct+"%";
+            
+            document.getElementById('deck-charts').classList.remove('hidden');
+            renderTypeChart(types); renderManaCurve(cmcs);
+            currentDeckCache = data;
+            
+            const stats = { lands:{count:0,target:36}, ramp:{count:0,target:10}, draw:{count:0,target:10}, removal:{count:0,target:10}, wipes:{count:0,target:3} };
+            data.forEach(c => {
+                const t=(c.oracle_text||"").toLowerCase(), ty=(c.type||"").toLowerCase(), q=c.qty;
+                if(ty.includes('land')) { stats.lands.count+=q; return; }
+                if((t.includes('add') && t.includes('mana')) || (t.includes('search') && t.includes('land'))) stats.ramp.count+=q;
+                if(t.includes('draw') && t.includes('card')) stats.draw.count+=q;
+                if((t.includes('destroy')||t.includes('exile')) && t.includes('target')) stats.removal.count+=q;
+                if(t.includes('destroy') && t.includes('all')) stats.wipes.count+=q;
+            });
+            let advHtml = "";
+            for(const [k,d] of Object.entries(stats)) {
+                let col = 'var(--red)'; if(d.count/d.target > 0.8) col='var(--green)';
+                advHtml += `<div class="mb-20"><div class="flex-between text-sub" style="font-size:10px;"><span style="text-transform:capitalize">${k}</span><span>${d.count}/${d.target}</span></div><div class="progress-bg"><div class="progress-fill" style="width:${Math.min(100, (d.count/d.target)*100)}%; background:${col}"></div></div></div>`;
+            }
+            setHTML('deck-advisor', advHtml);
+        }
+
+        function renderTypeChart(d) { 
+            const ctx=document.getElementById('typeChart').getContext('2d'); if(typeChartInstance) typeChartInstance.destroy();
+            typeChartInstance = new Chart(ctx, { type:'doughnut', data:{labels:Object.keys(d),datasets:[{data:Object.values(d),backgroundColor:CHART_COLORS,borderWidth:0}]}, options:{plugins:{legend:{position:'right',labels:{color:'#a1a1aa'}}}} });
+        }
+        function renderManaCurve(d) {
+            const ctx=document.getElementById('manaCurve').getContext('2d'); if(manaCurveInstance) manaCurveInstance.destroy();
+            const l=['0','1','2','3','4','5','6','7+']; const v=l.map((_,i)=>d[i]||0);
+            manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
+        }
+
+        async function saveDeck(btn) {
+            setLoading(btn, true);
+            const name = getValue('deckName');
+            const main = getValue('deckMain');
+            try {
+                if(!name) throw new Error("Name required");
+                const payload = { 
+                    user_id:session.user.id, name:name, card_list:main, 
+                    format:document.getElementById('deckFormat').value,
+                    cover_url: currentDeckCache[0]?.img || CARD_BACK_URL,
+                    structured_list: window.currentDeckStructuredList
+                };
+                
+                if(currentViewedDeckId) await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
+                else await sb.from('decks').insert(payload);
+                
+                showToast("Saved!", "success"); loadDecks();
+            } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
+        }
+
+        // --- TOOLS ---
+        function handleDeckTool(action) {
+            document.getElementById('tools-dropdown').value = '';
+            if(action === 'copy_missing') {
+                const missing = currentDeckStructuredList.filter(c => {
+                    const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
+                    const have = vaultLookup[key] || 0;
+                    return have < c.qty;
+                }).map(c => `${c.qty - (vaultLookup[`${c.name.toLowerCase()}_${c.set}_${c.num}`]||0)} ${c.name}`).join('\n');
+                navigator.clipboard.writeText(missing); showToast("Copied!");
+            }
+            if(action === 'buy') {
+                const missing = currentDeckStructuredList.filter(c => {
+                    const key = `${c.name.toLowerCase()}_${c.set}_${c.num}`;
+                    return (vaultLookup[key] || 0) < c.qty;
+                }).map(c => `${c.qty - (vaultLookup[`${c.name.toLowerCase()}_${c.set}_${c.num}`]||0)} ${c.name}`).join('||');
+                window.open(`https://www.tcgplayer.com/massentry?c=${encodeURIComponent(missing)}`, '_blank');
+            }
+            if(action === 'print') {
+                const w = window.open('','_blank');
+                let h = `<html><style>body{margin:0; font-family:sans-serif;} .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:2px; width:7.4in;} img{width:100%;}</style><body><div class="grid">`;
+                currentDeckCache.forEach(c => { for(let i=0; i<c.qty; i++) h+=`<img src="${c.img}">`; });
+                h += `</div></body></html>`;
+                w.document.write(h); w.document.close();
+            }
+            if(action === 'export_arena') {
+                 const txt = currentDeckCache.map(c => `${c.qty} ${c.name} (${c.set}) ${c.num}`).join('\n');
+                 navigator.clipboard.writeText(txt); showToast("Copied Arena format!");
+            }
+        }
+        
+        function toggleDeckView() {
+            const list = document.getElementById('detail-decklist-viewer');
+            const grid = document.getElementById('detail-visual-grid');
+            if(list.classList.contains('hidden')) { list.classList.remove('hidden'); grid.classList.add('hidden'); }
+            else {
+                list.classList.add('hidden'); grid.classList.remove('hidden');
+                grid.innerHTML = `<div class="visual-card-grid">` + currentDeckCache.map(c => `
+                    <div class="visual-card">
+                        <img src="${c.img}">
+                        <div class="visual-badge">${c.qty}</div>
+                    </div>
+                `).join('') + `</div>`;
+            }
+        }
+        
+        function openLandCalculator() { document.getElementById('land-modal').classList.remove('hidden'); recalcLands(); }
+        function recalcLands() {
+            const target = parseInt(document.getElementById('target-land-count').value) || 36;
+            if (!window.currentDeckStats) return;
+            const s = window.currentDeckStats;
+            const total = s.W+s.U+s.B+s.R+s.G;
+            if(total===0) { setHTML('land-results', "No symbols found."); return; }
+            let html='';
+            suggestedLands=[];
+            const types=[{n:'Plains',c:'pip-w',v:s.W},{n:'Island',c:'pip-u',v:s.U},{n:'Swamp',c:'pip-b',v:s.B},{n:'Mountain',c:'pip-r',v:s.R},{n:'Forest',c:'pip-g',v:s.G}];
+            types.forEach(t=>{
+                if(t.v>0) {
+                    const count = Math.round((t.v/total)*target);
+                    if(count>0) {
+                        suggestedLands.push({name:t.n, qty:count});
+                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                    }
+                }
+            });
+            setHTML('land-results', html);
+        }
+        function applyLands() {
+            const box = document.getElementById('deckMain');
+            let txt = box.value.trim();
+            if(txt) txt+='\n';
+            suggestedLands.forEach(l => txt+=`${l.qty} ${l.name}\n`);
+            box.value=txt;
+            document.getElementById('land-modal').classList.add('hidden');
+            showToast("Lands added!");
+            updateLiveEditorStats();
+        }
+
+        function viewRitualDetails(id) { 
+            const d = window.myDecks.find(x => x.id == id);
+            document.getElementById('deck-library').classList.add('hidden');
+            document.getElementById('deck-workspace').classList.remove('hidden');
+            document.getElementById('editor-mode').classList.add('hidden');
+            document.getElementById('detail-mode').classList.remove('hidden');
+            currentViewedDeckId = id;
+            document.getElementById('deckName').value = d.name;
+            document.getElementById('deckMain').value = d.card_list;
+            window.currentDeckStructuredList = d.structured_list;
+            validateDeck();
         }
 
         // --- INIT ---
