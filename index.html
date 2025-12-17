@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v11.4 (Librarian Fix)</title>
+    <title>The Grimoire | v11.5 (The Forge)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -212,36 +212,24 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* --- BATTLEFIELD V11.2 (OFFICIAL BACK) --- */
+        /* Battlefield */
         .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
         .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
-        
         .bf-board { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; background: radial-gradient(circle at center, #25103a 0%, #050308 90%); }
         .bf-zone-label { position: absolute; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: rgba(255,255,255,0.1); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 5px; pointer-events: none; }
         .bf-row { flex: 1; padding: 20px 40px; display: flex; flex-wrap: wrap; align-content: center; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); overflow-y: auto; position: relative; }
-        
-        /* The Side Zone (Library/Grave) */
         .bf-side-zone { background: rgba(0,0,0,0.4); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
-        
-        /* LIBRARY PILE (Face Down) */
         .pile-card { width: 100%; aspect-ratio: 2.5/3.5; border-radius: 8px; background: #1a1a1a; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; box-shadow: 2px 4px 10px rgba(0,0,0,0.5); }
         .pile-card:hover { border-color: var(--primary); transform: scale(1.03); }
-        
-        /* Stack Effect */
         .pile-card::before { content:''; position:absolute; top:-3px; left:-3px; width:100%; height:100%; border-radius:8px; background:#1a1a1a; border:1px solid #333; z-index:-1; }
         .pile-card::after { content:''; position:absolute; top:-6px; left:-6px; width:100%; height:100%; border-radius:8px; background:#1a1a1a; border:1px solid #333; z-index:-2; }
-
         .pile-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
         .pile-count { position: absolute; font-size: 18px; font-weight: 800; text-shadow: 0 2px 4px black; z-index: 10; color: white; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; }
         .pile-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); margin-top: 8px; }
-
-        /* The Hand (Fixed Bottom) */
         .bf-hand-shelf { grid-column: 1 / -1; height: 160px; background: linear-gradient(to top, #050308 80%, transparent); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: flex-end; justify-content: center; gap: -20px; z-index: 30; overflow-x: visible; }
         .bf-hand-card { width: 110px; border-radius: 8px; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: grab; transform-origin: bottom center; margin: 0 -15px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border: 1px solid #000; }
         .bf-hand-card:hover { transform: translateY(-40px) scale(1.4) !important; z-index: 100; margin: 0 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .bf-hand-card img { width: 100%; border-radius: 8px; pointer-events: none; }
-
-        /* Cards on Board */
         .bf-card { width: 100px; border-radius: 6px; cursor: grab; position: relative; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .bf-card img { width: 100%; border-radius: 6px; pointer-events: none; }
         .bf-card:hover { transform: scale(1.2); z-index: 50; box-shadow: 0 0 20px var(--primary); }
@@ -249,11 +237,20 @@
         .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid black; }
         .drag-over { background: rgba(167, 139, 250, 0.1); box-shadow: inset 0 0 20px var(--primary); }
         
-        /* Context Menu */
         .context-menu { position: fixed; background: rgba(20, 15, 30, 0.95); border: 1px solid var(--border); border-radius: 8px; padding: 5px; z-index: 2000; display: flex; flex-direction: column; width: 160px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px black; }
         .ctx-item { padding: 10px 15px; cursor: pointer; color: white; font-size: 13px; font-weight: 500; border-radius: 6px; transition: 0.1s; display: flex; justify-content: space-between; }
         .ctx-item:hover { background: var(--primary); color: white; }
         .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
+        
+        /* ADD CARD FORGE V11.5 */
+        .add-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
+        @media (max-width: 900px) { .add-grid { grid-template-columns: 1fr; } }
+        
+        .session-log { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
+        .log-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--subtext); font-size: 13px; animation: fadeUp 0.3s; }
+        
+        .preview-pane { position: sticky; top: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border); padding: 20px; text-align: center; }
+        .preview-pane img { width: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -360,27 +357,52 @@
             </div>
 
             <div id="view-add" class="hidden view-section">
-                <div class="card-box" style="max-width: 550px; margin: 0 auto;">
-                    <div class="flex-between mb-20"><h2>Add Card</h2><button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button><input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)"></div>
-                    <div class="input-group"><span class="input-icon">🔍</span><input id="search" placeholder="Card Name or SET 123" oninput="debounceSearch()"></div>
-                    <div id="search-status" class="text-sub mb-20"></div>
-                    <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20"></select>
-                    <div class="flex-row">
-                        <input id="set" readonly placeholder="SET" style="width: 30%;">
-                        <input id="num" readonly placeholder="#" style="width: 30%;">
-                        <input type="number" id="qty" value="1" placeholder="Qty" style="width: 40%;">
+                <div class="add-grid">
+                    <div>
+                        <div class="card-box">
+                            <div class="flex-between mb-20">
+                                <h2>The Forge</h2>
+                                <button class="secondary btn-sm" onclick="document.getElementById('csvFile').click()">Import CSV</button>
+                                <input type="file" id="csvFile" style="display:none;" onchange="handleCSVUpload(this)">
+                            </div>
+                            
+                            <div class="input-group">
+                                <span class="input-icon">🔍</span>
+                                <input id="search" placeholder="Search Card Name..." oninput="debounceSearch()" style="font-size:16px; padding:16px 16px 16px 45px;">
+                            </div>
+                            <div id="search-status" class="text-sub mb-20" style="margin-top:-10px;"></div>
+                            
+                            <select id="versionSelect" onchange="updateSelectedVersion()" class="mb-20" style="background:rgba(255,255,255,0.05);"></select>
+                            
+                            <div class="flex-row">
+                                <div style="flex:1;"><label class="text-sub">Set</label><input id="set" readonly placeholder="SET"></div>
+                                <div style="flex:1;"><label class="text-sub">#</label><input id="num" readonly placeholder="#"></div>
+                                <div style="flex:1;"><label class="text-sub">Qty</label><input type="number" id="qty" value="1"></div>
+                            </div>
+                            
+                            <div class="flex-row mt-20">
+                                <div style="flex:1;"><label class="text-sub">Cost ($)</label><input type="number" id="cost" step="0.01" placeholder="0.00"></div>
+                                <div style="flex:2;"><label class="text-sub">Tags</label><input id="add-tags" placeholder="Foil, Commander..."></div>
+                            </div>
+                            
+                            <textarea id="bulkList" class="hidden"></textarea>
+                        </div>
+                        
+                        <div class="card-box">
+                            <h3>Session History</h3>
+                            <div id="session-log" class="session-log"><div class="text-sub" style="text-align:center;">Ready to forge.</div></div>
+                        </div>
                     </div>
-                    <input type="number" id="cost" placeholder="Cost ($)" step="0.01">
-                    <input id="add-tags" placeholder="Tags (foil, trade)...">
-                    <div class="flex-between mb-20 mt-20" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px;">
-                        <span>Market: <strong id="marketPrice" style="color:var(--green); font-size:18px;">--</strong></span>
-                        <img id="preview" style="height: 60px; display: none; border-radius: 4px;">
+
+                    <div class="preview-pane">
+                        <img id="preview" src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg">
+                        <div class="mt-20">
+                            <div class="text-sub mb-10">Market Price</div>
+                            <div id="marketPrice" style="font-size:24px; font-weight:800; color:var(--green); margin-bottom:20px;">--</div>
+                            <button onclick="addCard(this, false)" class="mb-10" style="background:linear-gradient(45deg, var(--primary), #d946ef); box-shadow:0 10px 20px rgba(167, 139, 250, 0.3);">Add to Collection</button>
+                            <button onclick="addCard(this, true)" class="secondary">Add to Wishlist</button>
+                        </div>
                     </div>
-                    <div class="flex-row">
-                        <button onclick="addCard(this, false)">Add to Collection</button>
-                        <button onclick="addCard(this, true)" class="secondary">Wishlist</button>
-                    </div>
-                    <textarea id="bulkList" class="hidden"></textarea>
                 </div>
             </div>
 
@@ -499,7 +521,7 @@
 
                     <div class="bf-side-zone">
                         <div class="pile-card" onclick="drawCard()">
-                            <img src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg">
+                            <img src="https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg">
                             <div class="pile-count" id="bf-lib-count">99</div>
                             <div class="pile-label">Library</div>
                         </div>
@@ -514,8 +536,7 @@
                     </div>
                 </div>
 
-                <div class="bf-hand-shelf" id="bf-hand" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)">
-                    </div>
+                <div class="bf-hand-shelf" id="bf-hand" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)"></div>
             </div>
             
             <div id="view-oracle" class="hidden view-section"><h2>Wishlist</h2><div id="oracle-grid" class="collection-grid mt-20"></div></div>
@@ -581,7 +602,7 @@
         const EMAILJS_SERVICE_ID = 'service_n9utr47';
         const EMAILJS_TEMPLATE_ID = 'template_xtth5gu';
         const EMAILJS_PUBLIC_KEY = 'ohGLAW9gp3OUPH0uf';
-        const CARD_BACK_URL = "https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg";
+        const CARD_BACK_URL = "https://c1.scryfall.com/file/scryfall-card-backs/large/59/597b79b3-7d77-4261-871a-60dd17403388.jpg";
 
         window.onerror = function(msg, url, line) { console.error("Error on line " + line + ": " + msg); return false; };
 
@@ -593,14 +614,13 @@
         const CHART_COLORS=['#a78bfa','#dc2626','#a78bfa','#4f46e5','#059669','#737373','#facc15'];
         let suggestedLands = [];
 
-        // --- HELPERS (CRASH PROOF) ---
+        // --- HELPERS ---
         function setLoading(btn, isLoading) { if(!btn) return; if(isLoading) btn.classList.add('btn-loading'); else btn.classList.remove('btn-loading'); }
         function showToast(msg) { let c=document.getElementById('toast-container'); let e=document.createElement('div'); e.className='toast'; e.innerHTML=`<span>${msg}</span>`; c.appendChild(e); setTimeout(()=>e.remove(), 3000); }
         function setText(id, val) { const el = document.getElementById(id); if(el) el.innerText = val; }
         function setHTML(id, val) { const el = document.getElementById(id); if(el) el.innerHTML = val; }
         function getValue(id) { const el = document.getElementById(id); return el ? el.value : ''; }
         
-        // FIXED IMAGE LOADER (V11.4: LIBRARIAN)
         function getCardImage(c) {
              if(!c) return CARD_BACK_URL;
              if(c.image_uris?.normal) return c.image_uris.normal;
@@ -614,7 +634,132 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- AUTH ---
+        // --- BATTLEFIELD V11.0 LOGIC ---
+        function initBattlefield() {
+            document.getElementById('view-decks').classList.add('hidden');
+            document.getElementById('view-battlefield').classList.remove('hidden');
+            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:40, turn:1 };
+            
+            // Build library from current deck
+            currentDeckCache.forEach(c => {
+                for(let i=0; i<c.qty; i++) {
+                    gameState.lib.push({ uid: Math.random().toString(36).substr(2, 9), ...c, tapped:false, counters:0 });
+                }
+            });
+            // Shuffle
+            for(let i=gameState.lib.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
+            
+            // Draw 7
+            for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
+            renderBF();
+        }
+
+        function renderBF() {
+            setText('bf-lib-count', gameState.lib.length);
+            setText('bf-grave-count', gameState.grave.length);
+            setText('bf-exile-count', gameState.exile.length);
+            setText('bf-life', gameState.life);
+            setText('bf-turn', gameState.turn);
+
+            // Hand
+            setHTML('bf-hand', gameState.hand.map(c => 
+                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
+                    <img src="${getCardImage(c)}" draggable="false">
+                </div>`
+            ).join(''));
+            
+            const cardHTML = (c) => `
+                <div class="bf-card ${c.tapped?'bf-tapped':''}" id="${c.uid}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="handleCardContext(event, '${c.uid}')">
+                    ${c.counters > 0 ? `<div class="counter-badge">+${c.counters}</div>` : ''}
+                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff; border-radius:9px; font-weight:bold; font-size:12px; text-align:center; padding:5px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`}
+                </div>
+            `;
+            
+            const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
+            const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
+            
+            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
+        }
+
+        // Context Menu Logic
+        function handleCardContext(e, uid) {
+            e.preventDefault();
+            const menu = document.getElementById('card-ctx-menu');
+            menu.style.top = e.clientY + 'px';
+            menu.style.left = e.clientX + 'px';
+            menu.classList.remove('hidden');
+            
+            menu.innerHTML = `
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'counter')">Add Counter 🎲</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'untap')">Untap 🔄</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'bounce')">Bounce to Hand ✋</div>
+                <div class="ctx-divider"></div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'grave')" style="color:var(--red);">Destroy 💀</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'exile')" style="color:var(--blue);">Exile ✨</div>
+            `;
+        }
+        
+        function hideContextMenu() { document.getElementById('card-ctx-menu').classList.add('hidden'); }
+        
+        function modifyCard(uid, action) {
+            const idx = gameState.field.findIndex(c => c.uid === uid);
+            if(idx === -1) return;
+            const card = gameState.field[idx];
+            
+            if(action === 'counter') card.counters = (card.counters || 0) + 1;
+            if(action === 'untap') card.tapped = false;
+            if(action === 'bounce') { gameState.field.splice(idx, 1); gameState.hand.push(card); }
+            if(action === 'grave') { gameState.field.splice(idx, 1); gameState.grave.push(card); }
+            if(action === 'exile') { gameState.field.splice(idx, 1); gameState.exile.push(card); }
+            
+            renderBF();
+            hideContextMenu();
+        }
+
+        function openTokenMenu() {
+            const tokens = ['Soldier 1/1', 'Goblin 1/1', 'Zombie 2/2', 'Angel 4/4', 'Treasure', 'Clue', 'Food'];
+            setHTML('token-grid', tokens.map(t => `<button onclick="spawnToken('${t}')">${t}</button>`).join(''));
+            document.getElementById('token-modal').classList.remove('hidden');
+        }
+        
+        function spawnToken(name) {
+            gameState.field.push({ uid: Math.random().toString(36), name: name, isToken: true, type: 'Creature Token', tapped: false });
+            document.getElementById('token-modal').classList.add('hidden');
+            renderBF();
+        }
+        
+        function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
+        function tapCard(uid) { const c = gameState.field.find(c => c.uid === uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
+        function updateLife(n) { gameState.life += n; renderBF(); }
+        function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
+        function exitBattlefield() { nav('decks'); }
+
+        // Drag & Drop
+        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
+        function drop(ev, target) {
+            ev.preventDefault();
+            document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
+            const uid = ev.dataTransfer.getData("uid");
+            
+            // Find card source
+            let card, sourceArr;
+            ['hand','field','grave','exile','lib'].forEach(z => {
+                const idx = gameState[z].findIndex(c => c.uid === uid);
+                if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
+            });
+            
+            if(card) {
+                if(target === 'field') gameState.field.push(card);
+                else if(target === 'hand') gameState.hand.push(card);
+                else if(target === 'grave') gameState.grave.push(card);
+                else if(target === 'exile') gameState.exile.push(card);
+                renderBF();
+            }
+        }
+        
+        // --- STANDARD APP LOGIC (V10.10) ---
         async function handleAuthAction(btn) {
             setLoading(btn, true);
             const e=getValue('email'), p=getValue('password');
@@ -647,17 +792,15 @@
             setText('user-email', session.user.email);
         }
 
-        // --- BUG REPORT ---
         async function sendBugReport(btn) {
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.4' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.5' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
 
-        // --- NAVIGATION ---
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
             const view = document.getElementById('view-'+v);
@@ -690,7 +833,6 @@
             localStorage.setItem('grimoire_theme', theme);
         }
 
-        // --- DATA ---
         async function loadData() {
             const { data } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             cardsCache = data || [];
@@ -872,6 +1014,16 @@
             tempCardData = v;
         }
 
+        // V11.5 SESSION HISTORY
+        function appendToSessionLog(name) {
+            const log = document.getElementById('session-log');
+            if(log.innerText === "Ready to forge.") log.innerHTML = "";
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.innerHTML = `<span>${name}</span> <span style="color:var(--green)">✓ Added</span>`;
+            log.prepend(div);
+        }
+
         async function addCard(btn, isWishlist) {
             if(!tempCardData) return showToast("Select card");
             setLoading(btn, true);
@@ -895,7 +1047,12 @@
                 rarity: tempCardData.rarity
             });
             setLoading(btn, false);
-            if(error) showToast("Error"); else { showToast("Saved"); loadData(); }
+            if(error) showToast("Error"); 
+            else { 
+                showToast("Saved"); 
+                appendToSessionLog(tempCardData.name); 
+                loadData(); 
+            }
         }
         
         function handleCSVUpload(input) {
@@ -941,29 +1098,21 @@
              loadData();
         }
 
-        // --- V11.4 LIBRARIAN FIX ---
         async function loadDecks() {
-            const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
-            if(error) { console.error("Load Error:", error); return; } 
-            
+            const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             window.myDecks = data||[];
             const grid = document.getElementById('deck-grid-container');
-            
-            if(window.myDecks.length === 0) {
-                setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
-            } else {
-                setHTML('deck-grid-container', window.myDecks.map(d => {
-                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
-                    const bg = d.cover_url || CARD_BACK_URL;
-                    
-                    return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
-                        <div class="deck-card-content">
-                            <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
-                            <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
-                        </div>
-                    </div>`;
-                }).join(''));
-            }
+            if(window.myDecks.length === 0) setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
+            else setHTML('deck-grid-container', window.myDecks.map(d => {
+                const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
+                const bg = d.cover_url || CARD_BACK_URL;
+                return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
+                    <div class="deck-card-content">
+                        <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)">✕</span></div>
+                        <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
+                    </div>
+                </div>`;
+            }).join(''));
         }
         
         function showRitualEditor(keep) {
@@ -1108,47 +1257,24 @@
             manaCurveInstance = new Chart(ctx, { type:'bar', data:{labels:l,datasets:[{data:v,backgroundColor:'#a78bfa'}]}, options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#a1a1aa'}},y:{ticks:{color:'#a1a1aa'}}}} });
         }
 
-        // V11.4: SAVE FIX WITH DEBUGGING
         async function saveDeck(btn) {
             setLoading(btn, true);
             const name = getValue('deckName');
             const main = getValue('deckMain');
-            
             try {
-                if(!name) throw new Error("Deck Name is required");
-                if(!session || !session.user) throw new Error("You must be logged in");
-
+                if(!name) throw new Error("Name required");
                 const payload = { 
-                    user_id: session.user.id, 
-                    name: name, 
-                    card_list: main, 
-                    format: document.getElementById('deckFormat').value,
-                    cover_url: currentDeckCache[0]?.img || CARD_BACK_URL, // Use default if no image
+                    user_id:session.user.id, name:name, card_list:main, 
+                    format:document.getElementById('deckFormat').value,
+                    cover_url: currentDeckCache[0]?.img || CARD_BACK_URL,
                     structured_list: window.currentDeckStructuredList
                 };
                 
-                let error;
-                if(currentViewedDeckId) {
-                    const res = await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
-                    error = res.error;
-                } else {
-                    const res = await sb.from('decks').insert(payload);
-                    error = res.error;
-                }
-
-                if(error) {
-                    console.error("Supabase Error:", error);
-                    throw new Error(error.message);
-                }
+                if(currentViewedDeckId) await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
+                else await sb.from('decks').insert(payload);
                 
-                showToast("Deck Saved Successfully!"); 
-                loadDecks(); 
-            } catch(e) { 
-                console.error(e);
-                showToast("Save Failed: " + e.message); 
-            } finally { 
-                setLoading(btn, false); 
-            }
+                showToast("Saved!", "success"); loadDecks();
+            } catch(e) { showToast(e.message||"Error", "error"); } finally { setLoading(btn, false); }
         }
 
         // --- TOOLS ---
@@ -1212,7 +1338,7 @@
                     const count = Math.round((t.v/total)*target);
                     if(count>0) {
                         suggestedLands.push({name:t.n, qty:count});
-                        html+=`<div class="mana-row"><div><span class="mana-pip ${t.c}"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
+                        html+=`<div class="flex-between mb-10"><div><span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:var(--subtext); margin-right:5px;"></span> ${t.n}</div><div class="text-bold">${count}</div></div>`;
                     }
                 }
             });
@@ -1229,98 +1355,12 @@
             updateLiveEditorStats();
         }
 
-        // --- BATTLEFIELD (RESTORED V9.0) ---
-        function initBattlefield() {
-            document.getElementById('view-decks').classList.add('hidden');
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:20, turn:1 };
-            currentDeckCache.forEach(c => {
-                for(let i=0; i<c.qty; i++) gameState.lib.push({ uid:Math.random(), ...c, tapped:false });
-            });
-            // Shuffle
-            for(let i=gameState.lib.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
-            for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
-            renderBF();
-        }
-        function renderBF() {
-            setText('bf-lib-count', gameState.lib.length);
-            setText('bf-grave-count', gameState.grave.length);
-            setText('bf-exile-count', gameState.exile.length);
-            setText('bf-life', gameState.life);
-            setText('bf-turn', gameState.turn);
-
-            setHTML('bf-hand', gameState.hand.map(c => 
-                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
-                    <img src="${getCardImage(c)}" draggable="false">
-                </div>`
-            ).join(''));
-            
-            const cardHTML = (c) => `
-                <div class="bf-card ${c.tapped?'bf-tapped':''}" id="${c.uid}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="handleCardContext(event, '${c.uid}')">
-                    ${c.counters > 0 ? `<div class="counter-badge">+${c.counters}</div>` : ''}
-                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff; border-radius:9px; font-weight:bold; font-size:12px; text-align:center; padding:5px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`}
-                </div>
-            `;
-            
-            const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
-            const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
-            
-            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
-            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
-        }
-        
-        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
-        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
-        function drop(ev, target) {
-            ev.preventDefault();
-            document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
-            const uid = ev.dataTransfer.getData("uid");
-            
-            // Find card source
-            let card, sourceArr;
-            ['hand','field','grave','exile','lib'].forEach(z => {
-                const idx = gameState[z].findIndex(c => c.uid === uid);
-                if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
-            });
-            
-            if(card) {
-                if(target === 'field') gameState.field.push(card);
-                else if(target === 'hand') gameState.hand.push(card);
-                else if(target === 'grave') gameState.grave.push(card);
-                else if(target === 'exile') gameState.exile.push(card);
-                renderBF();
-            }
-        }
-        
-        function playCard(uid) {
-            const idx = gameState.hand.findIndex(c => c.uid == uid);
-            if(idx > -1) { gameState.field.push(gameState.hand.splice(idx, 1)[0]); renderBF(); }
-        }
-        function tapCard(uid) { const c = gameState.field.find(c => c.uid == uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
-        function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
-        function updateLife(n) { gameState.life += n; renderBF(); }
-        function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
-        function killCard(uid, e) { 
-            e.preventDefault(); 
-            const idx = gameState.field.findIndex(c => c.uid == uid);
-            if(idx > -1) { 
-                const c = gameState.field.splice(idx, 1)[0]; 
-                c.tapped = false; gameState.grave.push(c); 
-                renderBF(); 
-            } 
-        }
-        function createToken() {
-            const n = prompt("Token Name");
-            if(n) { gameState.field.push({ uid:Math.random(), name:n, isToken:true, type:'Creature' }); renderBF(); }
-        }
-        
         function viewRitualDetails(id) { 
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deck-library').classList.add('hidden');
             document.getElementById('deck-workspace').classList.remove('hidden');
             document.getElementById('editor-mode').classList.add('hidden');
             document.getElementById('detail-mode').classList.remove('hidden');
-
             currentViewedDeckId = id;
             document.getElementById('deckName').value = d.name;
             document.getElementById('deckMain').value = d.card_list;
