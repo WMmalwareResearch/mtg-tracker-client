@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v12.4 (The Missing Link)</title>
+    <title>The Grimoire | v12.5 (The Vaultkeeper)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -667,7 +667,7 @@
             "https://svgshare.com/i/10gv.svg"
         ];
 
-        // --- CORE FUNCTIONS (MOVED TO TOP) ---
+        // --- CORE FUNCTIONS (MOVED TO TOP TO PREVENT REFERENCE ERRORS) ---
         
         function nav(v) {
             document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
@@ -1439,7 +1439,7 @@
                     user_id:session.user.id, name:name, card_list:main, 
                     format:document.getElementById('deckFormat').value,
                     cover_url: currentDeckCache[0]?.img || CARD_BACK_URL,
-                    structured_list: window.currentDeckStructuredList
+                    structured_list: window.currentDeckStructuredList || []
                 };
                 
                 if(currentViewedDeckId) await sb.from('decks').update(payload).eq('id', currentViewedDeckId);
