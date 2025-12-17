@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v11.0 (War Room)</title>
+    <title>The Grimoire | v11.1 (Commander's Table)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,7 +39,7 @@
             flex-direction: column; 
             overflow: hidden; 
             font-size: 14px;
-            user-select: none; /* Prevent text selection during drag */
+            user-select: none;
         }
         
         * { box-sizing: border-box; outline: none; }
@@ -57,7 +57,6 @@
         .sidebar { 
             background: rgba(10, 5, 20, 0.85); 
             backdrop-filter: blur(25px); 
-            -webkit-backdrop-filter: blur(25px);
             padding: 30px 20px; 
             display: flex; 
             flex-direction: column; 
@@ -93,7 +92,6 @@
         .card-box { 
             background: var(--card-bg); 
             backdrop-filter: blur(16px); 
-            -webkit-backdrop-filter: blur(16px);
             padding: 24px; 
             border-radius: 20px; 
             border: 1px solid var(--card-border); 
@@ -163,9 +161,10 @@
         .grid-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 25px -5px var(--primary-glow); }
         .grid-card img { width: 100%; height: 100%; object-fit: cover; }
         
-        .deck-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; height: 320px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center; }
+        .deck-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; height: 320px; display: flex; flex-direction: column; justify-content: flex-end; position: relative; overflow: hidden; cursor: pointer; transition: all 0.3s; background-size: cover; background-position: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
         .deck-card:hover { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 20px 40px -5px var(--primary-glow); }
-        .deck-card-content { position: relative; z-index: 2; padding: 25px; background: linear-gradient(to top, #050308 10%, transparent 100%); }
+        .deck-card::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, #050308 10%, rgba(5, 3, 8, 0.8) 50%, transparent 100%); z-index: 1; }
+        .deck-card-content { position: relative; z-index: 2; padding: 25px; }
         .deck-card h4 { margin: 0 0 5px 0; font-size: 18px; color: white; }
 
         /* Badges */
@@ -173,7 +172,6 @@
         .gain-badge { right: 8px; color: var(--green); } .qty-badge { left: 8px; color: white; }
         .overlay { position: absolute; bottom: 0; width: 100%; padding: 12px; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); display:flex; justify-content: space-between; align-items: flex-end; opacity: 0; transition: 0.2s; }
         .grid-card:hover .overlay { opacity: 1; }
-        
         .tag-pill { background: var(--primary); color: white; font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
         .format-badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 
@@ -191,17 +189,14 @@
         .text-green { color: var(--green); } .text-red { color: var(--red); }
         .w-full { width: 100%; }
         
-        /* Modals */
+        /* Modals & Loading */
         .modal-overlay { position: fixed; inset: 0; background: rgba(5, 3, 10, 0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(8px); }
         .modal-content { width: 90%; max-width: 800px; }
-        
         .toast { background: rgba(30, 20, 45, 0.9); backdrop-filter: blur(12px); border: 1px solid var(--primary); color: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-weight: 600; animation: slideInRight 0.3s ease-out; }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
-
         .btn-loading { color: transparent !important; pointer-events: none; }
         .btn-loading::after { content: ""; position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
         .empty-state { text-align: center; color: var(--subtext); padding: 60px; border: 2px dashed var(--border); border-radius: 20px; background: rgba(0,0,0,0.1); }
         
         /* Deck Details */
@@ -217,31 +212,42 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* --- BATTLEFIELD 11.0: WAR ROOM --- */
-        .bf-hud { height: 80px; background: rgba(5, 3, 8, 0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 100; backdrop-filter: blur(10px); }
-        .bf-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background: radial-gradient(circle, #2d153c 10%, #050308 100%); /* Playmat Texture */ }
-        .bf-row { flex: 1; padding: 30px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 15px; border-bottom: 2px dashed rgba(255,255,255,0.05); overflow-y: auto; transition: background 0.2s; }
+        /* --- BATTLEFIELD V11.1 LAYOUT (The Commander Table) --- */
+        .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
+        .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
         
-        /* Card Zones */
-        .bf-hand-area { height: 260px; background: rgba(5, 3, 8, 0.95); border-top: 1px solid var(--border); padding: 20px; display: flex; gap: 20px; overflow-x: auto; align-items: center; backdrop-filter: blur(10px); }
+        /* The Board (Center) */
+        .bf-board { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; background: radial-gradient(circle at center, #25103a 0%, #050308 90%); }
+        .bf-zone-label { position: absolute; left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); color: rgba(255,255,255,0.1); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 5px; pointer-events: none; }
+        .bf-row { flex: 1; padding: 20px 40px; display: flex; flex-wrap: wrap; align-content: center; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); overflow-y: auto; position: relative; }
         
-        .bf-card { width: 140px; border-radius: 9px; cursor: grab; position: relative; transition: 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); user-select: none; }
-        .bf-card img { width: 100%; border-radius: 9px; pointer-events: none; }
-        .bf-card:hover { transform: scale(1.15) translateY(-20px); z-index: 100; box-shadow: 0 0 30px var(--primary); }
-        .bf-card:active { cursor: grabbing; }
-        .bf-tapped { transform: rotate(90deg); filter: brightness(0.8); transition: 0.2s; }
-        
-        .drag-over { background: rgba(167, 139, 250, 0.15) !important; border-color: var(--primary) !important; }
-        .counter-badge { position: absolute; top: -8px; right: -8px; background: var(--red); color: white; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid #000; z-index: 20; font-weight: 800; box-shadow: 0 4px 10px black; }
+        /* The Side Zone (Library/Grave) */
+        .bf-side-zone { background: rgba(0,0,0,0.4); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
+        .pile-card { width: 100%; aspect-ratio: 2.5/3.5; border-radius: 6px; background: #1a1a1a; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative; }
+        .pile-card:hover { border-color: var(--primary); transform: scale(1.05); }
+        .pile-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; opacity: 0.5; }
+        .pile-count { position: absolute; font-size: 18px; font-weight: 800; text-shadow: 0 2px 4px black; z-index: 2; }
+        .pile-label { font-size: 10px; text-transform: uppercase; color: var(--subtext); margin-top: 5px; }
 
-        /* Context Menu (V11.0) */
+        /* The Hand (Fixed Bottom) */
+        .bf-hand-shelf { grid-column: 1 / -1; height: 160px; background: linear-gradient(to top, #050308 80%, transparent); border-top: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: flex-end; justify-content: center; gap: -20px; z-index: 30; overflow-x: visible; }
+        .bf-hand-card { width: 110px; border-radius: 8px; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: grab; transform-origin: bottom center; margin: 0 -15px; box-shadow: -5px 0 15px rgba(0,0,0,0.5); border: 1px solid #000; }
+        .bf-hand-card:hover { transform: translateY(-40px) scale(1.4) !important; z-index: 100; margin: 0 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .bf-hand-card img { width: 100%; border-radius: 8px; pointer-events: none; }
+
+        /* Cards on Board */
+        .bf-card { width: 100px; border-radius: 6px; cursor: grab; position: relative; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .bf-card img { width: 100%; border-radius: 6px; pointer-events: none; }
+        .bf-card:hover { transform: scale(1.2); z-index: 50; box-shadow: 0 0 20px var(--primary); }
+        .bf-tapped { transform: rotate(90deg); filter: brightness(0.8); }
+        .counter-badge { position: absolute; top: -5px; right: -5px; background: var(--red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 800; border: 2px solid black; }
+        .drag-over { background: rgba(167, 139, 250, 0.1); box-shadow: inset 0 0 20px var(--primary); }
+        
+        /* Context Menu */
         .context-menu { position: fixed; background: rgba(20, 15, 30, 0.95); border: 1px solid var(--border); border-radius: 8px; padding: 5px; z-index: 2000; display: flex; flex-direction: column; width: 160px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px black; }
         .ctx-item { padding: 10px 15px; cursor: pointer; color: white; font-size: 13px; font-weight: 500; border-radius: 6px; transition: 0.1s; display: flex; justify-content: space-between; }
         .ctx-item:hover { background: var(--primary); color: white; }
         .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
-        
-        /* Token Menu */
-        .token-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -275,8 +281,7 @@
     <div id="token-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
         <div class="card-box" style="max-width: 500px;">
             <h2>Summon Token</h2>
-            <div class="collection-grid" id="token-grid">
-                </div>
+            <div class="collection-grid" id="token-grid"></div>
         </div>
     </div>
 
@@ -461,39 +466,50 @@
             </div>
             
             <div id="view-battlefield" class="hidden">
-                <div class="bf-hud">
-                    <div class="flex-row">
-                        <button class="secondary btn-sm" onclick="exitBattlefield()">Exit</button>
-                        <div class="text-bold" style="font-size:20px; color:white;">Life: <span id="bf-life">20</span></div>
-                        <button class="btn-sm" onclick="updateLife(1)">+</button><button class="btn-sm" onclick="updateLife(-1)">-</button>
+                <div class="bf-grid-layout">
+                    <div style="display:flex; flex-direction:column; height:100%; border-right:1px solid var(--border);">
+                        <div class="bf-hud">
+                            <div class="flex-row">
+                                <button class="secondary btn-sm" onclick="exitBattlefield()">Exit</button>
+                                <div class="text-bold" style="font-size:20px; color:white;">Life: <span id="bf-life">20</span></div>
+                                <button class="btn-sm" onclick="updateLife(1)">+</button><button class="btn-sm" onclick="updateLife(-1)">-</button>
+                            </div>
+                            <div class="flex-row">
+                                <div class="text-sub">Turn: <span id="bf-turn">1</span></div>
+                                <button class="btn-sm" onclick="nextTurn()">Next Turn</button>
+                                <button class="btn-sm" style="background:var(--blue);" onclick="openTokenMenu()">Token</button>
+                                <button class="btn-sm" style="background:var(--red);" onclick="initBattlefield()">Reset</button>
+                            </div>
+                        </div>
+                        <div class="bf-board">
+                            <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)">
+                                <div class="bf-zone-label">Combat</div>
+                            </div>
+                            <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)" style="border-bottom:none; background:rgba(0,0,0,0.2);">
+                                <div class="bf-zone-label">Lands</div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex-row">
-                        <div class="text-sub">Turn: <span id="bf-turn">1</span></div>
-                        <button class="btn-sm" onclick="nextTurn()">Next Turn</button>
-                        <button class="btn-sm" style="background:var(--blue);" onclick="openTokenMenu()">Token</button>
-                        <button class="btn-sm" style="background:var(--red);" onclick="initBattlefield()">Reset</button>
+
+                    <div class="bf-side-zone">
+                        <div class="pile-card" onclick="drawCard()">
+                            <img src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg">
+                            <div class="pile-count" id="bf-lib-count">99</div>
+                            <div class="pile-label">Library</div>
+                        </div>
+                        <div class="pile-card" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)">
+                            <div class="pile-count" id="bf-grave-count">0</div>
+                            <div class="pile-label">Grave</div>
+                        </div>
+                        <div class="pile-card" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)">
+                            <div class="pile-count" id="bf-exile-count">0</div>
+                            <div class="pile-label">Exile</div>
+                        </div>
                     </div>
                 </div>
-                <div class="bf-main">
-                    <div id="bf-frontline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)">
-                        </div>
-                    <div id="bf-backline" class="bf-row" ondrop="drop(event, 'field')" ondragover="allowDrop(event)">
-                        </div>
-                </div>
-                <div class="bf-hand-area">
-                    <div style="border:1px solid var(--subtext); padding:20px; border-radius:8px; cursor:pointer; background:rgba(0,0,0,0.5);" onclick="drawCard()">
-                        <img src="https://cards.scryfall.io/large/front/0/0/00000000-0000-0000-0000-000000000000.jpg" style="width:100px; border-radius:6px;">
-                        <div style="text-align:center; margin-top:5px; font-weight:700;">Library (<span id="bf-lib-count">0</span>)</div>
+
+                <div class="bf-hand-shelf" id="bf-hand" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)">
                     </div>
-                    <div style="border:1px solid var(--red); padding:10px; border-radius:8px; min-width:100px; text-align:center;" ondrop="drop(event, 'grave')" ondragover="allowDrop(event)" onclick="viewPile('grave')">
-                        Grave (<span id="bf-grave-count">0</span>)
-                    </div>
-                    <div style="border:1px solid var(--blue); padding:10px; border-radius:8px; min-width:100px; text-align:center;" ondrop="drop(event, 'exile')" ondragover="allowDrop(event)" onclick="viewPile('exile')">
-                        Exile (<span id="bf-exile-count">0</span>)
-                    </div>
-                    <div id="bf-hand" style="flex:1; display:flex; gap:10px; overflow-x:auto; align-items:center; padding:10px;" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)">
-                        </div>
-                </div>
             </div>
             
             <div id="view-oracle" class="hidden view-section"><h2>Wishlist</h2><div id="oracle-grid" class="collection-grid mt-20"></div></div>
@@ -591,11 +607,11 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- BATTLEFIELD V11.0 LOGIC ---
+        // --- BATTLEFIELD V11.1 LOGIC ---
         function initBattlefield() {
             document.getElementById('view-decks').classList.add('hidden');
             document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:20, turn:1 };
+            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:40, turn:1 };
             
             // Build library from current deck
             currentDeckCache.forEach(c => {
@@ -620,7 +636,7 @@
 
             // Hand
             setHTML('bf-hand', gameState.hand.map(c => 
-                `<div class="bf-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
+                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
                     <img src="${getCardImage(c)}" draggable="false">
                 </div>`
             ).join(''));
@@ -635,8 +651,8 @@
             const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
             const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
             
-            setHTML('bf-backline', lands.map(cardHTML).join(''));
-            setHTML('bf-frontline', spells.map(cardHTML).join(''));
+            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
         }
 
         // Context Menu Logic
@@ -694,7 +710,7 @@
 
         // Drag & Drop
         function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
-        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-area div')?.classList.add('drag-over'); }
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
         function drop(ev, target) {
             ev.preventDefault();
             document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
@@ -753,7 +769,7 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.0' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.1' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
@@ -1295,6 +1311,131 @@
             updateLiveEditorStats();
         }
 
+        // --- BATTLEFIELD V11.0 LOGIC ---
+        function initBattlefield() {
+            document.getElementById('view-decks').classList.add('hidden');
+            document.getElementById('view-battlefield').classList.remove('hidden');
+            gameState = { lib:[], hand:[], field:[], grave:[], exile:[], life:40, turn:1 };
+            
+            // Build library from current deck
+            currentDeckCache.forEach(c => {
+                for(let i=0; i<c.qty; i++) {
+                    gameState.lib.push({ uid: Math.random().toString(36).substr(2, 9), ...c, tapped:false, counters:0 });
+                }
+            });
+            // Shuffle
+            for(let i=gameState.lib.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [gameState.lib[i],gameState.lib[j]]=[gameState.lib[j],gameState.lib[i]]; }
+            
+            // Draw 7
+            for(let i=0; i<7; i++) gameState.hand.push(gameState.lib.pop());
+            renderBF();
+        }
+
+        function renderBF() {
+            setText('bf-lib-count', gameState.lib.length);
+            setText('bf-grave-count', gameState.grave.length);
+            setText('bf-exile-count', gameState.exile.length);
+            setText('bf-life', gameState.life);
+            setText('bf-turn', gameState.turn);
+
+            // Hand
+            setHTML('bf-hand', gameState.hand.map(c => 
+                `<div class="bf-hand-card" draggable="true" ondragstart="drag(event, '${c.uid}')">
+                    <img src="${getCardImage(c)}" draggable="false">
+                </div>`
+            ).join(''));
+            
+            const cardHTML = (c) => `
+                <div class="bf-card ${c.tapped?'bf-tapped':''}" id="${c.uid}" draggable="true" ondragstart="drag(event, '${c.uid}')" onclick="tapCard('${c.uid}')" oncontextmenu="handleCardContext(event, '${c.uid}')">
+                    ${c.counters > 0 ? `<div class="counter-badge">+${c.counters}</div>` : ''}
+                    ${c.isToken ? `<div style="background:#333; height:100%; display:flex; align-items:center; justify-content:center; border:1px solid #fff; border-radius:9px; font-weight:bold; font-size:12px; text-align:center; padding:5px;">${c.name}</div>` : `<img src="${getCardImage(c)}" draggable="false">`}
+                </div>
+            `;
+            
+            const lands = gameState.field.filter(c => c.type && c.type.toLowerCase().includes('land'));
+            const spells = gameState.field.filter(c => !c.type || !c.type.toLowerCase().includes('land'));
+            
+            setHTML('bf-backline', `<div class="bf-zone-label">Lands</div>` + lands.map(cardHTML).join(''));
+            setHTML('bf-frontline', `<div class="bf-zone-label">Combat</div>` + spells.map(cardHTML).join(''));
+        }
+
+        // Context Menu Logic
+        function handleCardContext(e, uid) {
+            e.preventDefault();
+            const menu = document.getElementById('card-ctx-menu');
+            menu.style.top = e.clientY + 'px';
+            menu.style.left = e.clientX + 'px';
+            menu.classList.remove('hidden');
+            
+            menu.innerHTML = `
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'counter')">Add Counter 🎲</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'untap')">Untap 🔄</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'bounce')">Bounce to Hand ✋</div>
+                <div class="ctx-divider"></div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'grave')" style="color:var(--red);">Destroy 💀</div>
+                <div class="ctx-item" onclick="modifyCard('${uid}', 'exile')" style="color:var(--blue);">Exile ✨</div>
+            `;
+        }
+        
+        function hideContextMenu() { document.getElementById('card-ctx-menu').classList.add('hidden'); }
+        
+        function modifyCard(uid, action) {
+            const idx = gameState.field.findIndex(c => c.uid === uid);
+            if(idx === -1) return;
+            const card = gameState.field[idx];
+            
+            if(action === 'counter') card.counters = (card.counters || 0) + 1;
+            if(action === 'untap') card.tapped = false;
+            if(action === 'bounce') { gameState.field.splice(idx, 1); gameState.hand.push(card); }
+            if(action === 'grave') { gameState.field.splice(idx, 1); gameState.grave.push(card); }
+            if(action === 'exile') { gameState.field.splice(idx, 1); gameState.exile.push(card); }
+            
+            renderBF();
+            hideContextMenu();
+        }
+
+        function openTokenMenu() {
+            const tokens = ['Soldier 1/1', 'Goblin 1/1', 'Zombie 2/2', 'Angel 4/4', 'Treasure', 'Clue', 'Food'];
+            setHTML('token-grid', tokens.map(t => `<button onclick="spawnToken('${t}')">${t}</button>`).join(''));
+            document.getElementById('token-modal').classList.remove('hidden');
+        }
+        
+        function spawnToken(name) {
+            gameState.field.push({ uid: Math.random().toString(36), name: name, isToken: true, type: 'Creature Token', tapped: false });
+            document.getElementById('token-modal').classList.add('hidden');
+            renderBF();
+        }
+        
+        function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
+        function tapCard(uid) { const c = gameState.field.find(c => c.uid === uid); if(c) { c.tapped = !c.tapped; renderBF(); } }
+        function updateLife(n) { gameState.life += n; renderBF(); }
+        function nextTurn() { gameState.turn++; gameState.field.forEach(c => c.tapped = false); drawCard(); }
+        function exitBattlefield() { nav('decks'); }
+
+        // Drag & Drop
+        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
+        function allowDrop(ev) { ev.preventDefault(); ev.target.closest('.bf-row, .bf-hand-shelf, .pile-card')?.classList.add('drag-over'); }
+        function drop(ev, target) {
+            ev.preventDefault();
+            document.querySelectorAll('.drag-over').forEach(e => e.classList.remove('drag-over'));
+            const uid = ev.dataTransfer.getData("uid");
+            
+            // Find card source
+            let card, sourceArr;
+            ['hand','field','grave','exile','lib'].forEach(z => {
+                const idx = gameState[z].findIndex(c => c.uid === uid);
+                if(idx > -1) { card = gameState[z][idx]; sourceArr = gameState[z]; sourceArr.splice(idx, 1); }
+            });
+            
+            if(card) {
+                if(target === 'field') gameState.field.push(card);
+                else if(target === 'hand') gameState.hand.push(card);
+                else if(target === 'grave') gameState.grave.push(card);
+                else if(target === 'exile') gameState.exile.push(card);
+                renderBF();
+            }
+        }
+        
         function viewRitualDetails(id) { 
             const d = window.myDecks.find(x => x.id == id);
             document.getElementById('deck-library').classList.add('hidden');
