@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v12.0 (The Archmage)</title>
+    <title>The Grimoire | v12.1 (Architect Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -118,13 +118,6 @@
         }
         .input-group input { padding-left: 42px; margin-bottom: 0; }
         
-        input:focus, select:focus, textarea:focus { 
-            border-color: var(--primary); 
-            background: rgba(0,0,0,0.4); 
-            box-shadow: 0 0 0 2px var(--primary-dim);
-        }
-        input:focus + .input-icon { color: var(--primary); }
-        
         button { 
             width: 100%; 
             padding: 12px 16px; 
@@ -219,7 +212,7 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* BATTLEFIELD (RESTORED V11.7) */
+        /* Battlefield */
         .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
         .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
         .bf-board { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; background: radial-gradient(circle at center, #25103a 0%, #050308 90%); }
@@ -256,7 +249,7 @@
         .pile-item:hover { transform: scale(1.05); z-index: 10; border: 2px solid var(--primary); border-radius: 8px; }
         .pile-item img { width: 100%; border-radius: 8px; }
 
-        /* ADD CARD FORGE (Restored V11.5 + V11.8 Fix) */
+        /* ADD CARD FORGE V11.8 */
         .add-grid { display: grid; grid-template-columns: 1fr 300px; gap: 30px; }
         @media (max-width: 900px) { .add-grid { grid-template-columns: 1fr; } }
         
@@ -266,7 +259,7 @@
         .preview-pane { position: sticky; top: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border); padding: 20px; text-align: center; }
         .preview-pane img { width: 100%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* Settings V11.9 (Artificer) */
+        /* Settings V11.9 */
         .theme-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
         .theme-btn { aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
         .theme-btn:hover { transform: scale(1.1); box-shadow: 0 0 10px currentColor; }
