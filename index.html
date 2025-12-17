@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v12.1 (Architect Fix)</title>
+    <title>The Grimoire | v12.2 (Structure Fix)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -687,7 +687,7 @@
         function showPreview(url, e) { const el=document.getElementById('hover-preview'); if(url){ el.src=url; el.style.display='block'; el.style.left=(e.clientX+20)+'px'; el.style.top=(e.clientY)+'px'; }}
         function hidePreview() { document.getElementById('hover-preview').style.display='none'; }
 
-        // --- AUTH & PROFILE V11.9 ---
+        // --- AUTH & PROFILE ---
         async function handleAuthAction(btn) {
             setLoading(btn, true);
             const e=getValue('email'), p=getValue('password');
@@ -708,7 +708,7 @@
                  await sb.from('profiles').upsert({id:session.user.id, username:u}); 
                  setLoading(btn,false); 
                  showToast("Saved");
-                 loadProfile(); // Refresh
+                 loadProfile(); 
              }
         }
         
@@ -719,13 +719,11 @@
             loadProfile();
             renderAvatarGrid();
             
-            // Load saved theme
             const savedTheme = localStorage.getItem('grimoire_theme');
             if(savedTheme) applyTheme(savedTheme);
         }
         
         async function loadProfile() {
-            // Load Avatar from Local Storage (Fast)
             const savedAvatar = localStorage.getItem('grimoire_avatar') || AVATARS[0];
             document.getElementById('sidebar-avatar').src = savedAvatar;
 
@@ -747,7 +745,6 @@
         function changeAvatar(url) {
             localStorage.setItem('grimoire_avatar', url);
             document.getElementById('sidebar-avatar').src = url;
-            // Visual feedback
             document.querySelectorAll('.avatar-option').forEach(img => img.classList.remove('selected'));
             event.target.classList.add('selected');
             showToast("Avatar Updated");
@@ -757,43 +754,12 @@
             const txt = getValue('bug-text');
             if(!txt) return showToast("Describe the bug first.");
             setLoading(btn, true);
-            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v11.9' };
+            const templateParams = { bug_description: txt, user_email: session ? session.user.email : 'Anonymous', app_version: 'v12.2' };
             try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY); showToast("Report Sent!"); document.getElementById('report-modal').classList.add('hidden'); document.getElementById('bug-text').value = ''; } catch(e) { console.error(e); showToast("Failed to send."); }
             setLoading(btn, false);
         }
 
-        function nav(v) {
-            document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
-            const view = document.getElementById('view-'+v);
-            if(view) {
-                view.classList.remove('hidden');
-                view.classList.remove('view-section');
-                void view.offsetWidth; 
-                view.classList.add('view-section');
-            }
-            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
-            const active = document.querySelector(`.nav-item[onclick="nav('${v}')"]`);
-            if(active) active.classList.add('active');
-            if(v === 'decks') loadDecks();
-            if(v === 'collection') loadCollection();
-            if(v === 'oracle') loadOracle();
-            document.getElementById('sidebar').classList.remove('mobile-open');
-        }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
-        function closeUserOptionsModal() { document.getElementById('user-options-modal').classList.add('hidden'); }
-        function openUserOptionsModal() { document.getElementById('user-options-modal').classList.remove('hidden'); }
-        function toggleResetMode() { showToast("Not implemented yet"); }
-
-        function applyTheme(theme) {
-            const root = document.documentElement;
-            if(theme==='white') { root.style.setProperty('--primary', '#fcd34d'); root.style.setProperty('--bg-dark', '#57534e'); }
-            else if(theme==='blue') { root.style.setProperty('--primary', '#60a5fa'); root.style.setProperty('--bg-dark', '#1e3a8a'); }
-            else if(theme==='red') { root.style.setProperty('--primary', '#f87171'); root.style.setProperty('--bg-dark', '#450a0a'); }
-            else if(theme==='green') { root.style.setProperty('--primary', '#34d399'); root.style.setProperty('--bg-dark', '#064e3b'); }
-            else { root.style.setProperty('--primary', '#a78bfa'); root.style.setProperty('--bg-dark', '#0f0a1c'); }
-            localStorage.setItem('grimoire_theme', theme);
-        }
-
+        // --- DATA ---
         async function loadData() {
             const { data } = await sb.from('cards').select('*').order('created_at', { ascending: false });
             cardsCache = data || [];
@@ -814,6 +780,63 @@
                     <img src="${getCardImage(c)}" loading="lazy" onerror="this.src='${CARD_BACK_URL}'">
                 </div>`
             ).join(''));
+        }
+
+        // --- DECK MANAGEMENT (MOVED UP FOR V12.2) ---
+        async function loadDecks() {
+            const { data, error } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+            if(error) { console.error("Load Error:", error); return; } 
+            
+            window.myDecks = data||[];
+            const grid = document.getElementById('deck-grid-container');
+            
+            if(window.myDecks.length === 0) {
+                setHTML('deck-grid-container', '<div class="empty-state">No decks. Create one!</div>');
+            } else {
+                setHTML('deck-grid-container', window.myDecks.map(d => {
+                    const count = d.card_count || (d.card_list ? d.card_list.split('\n').filter(x=>x.trim()).length : 0);
+                    const bg = d.cover_url || CARD_BACK_URL;
+                    return `<div class="deck-card animate-in" onclick="viewRitualDetails('${d.id}')" style="background-image:url('${bg}');">
+                        <div class="deck-card-content">
+                            <div class="flex-between"><h4>${d.name}</h4><span onclick="askDeleteDeck('${d.id}', event)" style="cursor:pointer; color:var(--red);">✕</span></div>
+                            <div class="deck-card-meta"><span>${count} Cards</span><span class="format-badge">${d.format}</span></div>
+                        </div>
+                    </div>`;
+                }).join(''));
+            }
+        }
+
+        // --- NAVIGATION ---
+        function nav(v) {
+            document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
+            const view = document.getElementById('view-'+v);
+            if(view) {
+                view.classList.remove('hidden');
+                view.classList.remove('view-section');
+                void view.offsetWidth; 
+                view.classList.add('view-section');
+            }
+            document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+            const active = document.querySelector(`.nav-item[onclick="nav('${v}', '${v}')"]`);
+            if(active) active.classList.add('active');
+            if(v === 'decks') loadDecks();
+            if(v === 'collection') loadCollection();
+            if(v === 'oracle') loadOracle();
+            document.getElementById('sidebar').classList.remove('mobile-open');
+        }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('mobile-open'); }
+        function closeUserOptionsModal() { document.getElementById('user-options-modal').classList.add('hidden'); }
+        function openUserOptionsModal() { document.getElementById('user-options-modal').classList.remove('hidden'); }
+        function toggleResetMode() { showToast("Not implemented yet"); }
+
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            if(theme==='white') { root.style.setProperty('--primary', '#fcd34d'); root.style.setProperty('--bg-dark', '#57534e'); }
+            else if(theme==='blue') { root.style.setProperty('--primary', '#60a5fa'); root.style.setProperty('--bg-dark', '#1e3a8a'); }
+            else if(theme==='red') { root.style.setProperty('--primary', '#f87171'); root.style.setProperty('--bg-dark', '#450a0a'); }
+            else if(theme==='green') { root.style.setProperty('--primary', '#34d399'); root.style.setProperty('--bg-dark', '#064e3b'); }
+            else { root.style.setProperty('--primary', '#a78bfa'); root.style.setProperty('--bg-dark', '#0f0a1c'); }
+            localStorage.setItem('grimoire_theme', theme);
         }
 
         function loadCollection() { filterVault(); }
