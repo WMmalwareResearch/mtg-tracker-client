@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.8 (The Alchemist)</title>
+    <title>The Grimoire | v14.7 (Restored)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -403,18 +403,9 @@
     </div>
     
     <div id="token-modal" class="modal-overlay hidden" onclick="if(event.target===this) this.classList.add('hidden')">
-        <div class="card-box" style="width: 600px; max-height:80vh; display:flex; flex-direction:column;">
-            <div class="flex-between mb-20">
-                <h2>Summon Token</h2>
-                <button class="secondary btn-sm" onclick="document.getElementById('token-modal').classList.add('hidden')">Close</button>
-            </div>
-            <div class="input-group">
-                <span class="input-icon">🔎</span>
-                <input id="token-search" placeholder="Search tokens (e.g. 'Goblin', 'Treasure')" onkeydown="if(event.key==='Enter') searchTokens()">
-            </div>
-            <div id="token-grid" class="collection-grid" style="overflow-y:auto; flex:1; padding:10px;">
-                <div class="text-sub" style="text-align:center; padding:20px;">Type a name and press Enter to search Scryfall for tokens.</div>
-            </div>
+        <div class="card-box" style="max-width: 500px;">
+            <h2>Summon Token</h2>
+            <div class="collection-grid" id="token-grid"></div>
         </div>
     </div>
 
@@ -1032,6 +1023,7 @@
             container.innerHTML = recent.map(d => {
                  let bg = d.cover_url || CARD_BACK_URL;
                  if(bg.includes('c1.scryfall.com')) bg = bg.replace('c1.scryfall.com', 'cards.scryfall.io');
+                 // Smart Load Fallback
                  if (bg === CARD_BACK_URL && d.structured_list && d.structured_list.length > 0 && d.structured_list[0].img) {
                     bg = d.structured_list[0].img;
                  }
@@ -1698,50 +1690,20 @@
         }
 
         function openTokenMenu() {
-            // V14.8 ALCHEMIST
+            // V14.7 RESTORED: SIMPLE LIST
+            const tokens = ['Soldier 1/1', 'Goblin 1/1', 'Zombie 2/2', 'Angel 4/4', 'Treasure', 'Clue', 'Food'];
+            setHTML('token-grid', tokens.map(t => `<button onclick="spawnToken('${t}')">${t}</button>`).join(''));
             document.getElementById('token-modal').classList.remove('hidden');
-            document.getElementById('token-search').value = '';
-            // Show some defaults
-            searchTokens('token');
         }
         
-        // V14.8 ALCHEMIST LOGIC
-        async function searchTokens(override) {
-            const q = override || document.getElementById('token-search').value;
-            if(!q) return;
-            
-            const grid = document.getElementById('token-grid');
-            grid.innerHTML = '<div class="text-sub" style="text-align:center;">Summoning...</div>';
-            
-            try {
-                const res = await fetch(`https://api.scryfall.com/cards/search?q=t:token+${encodeURIComponent(q)}&unique=art`);
-                const d = await res.json();
-                
-                if(!d.data || d.data.length === 0) {
-                    grid.innerHTML = '<div class="text-sub" style="text-align:center;">No tokens found.</div>';
-                    return;
-                }
-                
-                grid.innerHTML = d.data.map(c => {
-                    const img = getCardImage(c);
-                    return `<div class="grid-card" onclick="spawnToken('${c.name}', '${img}')">
-                        <img src="${img}" loading="lazy">
-                        <div class="overlay" style="justify-content:center;"><div class="tag-pill">Spawn</div></div>
-                    </div>`
-                }).join('');
-            } catch(e) {
-                grid.innerHTML = '<div class="text-sub" style="text-align:center;">Fizzled. Try again.</div>';
-            }
-        }
-        
-        function spawnToken(name, img) {
+        function spawnToken(name) {
             gameState.field.push({ 
                 uid: Math.random().toString(36), 
                 name: name, 
                 isToken: true, 
                 type: 'Creature Token', 
                 tapped: false,
-                image_uris: { normal: img } // Store the specific art
+                image_uris: null // No image in this simple version
             });
             document.getElementById('token-modal').classList.add('hidden');
             renderBF();
