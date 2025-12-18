@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v14.7 (Restored)</title>
+    <title>The Grimoire | v14.7 (The Multiverse)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -162,13 +162,27 @@
         .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: white; }
         .nav-item.active { background: var(--primary-dim); color: white; border-left: 3px solid var(--primary); }
         
-        /* Grids & Cards */
-        .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .deck-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        
+        /* Grids & Cards - V14.6 MOBILE POLISH */
+        .collection-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            gap: 20px; 
+        }
+        .deck-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; 
+        }
+
+        /* V14.6: Responsive Grids */
         @media (max-width: 600px) {
-            .collection-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
-            .deck-grid { grid-template-columns: 1fr; }
+            .collection-grid { 
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+                gap: 12px; 
+            }
+            .deck-grid { 
+                grid-template-columns: 1fr; /* Full width decks on phone */
+            }
         }
         
         .grid-card { position: relative; aspect-ratio: 2.5/3.5; border-radius: 12px; overflow: hidden; cursor: pointer; background: rgba(0,0,0,0.3); border: 1px solid var(--border); transition: transform 0.2s; }
@@ -230,9 +244,13 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         .empty-state { text-align: center; color: var(--subtext); padding: 60px; border: 2px dashed var(--border); border-radius: 20px; background: rgba(0,0,0,0.1); }
         
-        /* Deck Details */
+        /* Deck Details - V14.6 MOBILE RESPONSIVE */
         .deck-area-detail { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-        @media (max-width: 900px) { .deck-area-detail { grid-template-columns: 1fr; } .deck-list-viewer { max-height: 50vh; } }
+        @media (max-width: 900px) { 
+            .deck-area-detail { grid-template-columns: 1fr; } 
+            .deck-list-viewer { max-height: 50vh; }
+        }
+        
         .deck-list-viewer { height: 60vh; overflow-y: auto; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 12px; font-family: monospace; font-size: 13px; border: 1px solid var(--border); line-height: 1.6; }
         .deck-line { padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; display: flex; justify-content: space-between; }
         .is-owned { border-left: 3px solid var(--green); } .is-partial { border-left: 3px solid var(--yellow); } .is-missing { border-left: 3px solid var(--red); opacity: 0.7; }
@@ -244,7 +262,7 @@
         .fab-btn:hover { transform: scale(1.1) rotate(90deg); }
         @media (min-width: 769px) { .fab-btn { display: none; } }
         
-        /* Battlefield Layout */
+        /* Battlefield Layout - V13.5 Mobile Polish */
         .bf-grid-layout { display: grid; grid-template-columns: 1fr 140px; height: 100%; overflow: hidden; }
         .bf-hud { grid-column: 1 / -1; height: 70px; background: rgba(5,3,8,0.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 25px; z-index: 20; }
         .bf-board { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; background: radial-gradient(circle at center, #25103a 0%, #050308 90%); }
@@ -252,6 +270,7 @@
         .bf-row { flex: 1; padding: 20px 40px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 10px; border-bottom: 1px dashed rgba(255,255,255,0.05); overflow-y: auto; position: relative; min-height: 150px; }
         .bf-side-zone { background: rgba(0,0,0,0.4); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 15px; align-items: center; z-index: 10; }
         
+        /* Mobile Battlefield Adjustments */
         @media (max-width: 768px) {
             .bf-grid-layout { display: flex; flex-direction: column; }
             .bf-side-zone { display: flex; flex-direction: row; width: 100%; height: 80px; padding: 10px; border-left: none; border-top: 1px solid var(--border); overflow-x: auto; background: rgba(15, 10, 25, 0.95); }
@@ -1690,24 +1709,15 @@
         }
 
         function openTokenMenu() {
-            // V14.7 RESTORED: SIMPLE LIST
             const tokens = ['Soldier 1/1', 'Goblin 1/1', 'Zombie 2/2', 'Angel 4/4', 'Treasure', 'Clue', 'Food'];
             setHTML('token-grid', tokens.map(t => `<button onclick="spawnToken('${t}')">${t}</button>`).join(''));
             document.getElementById('token-modal').classList.remove('hidden');
         }
         
         function spawnToken(name) {
-            gameState.field.push({ 
-                uid: Math.random().toString(36), 
-                name: name, 
-                isToken: true, 
-                type: 'Creature Token', 
-                tapped: false,
-                image_uris: null // No image in this simple version
-            });
+            gameState.field.push({ uid: Math.random().toString(36), name: name, isToken: true, type: 'Creature Token', tapped: false });
             document.getElementById('token-modal').classList.add('hidden');
             renderBF();
-            showToast("Token Spawned");
         }
         
         function drawCard() { if(gameState.lib.length) { gameState.hand.push(gameState.lib.pop()); renderBF(); } }
