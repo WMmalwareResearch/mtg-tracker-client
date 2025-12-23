@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v100.1 (Revealed)</title>
+    <title>The Grimoire | v100.1 (Eternal)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,6 +22,7 @@
             --bone: #dcd0c0;
             --ash: #5c5c5c;
             --gold: #c5a059;
+            
             --font-ui: 'Cinzel Decorative', cursive;
             --font-body: 'Crimson Text', serif;
             --font-header: 'MedievalSharp', cursive;
@@ -29,7 +30,9 @@
 
         body { 
             background-color: var(--void);
-            background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%), url("https://www.transparenttextures.com/patterns/black-felt.png");
+            background-image: 
+                radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%),
+                url("https://www.transparenttextures.com/patterns/black-felt.png");
             color: var(--bone);
             font-family: var(--font-body);
             margin: 0; height: 100vh; overflow: hidden;
@@ -40,6 +43,7 @@
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         .hidden { display: none !important; }
         
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--void); }
         ::-webkit-scrollbar-thumb { background: var(--blood-dried); border: 1px solid var(--blood-fresh); border-radius: 4px; }
@@ -49,7 +53,8 @@
             width: 98vw; height: 96vh; 
             display: grid; 
             grid-template-columns: 240px 1fr 340px; 
-            gap: 20px; position: relative;
+            gap: 20px;
+            position: relative;
         }
 
         /* 1. SPINE (NAV) */
@@ -67,17 +72,16 @@
         }
         .bookmark {
             padding: 15px 20px; margin-bottom: 10px;
-            background: linear-gradient(90deg, transparent, rgba(43, 10, 10, 0.4)); /* Increased visibility */
-            color: var(--ash); font-family: var(--font-ui); font-size: 14px; font-weight: 700;
+            background: linear-gradient(90deg, transparent, rgba(43, 10, 10, 0.3));
+            color: var(--ash); font-family: var(--font-ui); font-size: 13px; font-weight: 700;
             cursor: pointer; transition: 0.3s; position: relative;
             border-right: 2px solid transparent;
             text-transform: uppercase; letter-spacing: 1px;
-            display: flex; align-items: center; gap: 10px;
         }
-        .bookmark:hover { color: var(--bone); background: linear-gradient(90deg, transparent, rgba(138, 0, 0, 0.3)); }
+        .bookmark:hover { color: var(--bone); background: linear-gradient(90deg, transparent, rgba(138, 0, 0, 0.2)); }
         .bookmark.active { 
             color: var(--hellfire); border-right: 2px solid var(--hellfire);
-            background: linear-gradient(90deg, transparent, rgba(138, 0, 0, 0.6));
+            background: linear-gradient(90deg, transparent, rgba(138, 0, 0, 0.5));
             text-shadow: 0 0 8px var(--blood-fresh);
         }
 
@@ -144,10 +148,7 @@
             font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 12px;
         }
         button:hover { background: var(--blood-fresh); color: #000; border-color: var(--hellfire); }
-        button.primary { 
-            background: linear-gradient(180deg, #8a0000 0%, #4a0000 100%);
-            border: 1px solid #ff0000; color: #ffcccc;
-        }
+        button.primary { background: linear-gradient(180deg, #8a0000 0%, #4a0000 100%); border: 1px solid #ff0000; color: #ffcccc; }
         button.primary:hover { background: linear-gradient(180deg, #b30000 0%, #600000 100%); box-shadow: 0 0 15px rgba(255,0,0,0.4); }
         .btn-sm { padding: 6px 12px; font-size: 10px; width: auto; }
 
@@ -190,16 +191,6 @@
         .ctx-item { padding: 10px; color: var(--bone); cursor: pointer; font-family: var(--font-body); border-bottom: 1px solid #222; }
         .ctx-item:hover { background: var(--blood-fresh); color: black; }
 
-        /* TOOL GRID (For the new Tools Page) */
-        .tool-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .tool-card { 
-            background: #1a0505; border: 1px solid var(--blood-dried); padding: 30px; 
-            text-align: center; cursor: pointer; transition: 0.3s;
-        }
-        .tool-card:hover { border-color: var(--hellfire); background: var(--blood-dried); transform: translateY(-5px); }
-        .tool-card h3 { font-family: var(--font-ui); color: var(--hellfire); margin-bottom: 10px; }
-        .tool-icon { font-size: 40px; margin-bottom: 15px; display: block; }
-
         /* BATTLEFIELD */
         .bf-overlay { position: fixed; inset: 0; background: #050000; z-index: 2000; display: flex; flex-direction: column; background-image: radial-gradient(circle, #1a0000 0%, #000 80%); }
         .bf-hud { height: 70px; border-bottom: 2px solid var(--blood-fresh); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(0,0,0,0.8); }
@@ -239,14 +230,26 @@
         </div>
     </div>
 
+    <div id="edit-modal" class="modal-wrap hidden">
+        <div class="parchment-modal">
+            <h2 id="edit-name" style="font-size:1.5rem; border:none; color:var(--bone);">Transmute</h2>
+            <input type="hidden" id="edit-id">
+            <div style="text-align:left; color:var(--hellfire);">Count</div><input type="number" id="edit-qty">
+            <div style="text-align:left; color:var(--hellfire);">Value</div><input type="number" id="edit-cost" step="0.01">
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button>
+                <button onclick="saveEdit()" class="primary">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="app" class="desk-container hidden">
         <nav class="spine-panel">
             <div class="logo-stamp">CODEX</div>
-            <div class="bookmark active" onclick="nav('dashboard')" id="nav-dashboard"><span>🏯 Sanctum</span></div>
-            <div class="bookmark" onclick="nav('collection')" id="nav-collection"><span>⚰️ Vault</span></div>
-            <div class="bookmark" onclick="nav('decks')" id="nav-decks"><span>📜 Tomes</span></div>
-            <div class="bookmark" onclick="nav('tools')" id="nav-tools"><span>🔮 Tools</span></div> <div class="bookmark" onclick="nav('settings')" id="nav-settings"><span>⚙️ Config</span></div>
-            
+            <div class="bookmark active" onclick="nav('dashboard')" id="nav-dashboard">🏯 <span>Sanctum</span></div>
+            <div class="bookmark" onclick="nav('collection')" id="nav-collection">⚰️ <span>Vault</span></div>
+            <div class="bookmark" onclick="nav('decks')" id="nav-decks">📜 <span>Tomes</span></div>
+            <div class="bookmark" onclick="nav('settings')" id="nav-settings">⚙️ <span>Config</span></div>
             <div style="margin-top:auto; padding:20px; text-align:center; cursor:pointer; color:var(--blood-fresh);" onclick="handleLogout()">🩸 Bleed Out</div>
         </nav>
 
@@ -276,6 +279,7 @@
                     <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
                         <input id="vaultSearch" placeholder="Search Artifacts..." oninput="filterVault()" style="width:200px; margin:0;">
                         <select id="filterColor" onchange="filterVault()" style="width:80px; margin:0;"><option value="all">Color</option><option value="W">W</option><option value="U">U</option><option value="B">B</option><option value="R">R</option><option value="G">G</option></select>
+                        <select id="filterRarity" onchange="filterVault()" style="width:90px; margin:0;"><option value="all">Rarity</option><option value="mythic">Mythic</option><option value="rare">Rare</option><option value="uncommon">Uncommon</option><option value="common">Common</option></select>
                         <select id="filterType" onchange="filterVault()" style="width:90px; margin:0;"><option value="all">Type</option><option value="Creature">Creature</option><option value="Artifact">Artifact</option><option value="Enchantment">Enchantment</option><option value="Instant">Instant</option><option value="Sorcery">Sorcery</option><option value="Land">Land</option></select>
                         <select id="sortOrder" onchange="filterVault()" style="width:100px; margin:0;"><option value="price-desc">$$$ High</option><option value="price-asc">$$$ Low</option><option value="name">Name</option></select>
                     </div>
@@ -300,6 +304,11 @@
                 <div id="deck-edit-view" class="hidden">
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                         <button class="btn-sm" onclick="closeDeckEditor()">← Seal Tome</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-sm" onclick="openGeomancer()">Geomancer</button>
+                            <button class="btn-sm" onclick="openHandSim()">Simulate</button>
+                            <button class="primary btn-sm" onclick="initBattlefield(true)">Battle</button>
+                        </div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 300px; gap:20px;">
                         <div>
@@ -318,27 +327,6 @@
                             <div style="height:150px; margin-bottom:20px;"><canvas id="typeChart"></canvas></div>
                             <div style="height:150px;"><canvas id="manaCurve"></canvas></div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div id="view-tools" class="hidden view-section view-content">
-                <h2>Arcane Tools</h2>
-                <div class="tool-grid">
-                    <div class="tool-card" onclick="initBattlefield(false)">
-                        <span class="tool-icon">⚔️</span>
-                        <h3>Battlefield</h3>
-                        <div style="font-size:12px; color:var(--ash);">Enter the arena. Drag & drop simulation.</div>
-                    </div>
-                    <div class="tool-card" onclick="openHandSim()">
-                        <span class="tool-icon">🃏</span>
-                        <h3>Hand Simulator</h3>
-                        <div style="font-size:12px; color:var(--ash);">Draw sample hands from current deck.</div>
-                    </div>
-                    <div class="tool-card" onclick="openGeomancer()">
-                        <span class="tool-icon">🏔️</span>
-                        <h3>Geomancer</h3>
-                        <div style="font-size:12px; color:var(--ash);">Calculate land ratios.</div>
                     </div>
                 </div>
             </div>
@@ -362,7 +350,6 @@
                 <input id="global-search" placeholder="Invoke name..." oninput="debounceSearch()">
                 <div id="search-results" class="search-results"></div>
             </div>
-            
             <div id="search-preview" style="text-align:center; margin-top:10px; opacity:0; transition:0.3s;">
                 <img id="tool-img" src="" style="width:100%; border-radius:8px; border:2px solid var(--blood-fresh);">
                 <div id="tool-price" style="color:var(--hellfire); font-size:20px; margin-top:5px; font-family:var(--font-ui);"></div>
@@ -373,7 +360,6 @@
                     <button class="primary" onclick="quickAdd()">Summon</button>
                 </div>
             </div>
-            
             <div style="margin-top:auto; padding-top:20px; border-top:1px dashed var(--blood-dried);">
                 <button class="btn-sm" style="width:100%;" onclick="document.getElementById('csvFile').click()">Import Scroll (CSV)</button>
                 <input type="file" id="csvFile" hidden onchange="handleCSVUpload(this)">
@@ -399,23 +385,10 @@
             <button class="secondary" onclick="document.getElementById('geo-modal').classList.add('hidden')">Close</button>
         </div>
     </div>
-    
-    <div id="edit-modal" class="modal-wrap hidden">
-        <div class="parchment-modal">
-            <h2 id="edit-name" style="font-size:1.5rem; border:none; color:var(--bone);">Transmute</h2>
-            <input type="hidden" id="edit-id">
-            <div style="text-align:left; color:var(--hellfire);">Count</div><input type="number" id="edit-qty">
-            <div style="text-align:left; color:var(--hellfire);">Value</div><input type="number" id="edit-cost" step="0.01">
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button>
-                <button onclick="saveEdit()" class="primary">Save</button>
-            </div>
-        </div>
-    </div>
 
     <div id="view-battlefield" class="bf-overlay hidden">
         <div class="bf-hud">
-            <button class="btn-sm secondary" style="width:auto;" onclick="nav('dashboard')">Flee</button>
+            <button class="btn-sm secondary" style="width:auto;" onclick="exitBattlefield()">Flee</button>
             <div style="color:var(--hellfire); font-size:32px; font-family:var(--font-ui);" id="bf-life">40</div>
             <div style="display:flex; gap:10px;">
                 <button class="btn-sm" onclick="updateLife(1)">Heal</button>
