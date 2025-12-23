@@ -759,17 +759,69 @@
         function openEditModal(id) { document.getElementById('details-modal').classList.add('hidden'); const c=cardsCache.find(x=>x.id==id); if(c) { document.getElementById('edit-id').value=id; document.getElementById('edit-qty').value=c.quantity; document.getElementById('edit-cost').value=c.buy_price; document.getElementById('edit-modal').classList.remove('hidden'); } }
         async function saveEdit() { await sb.from('cards').update({ quantity:document.getElementById('edit-qty').value, buy_price:document.getElementById('edit-cost').value }).eq('id',document.getElementById('edit-id').value); document.getElementById('edit-modal').classList.add('hidden'); showToast("Done."); loadData(); }
         async function syncPrices(btn) { btn.innerText="Divining..."; const chunk=cardsCache.map(c=>({set:c.set_code,collector_number:c.collector_number})).slice(0,75); try{const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})}); const d=await res.json(); if(d.data) { for(const s of d.data) { const l=cardsCache.find(c=>c.set_code===s.set&&c.collector_number===s.collector_number); if(l) await sb.from('cards').update({market_price_usd:parseFloat(s.prices.usd||0)}).eq('id',l.id); } } showToast("Aligned."); loadData(); }catch(e){} btn.innerText="Divinate"; }
-        function handleCSVUpload(input) { 
-            const file = input.files[0]; if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const text = e.target.result; const lines = text.split('\n');
-                let count = 0;
-                for(let line of lines) { const m = line.match(/^(\d+)\s+(.+)/); if(m) { console.log("Found:", m[2]); count++; } }
-                showToast(`Scroll contains ${count} spells.`);
-            };
-            reader.readAsText(file);
+       /* --- REPLACES THE MOCK CSV FUNCTION --- */
+async function handleCSVUpload(input) { 
+    const file = input.files[0]; 
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const text = e.target.result; 
+        const lines = text.split(/\r\n|\n/); // Split by new line
+        
+        showToast(`Reading ${lines.length} lines...`);
+        let successCount = 0;
+
+        // Loop through every line
+        for(let line of lines) {
+            line = line.trim();
+            if(!line) continue;
+
+            // Regex to find "Quantity Name" (e.g., "4 Lightning Bolt")
+            const match = line.match(/^(\d+)\s+(.+)/);
+            
+            if(match) {
+                const qty = parseInt(match[1]);
+                const name = match[2];
+
+                try {
+                    // 1. Ask Scryfall for the card details
+                    const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
+                    
+                    if(res.ok) {
+                        const card = await res.json();
+                        
+                        // 2. Insert into your Vault
+                        await sb.from('cards').insert({
+                            user_id: session.user.id, 
+                            name: card.name, 
+                            set_code: card.set, 
+                            collector_number: card.collector_number,
+                            image_url: card.image_uris?.normal || card.image_url, 
+                            quantity: qty, 
+                            market_price_usd: parseFloat(card.prices.usd||0),
+                            type_line: card.type_line, 
+                            cmc: card.cmc||0, 
+                            color_identity: card.color_identity, 
+                            rarity: card.rarity
+                        });
+                        successCount++;
+                    }
+                } catch(err) {
+                    console.error(`Failed to scribe ${name}`, err);
+                }
+
+                // 3. Small delay to prevent Scryfall from blocking us (Rate Limiting)
+                await new Promise(r => setTimeout(r, 100));
+            }
         }
+        
+        showToast(`Ritual Complete: ${successCount} Artifacts Summoned.`);
+        loadData(); // Refresh the Vault view
+        input.value = ''; // Reset input so you can re-upload if needed
+    };
+    reader.readAsText(file);
+}
         function openGeomancer() { document.getElementById('geo-modal').classList.remove('hidden'); document.getElementById('geo-results').innerText = "Lands Recommended: " + Math.floor(currentDeckStructuredList.length * 0.4); }
         function exportCSV() { 
             let csv = "Name,Set,Price,Qty\n" + cardsCache.map(c => `${c.name},${c.set_code},${c.market_price_usd},${c.quantity}`).join("\n");
@@ -789,3 +841,4 @@
     </script>
 </body>
 </html>
+
