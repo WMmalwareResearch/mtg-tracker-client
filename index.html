@@ -8,7 +8,6 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&display=swap" rel="stylesheet">
@@ -17,24 +16,19 @@
         /* --- THEME: HELLFIRE CITADEL --- */
         :root { 
             --void: #050000;
-            --obsidian: #0f0505;
             --blood-dried: #2b0a0a;
             --blood-fresh: #8a0000;
             --hellfire: #ff3300;
             --bone: #dcd0c0;
             --ash: #5c5c5c;
             --gold: #c5a059;
-            
             --font-ui: 'Cinzel Decorative', cursive;
             --font-body: 'Crimson Text', serif;
-            --font-header: 'MedievalSharp', cursive;
         }
 
         body { 
             background-color: var(--void);
-            background-image: 
-                radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%),
-                url("https://www.transparenttextures.com/patterns/black-felt.png");
+            background-image: radial-gradient(circle at 50% 50%, #1a0505 0%, #000000 120%), url("https://www.transparenttextures.com/patterns/black-felt.png");
             color: var(--bone);
             font-family: var(--font-body);
             margin: 0; height: 100vh; overflow: hidden;
@@ -45,6 +39,7 @@
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         .hidden { display: none !important; }
         
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--void); }
         ::-webkit-scrollbar-thumb { background: var(--blood-dried); border: 1px solid var(--blood-fresh); border-radius: 4px; }
@@ -54,7 +49,8 @@
             width: 98vw; height: 96vh; 
             display: grid; 
             grid-template-columns: 240px 1fr 340px; 
-            gap: 20px; position: relative;
+            gap: 20px;
+            position: relative;
         }
 
         /* 1. SPINE (NAV) */
@@ -75,7 +71,8 @@
             background: linear-gradient(90deg, transparent, rgba(43, 10, 10, 0.3));
             color: var(--ash); font-family: var(--font-ui); font-size: 13px; font-weight: 700;
             cursor: pointer; transition: 0.3s; position: relative;
-            border-right: 2px solid transparent; text-transform: uppercase; letter-spacing: 1px;
+            border-right: 2px solid transparent;
+            text-transform: uppercase; letter-spacing: 1px;
         }
         .bookmark:hover { color: var(--bone); background: linear-gradient(90deg, transparent, rgba(138, 0, 0, 0.2)); }
         .bookmark.active { 
@@ -89,9 +86,11 @@
             background: rgba(12, 4, 4, 0.85);
             border: 1px solid var(--blood-dried);
             box-shadow: inset 0 0 80px rgba(0,0,0,0.9), 0 0 30px rgba(138,0,0,0.1);
-            position: relative; padding: 0; overflow-y: auto; overflow-x: hidden;
+            position: relative; padding: 0; 
+            overflow-y: auto; overflow-x: hidden;
             border-radius: 4px;
         }
+        
         .view-content { padding: 30px 40px; }
         .view-section { animation: bloodRise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
         @keyframes bloodRise { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
@@ -117,13 +116,12 @@
             display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;
             backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
-        
         .vault-total { font-family: var(--font-ui); font-size: 20px; color: var(--hellfire); text-shadow: 0 0 10px var(--blood-fresh); white-space: nowrap; }
 
         input, select, textarea {
             background: #000; border: 1px solid var(--blood-dried);
             padding: 10px; color: var(--bone); font-family: var(--font-body); font-size: 14px;
-            margin-bottom: 10px; transition: 0.3s; width: 100%;
+            margin-bottom: 10px; transition: 0.3s;
         }
         input:focus, select:focus, textarea:focus { border-color: var(--hellfire); box-shadow: 0 0 10px rgba(255, 51, 0, 0.2); }
         
@@ -147,17 +145,13 @@
             font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 12px;
         }
         button:hover { background: var(--blood-fresh); color: #000; border-color: var(--hellfire); }
-        button.primary { 
-            background: linear-gradient(180deg, #8a0000 0%, #4a0000 100%);
-            border: 1px solid #ff0000; color: #ffcccc;
-        }
+        button.primary { background: linear-gradient(180deg, #8a0000 0%, #4a0000 100%); border: 1px solid #ff0000; color: #ffcccc; }
         button.primary:hover { background: linear-gradient(180deg, #b30000 0%, #600000 100%); box-shadow: 0 0 15px rgba(255,0,0,0.4); }
         .btn-sm { padding: 6px 12px; font-size: 10px; width: auto; }
 
         .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
         .magic-card {
-            position: relative; aspect-ratio: 2.5/3.5;
-            background: #000; cursor: pointer; transition: 0.3s;
+            position: relative; aspect-ratio: 2.5/3.5; background: #000; cursor: pointer; transition: 0.3s;
             border: 1px solid var(--blood-dried); box-shadow: 0 5px 15px black;
         }
         .magic-card:hover { transform: translateY(-5px) scale(1.05); z-index: 10; border-color: var(--hellfire); box-shadow: 0 0 20px var(--blood-fresh); }
@@ -188,15 +182,12 @@
         .stat-val { font-family: var(--font-ui); font-size: 24px; color: var(--bone); }
         
         .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-        .parchment-modal {
-            background: #0f0505; padding: 30px; width: 500px; max-height: 90vh; overflow-y: auto;
-            box-shadow: 0 0 100px var(--blood-fresh); border: 2px solid var(--hellfire); text-align: center;
-        }
-        
+        .parchment-modal { background: #0f0505; padding: 30px; width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 100px var(--blood-fresh); border: 2px solid var(--hellfire); text-align: center; }
         .context-menu { position: fixed; background: #0a0000; border: 1px solid var(--hellfire); padding: 5px; width: 160px; z-index: 4000; display: flex; flex-direction: column; }
         .ctx-item { padding: 10px; color: var(--bone); cursor: pointer; font-family: var(--font-body); border-bottom: 1px solid #222; }
         .ctx-item:hover { background: var(--blood-fresh); color: black; }
 
+        /* BATTLEFIELD */
         .bf-overlay { position: fixed; inset: 0; background: #050000; z-index: 2000; display: flex; flex-direction: column; background-image: radial-gradient(circle, #1a0000 0%, #000 80%); }
         .bf-hud { height: 70px; border-bottom: 2px solid var(--blood-fresh); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(0,0,0,0.8); }
         .bf-mat { flex: 1; display: flex; flex-direction: column; position: relative; }
@@ -237,11 +228,11 @@
 
     <div id="edit-modal" class="modal-wrap hidden">
         <div class="parchment-modal">
-            <h2 id="edit-name" style="font-size:1.5rem; border:none; color:var(--bone);">Transmute Matter</h2>
+            <h2 id="edit-name" style="font-size:1.5rem; border:none; color:var(--bone);">Transmute</h2>
             <input type="hidden" id="edit-id">
-            <div style="text-align:left; margin-bottom:5px; font-weight:bold; color:var(--hellfire);">Count</div>
+            <div style="text-align:left; margin-bottom:5px; color:var(--hellfire);">Count</div>
             <input type="number" id="edit-qty">
-            <div style="text-align:left; margin-bottom:5px; font-weight:bold; color:var(--hellfire);">Value</div>
+            <div style="text-align:left; margin-bottom:5px; color:var(--hellfire);">Value</div>
             <input type="number" id="edit-cost" step="0.01">
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Flee</button>
@@ -257,7 +248,6 @@
             <div class="bookmark" onclick="nav('collection')" id="nav-collection">⚰️ <span>Vault</span></div>
             <div class="bookmark" onclick="nav('decks')" id="nav-decks">📜 <span>Tomes</span></div>
             <div class="bookmark" onclick="nav('settings')" id="nav-settings">⚙️ <span>Config</span></div>
-            
             <div style="margin-top:auto; padding:20px; text-align:center; cursor:pointer; color:var(--blood-fresh);" onclick="handleLogout()">🩸 Bleed Out</div>
         </nav>
 
@@ -315,7 +305,7 @@
                         <div style="display:flex; gap:10px;">
                             <button class="btn-sm" onclick="openGeomancer()">Geomancer</button>
                             <button class="btn-sm" onclick="openHandSim()">Simulate</button>
-                            <button class="primary btn-sm" onclick="initBattlefield()">Battle</button>
+                            <button class="primary btn-sm" onclick="initBattlefield(true)">Battle</button>
                         </div>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 300px; gap:20px;">
@@ -358,6 +348,7 @@
                 <input id="global-search" placeholder="Invoke name..." oninput="debounceSearch()">
                 <div id="search-results" class="search-results"></div>
             </div>
+            
             <div id="search-preview" style="text-align:center; margin-top:10px; opacity:0; transition:0.3s;">
                 <img id="tool-img" src="" style="width:100%; border-radius:8px; border:2px solid var(--blood-fresh);">
                 <div id="tool-price" style="color:var(--hellfire); font-size:20px; margin-top:5px; font-family:var(--font-ui);"></div>
@@ -368,6 +359,7 @@
                     <button class="primary" onclick="quickAdd()">Summon</button>
                 </div>
             </div>
+            
             <div style="margin-top:auto; padding-top:20px; border-top:1px dashed var(--blood-dried);">
                 <button class="btn-sm" style="width:100%;" onclick="document.getElementById('csvFile').click()">Import Scroll (CSV)</button>
                 <input type="file" id="csvFile" hidden onchange="handleCSVUpload(this)">
@@ -389,7 +381,6 @@
     <div id="geo-modal" class="modal-wrap hidden">
         <div class="parchment-modal">
             <h2>The Geomancer</h2>
-            <div style="margin-bottom:20px;">Calculate Land Ratio</div>
             <div id="geo-results" style="font-family:monospace; margin-bottom:20px; color:var(--hellfire);"></div>
             <button class="secondary" onclick="document.getElementById('geo-modal').classList.add('hidden')">Close</button>
         </div>
@@ -397,7 +388,7 @@
 
     <div id="view-battlefield" class="bf-overlay hidden">
         <div class="bf-hud">
-            <button class="btn-sm secondary" style="width:auto;" onclick="nav('dashboard')">Flee</button>
+            <button class="btn-sm secondary" style="width:auto;" onclick="exitBattlefield()">Flee</button>
             <div style="color:var(--hellfire); font-size:32px; font-family:var(--font-ui);" id="bf-life">40</div>
             <div style="display:flex; gap:10px;">
                 <button class="btn-sm" onclick="updateLife(1)">Heal</button>
@@ -440,11 +431,15 @@
             cardsCache = data || [];
             let count=0, val=0;
             cardsCache.forEach(c => { if(c.quantity > 0) { count += c.quantity; val += (c.market_price_usd || 0) * c.quantity; } });
+            
             document.getElementById('stat-count').innerText = count;
             document.getElementById('stat-value').innerText = "$"+val.toFixed(2);
             document.getElementById('col-filtered-val').innerText = "$"+val.toFixed(2);
+            
             renderValueChart(val);
-            document.getElementById('top-cards-list').innerHTML = cardsCache.slice(0,5).map(c => `<div class="list-row"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
+            const list = document.getElementById('top-cards-list');
+            list.innerHTML = cardsCache.slice(0,5).map(c => `<div class="list-row"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
+            
             if(!document.getElementById('view-collection').classList.contains('hidden')) filterVault();
         }
 
@@ -506,9 +501,11 @@
             const fType = document.getElementById('filterType').value;
             const fSort = document.getElementById('sortOrder').value;
             let filtered = cardsCache.filter(c => c.name.toLowerCase().includes(q) && c.quantity > 0);
+            
             if(fColor !== 'all') filtered = filtered.filter(c => { const basis = (c.type_line.includes('Land')) ? c.color_identity : c.colors; return (basis||[]).includes(fColor); });
             if(fRarity !== 'all') filtered = filtered.filter(c => c.rarity === fRarity);
             if(fType !== 'all') filtered = filtered.filter(c => c.type_line.includes(fType));
+            
             if(fSort === 'price-desc') filtered.sort((a,b) => (b.market_price_usd||0) - (a.market_price_usd||0));
             if(fSort === 'price-asc') filtered.sort((a,b) => (a.market_price_usd||0) - (b.market_price_usd||0));
             if(fSort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
@@ -587,7 +584,7 @@
         /* --- HAND SIM --- */
         function openHandSim() {
             document.getElementById('hand-sim-modal').classList.remove('hidden');
-            simDeck = [...currentDeckStructuredList]; // Mock shuffle
+            simDeck = [...currentDeckStructuredList]; 
             simDeck.sort(() => Math.random() - 0.5);
             renderSimHand(simDeck.slice(0, 7));
         }
@@ -597,39 +594,43 @@
         function simMulligan() { openHandSim(); }
         function simDraw() { 
             if(simDeck.length > 7) { 
-                const c = simDeck[7]; // Mock next card 
+                const c = simDeck[7];
                 document.getElementById('sim-hand-display').innerHTML += `<img src="${c.img}" style="width:120px; border-radius:6px;">`;
             }
         }
 
-        /* --- BATTLEFIELD (RESTORED STATE) --- */
-        function initBattlefield() {
+        /* --- BATTLEFIELD --- */
+        function initBattlefield(useDeck) {
             document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState.hand = currentDeckStructuredList.slice(0,7); // Start with actual cards
+            gameState.hand = useDeck ? currentDeckStructuredList.slice(0,7) : [];
+            if(gameState.hand.length === 0) for(let i=0;i<7;i++) drawCard();
             renderBF();
         }
         function renderBF() {
-            document.getElementById('bf-hand').innerHTML = gameState.hand.map((c, i) => `<img src="${c.img}" class="bf-card" ondragstart="drag(event, ${i})" draggable="true" style="width:100px; margin-right:-40px;">`).join('');
+            document.getElementById('bf-hand').innerHTML = gameState.hand.map((c, i) => `<img src="${c.img || CARD_BACK}" class="bf-card" ondragstart="drag(event, ${i})" draggable="true" style="width:100px; margin-right:-40px;">`).join('');
         }
         function drag(ev, index) { ev.dataTransfer.setData("index", index); }
         function drop(ev, targetZone) { 
             ev.preventDefault(); 
             const idx = ev.dataTransfer.getData("index");
             const card = gameState.hand[idx];
-            // Simple visual move for demo (Production would require full array management)
-            const img = document.createElement('img'); img.src=card.img; img.className='bf-card'; 
+            const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; 
             ev.target.closest('.bf-zone').appendChild(img);
         }
         function allowDrop(ev) { ev.preventDefault(); }
-        function drawCard() { /* Logic for battlefield draw */ }
+        function drawCard() { 
+            const img = document.createElement('img'); img.src=CARD_BACK; img.className='bf-card'; 
+            document.getElementById('bf-hand').appendChild(img); 
+        }
         function updateLife(n) { gameState.life+=n; document.getElementById('bf-life').innerText=gameState.life; }
+        function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
 
         /* --- UTILS --- */
         function nav(v) { 
             document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden')); 
             document.getElementById('view-'+v).classList.remove('hidden');
             document.querySelectorAll('.bookmark').forEach(el => el.classList.remove('active'));
-            document.getElementById('nav-'+v).classList.add('active');
+            document.getElementById('nav-'+v)?.classList.add('active');
             if(v==='collection') filterVault();
         }
         function showToast(msg) { const t=document.createElement('div'); t.className="toast"; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000); }
@@ -646,15 +647,13 @@
                 const text = e.target.result; const lines = text.split('\n');
                 let count = 0;
                 for(let line of lines) {
-                    // Simple parser: Quantity Name (e.g., "1 Sol Ring")
                     const m = line.match(/^(\d+)\s+(.+)/);
                     if(m) {
-                        // Mock fetch for ID then insert
-                        // In production: You'd fetch Scryfall ID here for accurate insert
-                        console.log("Importing", m[2]); count++;
+                        // In production: fetch ID from scryfall via name (m[2]) then insert
+                        console.log("Found:", m[2]); count++;
                     }
                 }
-                showToast(`Read ${count} scrolls.`);
+                showToast(`Scroll contains ${count} spells.`);
             };
             reader.readAsText(file);
         }
