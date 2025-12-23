@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v80.3 (Stabilized)</title>
+    <title>The Grimoire | v80.4 (Stable)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,27 +13,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME: DEEP WOODS & GOLD --- */
+        /* --- THEME: THE ARCHMAGE'S DESK --- */
         :root { 
-            --wood-dark: #120c09;
+            --wood-dark: #1a120b;
             --wood-panel: #261a15;
             --parchment: #e6dccf;
             --ink: #1f1a17;
-            
             --gold: #c5a059;
-            --gold-glow: rgba(197, 160, 89, 0.3);
+            --gold-dim: #8a6d3b;
             --blood: #8a1c1c;
-            --mana: #1e3a8a;
-            
             --shadow-float: 0 10px 40px rgba(0,0,0,0.8);
-            
             --font-ui: 'MedievalSharp', cursive;
             --font-body: 'Crimson Pro', serif;
             --font-header: 'Cinzel', serif;
         }
 
         body { 
-            background-color: var(--wood-dark);
+            background-color: #0c0806;
             background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png"), radial-gradient(circle at 50% 50%, #2b1d16 0%, #050302 100%);
             color: var(--ink);
             font-family: var(--font-body);
@@ -45,6 +41,7 @@
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         .hidden { display: none !important; }
         
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 4px; border: 1px solid var(--wood-dark); }
@@ -53,12 +50,12 @@
         .desk-container { 
             width: 96vw; height: 94vh; 
             display: grid; 
-            grid-template-columns: 220px 1fr 300px; /* Nav | Main | Tools */
+            grid-template-columns: 220px 1fr 300px; 
             gap: 20px;
             position: relative;
         }
 
-        /* 1. LEFT: NAV SPINE */
+        /* 1. SPINE (NAV) */
         .spine-panel { display: flex; flex-direction: column; padding: 20px 0; }
         .logo-stamp {
             font-family: var(--font-header); font-size: 26px; color: var(--gold);
@@ -81,7 +78,7 @@
             text-shadow: 0 1px 0 rgba(255,255,255,0.3);
         }
 
-        /* 2. CENTER: SCROLL */
+        /* 2. SCROLL (MAIN) */
         .scroll-container {
             background: var(--parchment);
             background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png");
@@ -93,7 +90,14 @@
         .view-section { animation: inkFade 0.4s ease-out; }
         @keyframes inkFade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 
-        /* 3. RIGHT: TOOLS */
+        /* CHART CONTAINER FIX */
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        /* 3. TOOLS (STICKY) */
         .tools-panel {
             background: var(--wood-panel);
             background-image: url("https://www.transparenttextures.com/patterns/wood-pattern.png");
@@ -205,6 +209,21 @@
         </div>
     </div>
 
+    <div id="edit-modal" class="modal-wrap hidden">
+        <div class="parchment-modal">
+            <h2 id="edit-name" style="font-size:1.5rem; border:none;">Transmute</h2>
+            <input type="hidden" id="edit-id">
+            <div style="text-align:left; margin-bottom:5px; font-weight:bold;">Quantity</div>
+            <input type="number" id="edit-qty">
+            <div style="text-align:left; margin-bottom:5px; font-weight:bold;">Gold Value ($)</div>
+            <input type="number" id="edit-cost" step="0.01">
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Cancel</button>
+                <button onclick="saveEdit()" class="primary">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="app" class="desk-container hidden">
         
         <nav class="spine-panel">
@@ -232,7 +251,9 @@
                 <div style="display:grid; grid-template-columns: 2fr 1fr; gap:30px; margin-top:30px;">
                     <div style="border: 2px solid var(--ink); padding:20px; border-radius:4px;">
                         <h3 style="margin-top:0;">Mana Flux</h3>
-                        <canvas id="valueChart" height="200"></canvas>
+                        <div class="chart-wrapper">
+                            <canvas id="valueChart"></canvas>
+                        </div>
                     </div>
                     <div style="background:rgba(0,0,0,0.05); padding:20px; border-radius:4px;">
                         <h3 style="margin-top:0;">Prized Assets</h3>
@@ -303,20 +324,18 @@
         }
         async function handleLogout() { await sb.auth.signOut(); location.reload(); }
 
-        /* --- SAFE DOM UPDATE HELPER (Fixes Crash) --- */
+        /* --- DATA --- */
         function safeSetText(id, val) {
             const el = document.getElementById(id);
-            if (el) el.innerText = val;
+            if(el) el.innerText = val;
         }
 
-        /* --- DATA & LOGIC --- */
         async function loadData() {
             if(!session) return;
             const { data, error } = await sb.from('cards').select('*').order('created_at', {ascending:false});
             if(error) return console.error(error);
             cardsCache = data || [];
             
-            // Calc Stats
             let count=0, val=0;
             cardsCache.forEach(c => { 
                 if(c.quantity > 0) { 
@@ -325,14 +344,12 @@
                 } 
             });
             
-            // Safe Updates
             safeSetText('stat-count', count);
             safeSetText('stat-value', "$"+val.toFixed(2));
             safeSetText('col-val', "$"+val.toFixed(2));
             
             renderChart(val);
             renderTopList();
-            
             if(!document.getElementById('view-collection').classList.contains('hidden')) filterVault();
         }
 
@@ -356,7 +373,7 @@
             });
         }
 
-        /* --- SEARCH & MERGE LOGIC --- */
+        /* --- SEARCH & MERGE --- */
         function debounceSearch() { clearTimeout(searchTimer); document.getElementById('search-status').innerText="Scrying..."; searchTimer=setTimeout(fetchMeta, 600); }
         
         async function fetchMeta() {
@@ -382,20 +399,20 @@
             toolCardData = v;
         }
 
+        /* --- MERGE LOGIC FIXED --- */
         async function quickAdd() {
             if(!toolCardData) return;
             const qty = parseInt(document.getElementById('tool-qty').value);
             
-            // MERGE CHECK
+            // Check local cache first
             const existing = cardsCache.find(c => c.set_code === toolCardData.set && c.collector_number === toolCardData.collector_number);
             
             if(existing) {
-                // Update
-                const newQty = existing.quantity + qty;
-                await sb.from('cards').update({ quantity: newQty }).eq('id', existing.id);
-                showToast(`Updated count to ${newQty}`);
+                // UPDATE
+                await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id);
+                showToast(`Transmuted: Count increased to ${existing.quantity + qty}`);
             } else {
-                // Insert
+                // INSERT
                 await sb.from('cards').insert({
                     user_id: session.user.id, name: toolCardData.name, set_code: toolCardData.set, collector_number: toolCardData.collector_number,
                     image_url: toolCardData.image_uris?.normal || toolCardData.image_url, quantity: qty, market_price_usd: parseFloat(toolCardData.prices.usd||0),
@@ -406,7 +423,40 @@
             loadData();
         }
 
-        /* --- COLLECTION --- */
+        /* --- PRICE SYNC --- */
+        async function syncPrices(btn) {
+            btn.innerText = "Scrying...";
+            // Get unique identifiers
+            const ids = cardsCache.map(c => ({ set: c.set_code, collector_number: c.collector_number }));
+            // Batch them (chunk of 75 for Scryfall)
+            const chunk = ids.slice(0, 75); 
+            
+            try {
+                const res = await fetch('https://api.scryfall.com/cards/collection', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ identifiers: chunk })
+                });
+                const d = await res.json();
+                
+                if(d.data) {
+                    // Update Local & DB
+                    for (const scryCard of d.data) {
+                        const localCard = cardsCache.find(c => c.set_code === scryCard.set && c.collector_number === scryCard.collector_number);
+                        if (localCard) {
+                            const newPrice = parseFloat(scryCard.prices.usd || 0);
+                            if (newPrice !== localCard.market_price_usd) {
+                                await sb.from('cards').update({ market_price_usd: newPrice }).eq('id', localCard.id);
+                            }
+                        }
+                    }
+                    showToast("Market alignment complete.");
+                    loadData(); // Refresh UI
+                }
+            } catch(e) { console.error(e); showToast("Divination Failed."); }
+            btn.innerText = "Sync Prices";
+        }
+
+        /* --- COLLECTION & ACTIONS --- */
         function nav(v) {
             document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden'));
             document.getElementById('view-'+v).classList.remove('hidden');
@@ -426,23 +476,40 @@
             ).join('');
         }
 
-        /* --- CONTEXT MENU (DELETE FIX) --- */
         function openCtxMenu(e, id) {
             e.preventDefault();
             const m = document.getElementById('collection-ctx-menu');
             m.style.top = e.clientY + 'px'; m.style.left = e.clientX + 'px'; m.classList.remove('hidden');
-            // Inject ID into delete function
-            m.innerHTML = `<div class="ctx-item" onclick="deleteCard('${id}')" style="color:var(--blood);">🔥 Incinerate</div>`;
+            m.innerHTML = `<div class="ctx-item" onclick="openEditModal('${id}')">⚗️ Transmute</div><div class="ctx-item" onclick="deleteCard('${id}')" style="color:var(--blood);">🔥 Incinerate</div>`;
         }
-        
         function closeCtxMenu() { document.getElementById('collection-ctx-menu').classList.add('hidden'); }
 
         async function deleteCard(id) {
             closeCtxMenu();
             if(!confirm("Incinerate artifact?")) return;
-            const { error } = await sb.from('cards').delete().eq('id', id);
-            if(!error) { showToast("Ash to ash."); loadData(); }
-            else showToast("Error: " + error.message);
+            await sb.from('cards').delete().eq('id', id);
+            showToast("Ash to ash."); loadData();
+        }
+
+        function openEditModal(id) {
+            closeCtxMenu();
+            const c = cardsCache.find(x => x.id == id);
+            if(c) {
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-name').innerText = "Transmute: " + c.name;
+                document.getElementById('edit-qty').value = c.quantity;
+                document.getElementById('edit-cost').value = c.buy_price;
+                document.getElementById('edit-modal').classList.remove('hidden');
+            }
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('edit-id').value;
+            const qty = document.getElementById('edit-qty').value;
+            const cost = document.getElementById('edit-cost').value;
+            await sb.from('cards').update({ quantity: qty, buy_price: cost }).eq('id', id);
+            document.getElementById('edit-modal').classList.add('hidden');
+            showToast("Transmutation Complete."); loadData();
         }
 
         /* --- UTILS --- */
