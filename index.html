@@ -4,11 +4,10 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v110.0 (Master of Tomes)</title>
+    <title>The Grimoire | v115.0 (Library)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://bernardo-castilho.github.io/DragDropTouch/DragDropTouch.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=MedievalSharp&display=swap" rel="stylesheet">
@@ -44,7 +43,6 @@
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         .hidden { display: none !important; }
         
-        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--void); }
         ::-webkit-scrollbar-thumb { background: var(--blood-dried); border: 1px solid var(--blood-fresh); border-radius: 4px; }
@@ -52,10 +50,8 @@
         /* --- LAYOUT --- */
         .desk-container { 
             width: 98vw; height: 96vh; 
-            display: grid; 
-            grid-template-columns: 240px 1fr 340px; 
-            gap: 20px;
-            position: relative;
+            display: grid; grid-template-columns: 240px 1fr 340px; 
+            gap: 20px; position: relative;
         }
 
         /* 1. SPINE (NAV) */
@@ -179,30 +175,27 @@
             font-size: 11px; padding: 4px; font-family: var(--font-body);
         }
 
+        .ledger-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .ledger-table th { text-align: left; padding: 12px; color: var(--hellfire); font-family: var(--font-ui); border-bottom: 2px solid var(--blood-dried); }
+        .ledger-table td { padding: 10px; border-bottom: 1px solid #222; color: var(--bone); transition: 0.2s; }
+        .ledger-table tr:hover td { background: rgba(138, 0, 0, 0.1); color: white; }
+
         .card-panel { background: rgba(10, 2, 2, 0.6); border: 1px solid var(--blood-dried); padding: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); margin-bottom: 20px; }
         .stat-cluster { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .stat-node { background: rgba(255,255,255,0.02); padding: 15px; border: 1px solid var(--blood-dried); text-align: center; }
         .stat-val { font-family: var(--font-ui); font-size: 24px; color: var(--bone); }
         
         .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 3000; display: flex; align-items: center; justify-content: center; }
-        .parchment-modal { background: #0f0505; padding: 30px; width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 100px var(--blood-fresh); border: 2px solid var(--hellfire); text-align: center; }
-        .context-menu { position: fixed; background: #0a0000; border: 1px solid var(--hellfire); padding: 5px; width: 160px; z-index: 4000; display: flex; flex-direction: column; }
-        .ctx-item { padding: 10px; color: var(--bone); cursor: pointer; font-family: var(--font-body); border-bottom: 1px solid #222; }
-        .ctx-item:hover { background: var(--blood-fresh); color: black; }
+        .parchment-modal { background: #0f0505; padding: 30px; width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 0 100px var(--blood-fresh); border: 2px solid var(--hellfire); text-align: center; position:relative; }
+        
+        /* CARD DETAILS SPECIFIC */
+        .det-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; text-align: left; }
+        .det-info { color: var(--ash); font-size: 14px; margin-bottom: 15px; }
+        .det-oracle { font-style: italic; color: var(--bone); margin-bottom: 20px; line-height: 1.6; border-left: 2px solid var(--hellfire); padding-left: 15px; }
+        .legality-badge { display: inline-block; padding: 2px 8px; margin: 2px; border-radius: 4px; font-size: 10px; text-transform: uppercase; border: 1px solid #333; }
+        .legality-badge.legal { border-color: var(--gold); color: var(--gold); background: rgba(197, 160, 89, 0.1); }
+        .legality-badge.not-legal { color: #555; background: #111; }
 
-        /* BATTLEFIELD */
-        .bf-overlay { position: fixed; inset: 0; background: #050000; z-index: 2000; display: flex; flex-direction: column; background-image: radial-gradient(circle, #1a0000 0%, #000 80%); }
-        .bf-hud { height: 70px; border-bottom: 2px solid var(--blood-fresh); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(0,0,0,0.8); }
-        .bf-mat { flex: 1; display: flex; flex-direction: column; position: relative; }
-        .bf-zone { flex: 1; border: 1px dashed rgba(138, 0, 0, 0.3); margin: 20px; padding: 10px; display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; transition:0.2s; }
-        .bf-hand { height: 180px; background: linear-gradient(to top, #0a0000 90%, transparent); display: flex; align-items: flex-end; justify-content: center; gap: -30px; padding-bottom: 20px; overflow-x: visible; }
-        
-        .bf-card { width: 100px; border-radius: 6px; cursor: grab; transition: 0.2s; box-shadow: 0 5px 15px black; position:relative; }
-        .bf-card:hover { transform: scale(1.3) translateY(-40px); z-index: 1000; }
-        .bf-card.tapped { transform: rotate(90deg); filter: sepia(1) brightness(0.6); }
-        .bf-card img { width: 100%; border-radius: 6px; pointer-events: none; }
-        .drag-over { background: rgba(138, 0, 0, 0.2); box-shadow: inset 0 0 50px var(--blood-fresh); }
-        
         .toast { position: fixed; bottom: 30px; right: 30px; z-index: 5000; background: #0f0505; border: 1px solid var(--hellfire); color: var(--bone); padding: 15px 25px; font-family: var(--font-ui); box-shadow: 0 0 20px var(--blood-fresh); animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
         
@@ -216,7 +209,6 @@
 </head>
 <body>
     <div id="toast-container"></div>
-    <div id="collection-ctx-menu" class="context-menu hidden"></div>
     <img id="hover-preview" style="position:fixed; z-index:4000; width:280px; border-radius:10px; display:none; pointer-events:none; border: 3px solid var(--hellfire); box-shadow: 0 0 100px var(--blood-fresh);">
 
     <div id="auth-screen" class="modal-wrap" style="display: flex;">
@@ -226,6 +218,49 @@
             <input type="email" id="email" placeholder="Wizard's Mark">
             <input type="password" id="password" placeholder="Secret Rune">
             <button class="primary mt-20" onclick="handleAuthAction(this)">Unseal Tome</button>
+        </div>
+    </div>
+
+    <div id="details-modal" class="modal-wrap hidden">
+        <div class="parchment-modal" style="width: 800px;">
+            <div class="det-grid">
+                <div>
+                    <img id="det-img" style="width: 100%; border-radius: 8px; box-shadow: 0 0 20px black;">
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 id="det-name" style="margin: 0; border: none; font-size: 24px;"></h2>
+                        <div id="det-mana" style="font-family: var(--font-header); color: var(--hellfire); font-size: 18px;"></div>
+                    </div>
+                    <div id="det-type" class="det-info"></div>
+                    <div id="det-oracle" class="det-oracle"></div>
+                    
+                    <div style="margin-bottom: 10px; font-size: 12px; color: var(--ash); text-transform: uppercase; letter-spacing: 1px;">Legalities</div>
+                    <div id="det-legalities" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px;"></div>
+                    
+                    <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: auto;">
+                        <input type="hidden" id="det-id">
+                        <button class="secondary" onclick="document.getElementById('details-modal').classList.add('hidden')">Close</button>
+                        <button class="btn-sm" onclick="openEditModal(document.getElementById('det-id').value)">Transmute</button>
+                        <button class="primary btn-sm" onclick="deleteCard(document.getElementById('det-id').value)">Incinerate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal-wrap hidden">
+        <div class="parchment-modal">
+            <h2 id="edit-name" style="font-size:1.5rem; border:none; color:var(--bone);">Transmute Matter</h2>
+            <input type="hidden" id="edit-id">
+            <div style="text-align:left; margin-bottom:5px; color:var(--hellfire);">Count</div>
+            <input type="number" id="edit-qty">
+            <div style="text-align:left; margin-bottom:5px; color:var(--hellfire);">Value</div>
+            <input type="number" id="edit-cost" step="0.01">
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="secondary">Flee</button>
+                <button onclick="saveEdit()" class="primary">Transmute</button>
+            </div>
         </div>
     </div>
 
@@ -239,7 +274,7 @@
             <div style="margin-top:auto; padding:20px; text-align:center; cursor:pointer; color:var(--blood-fresh);" onclick="handleLogout()">🩸 Bleed Out</div>
         </nav>
 
-        <main class="scroll-container" onclick="closeCtxMenu()">
+        <main class="scroll-container">
             
             <div id="view-dashboard" class="view-section view-content">
                 <h2>Infernal Sanctum</h2>
@@ -272,6 +307,7 @@
                     <div style="display:flex; gap:10px; align-items:center;">
                         <div class="vault-total" id="col-filtered-val">$0.00</div>
                         <button class="primary btn-sm" onclick="syncPrices(this)">Divinate</button>
+                        <button class="btn-sm" onclick="toggleCollectionView()">View</button>
                     </div>
                 </div>
                 <div class="view-content"><div id="collection-grid"></div></div>
@@ -288,52 +324,37 @@
                 
                 <div id="deck-edit-view" class="hidden">
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                        <button class="btn-sm secondary" onclick="closeDeckEditor()">← Seal Tome</button>
+                        <button class="btn-sm" onclick="closeDeckEditor()">← Seal Tome</button>
                         <div style="display:flex; gap:10px;">
                             <button class="btn-sm" onclick="openGeomancer()">Geomancer</button>
                             <button class="btn-sm" onclick="openHandSim()">Simulate</button>
                             <button class="primary btn-sm" onclick="initBattlefield(true)">Battle</button>
                         </div>
                     </div>
-                    
-                    <div style="display:grid; grid-template-columns: 1fr 320px; gap:20px;">
+                    <div style="display:grid; grid-template-columns: 1fr 300px; gap:20px;">
                         <div>
-                            <input id="deckName" placeholder="Tome Title" style="font-size:24px; color:var(--hellfire); border-bottom:2px solid var(--hellfire);">
-                            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                            <input id="deckName" placeholder="Grimoire Name" style="font-size:24px; color:var(--hellfire); border-bottom:2px solid var(--hellfire);">
+                            <div style="display:flex; gap:10px; margin-bottom:10px;">
                                 <select id="deckFormat" style="flex:1;" onchange="toggleCommanderField()">
                                     <option value="Commander">Commander (EDH)</option>
                                     <option value="Standard">Standard</option>
                                     <option value="Modern">Modern</option>
-                                    <option value="Pioneer">Pioneer</option>
                                     <option value="Legacy">Legacy</option>
-                                    <option value="Vintage">Vintage</option>
-                                    <option value="Pauper">Pauper</option>
                                 </select>
                                 <input id="deckCommander" placeholder="Commander Name" style="flex:1;">
                             </div>
-
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                                <label style="color:var(--ash); font-size:12px;">Mainboard</label>
-                            </div>
-                            <textarea id="deckMain" style="height:350px; font-family:monospace; background:#050000; color:var(--bone); resize:vertical;" placeholder="1 Sol Ring..."></textarea>
-                            
-                            <div style="display:flex; justify-content:space-between; margin-bottom:5px; margin-top:10px;">
-                                <label style="color:var(--ash); font-size:12px;">Sideboard</label>
-                            </div>
-                            <textarea id="deckSide" style="height:150px; font-family:monospace; background:#050000; color:var(--bone); resize:vertical;" placeholder="1 Red Elemental Blast..."></textarea>
-                            
-                            <div style="margin-top:20px; display:flex; gap:10px;">
+                            <textarea id="deckMain" style="height:350px; font-family:monospace; background:#050000; color:var(--bone);" placeholder="1 Sol Ring..."></textarea>
+                            <div style="margin-top:10px; color:var(--ash);">Sideboard</div>
+                            <textarea id="deckSide" style="height:100px; font-family:monospace; background:#050000; color:var(--bone);" placeholder="1 Card..."></textarea>
+                            <div style="margin-top:10px; display:flex; gap:10px;">
                                 <button onclick="validateDeck(this)" class="btn-sm">Read Runes</button>
                                 <button class="primary btn-sm" onclick="saveDeck(this)">Blood Bind</button>
                             </div>
                         </div>
-                        
                         <div class="card-panel">
                             <h3>Analysis</h3>
                             <div style="margin-bottom:10px; display:flex; justify-content:space-between;"><span>Value:</span> <span id="deck-value" class="text-gold">$0.00</span></div>
-                            <div style="margin-bottom:10px; display:flex; justify-content:space-between;"><span>Avg CMC:</span> <span id="deck-cmc">0.00</span></div>
-                            <div style="margin-bottom:10px; display:flex; justify-content:space-between;"><span>Main:</span> <span id="deck-count-main">0</span></div>
-                            <div style="margin-bottom:20px; display:flex; justify-content:space-between;"><span>Side:</span> <span id="deck-count-side">0</span></div>
+                            <div style="margin-bottom:10px; display:flex; justify-content:space-between;"><span>Cards:</span> <span id="deck-count">0</span></div>
                             <div style="height:150px; margin-bottom:20px;"><canvas id="typeChart"></canvas></div>
                             <div style="height:150px;"><canvas id="manaCurve"></canvas></div>
                         </div>
@@ -419,9 +440,10 @@
         let sb=null; try { if(typeof supabase!=='undefined') sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY); } catch(e){}
 
         const CARD_BACK = "https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg";
+        const SIDEBOARD_SEP = "\n### SIDEBOARD ###\n";
+        
         let session, cardsCache=[], searchTimer, toolCardData, allVersions=[], collectionMode='grid';
         let currentDeckStructuredList=[], currentDeckId, valueChart, typeChart, manaChart, gameState={life:40}, simDeck=[];
-        const SIDEBOARD_SEPARATOR = "\n### SIDEBOARD ###\n";
 
         /* --- AUTH --- */
         async function handleAuthAction(btn) {
@@ -436,17 +458,19 @@
         async function handleLogout() { await sb.auth.signOut(); location.reload(); }
 
         /* --- DATA --- */
+        function safeSetText(id, val) { const el=document.getElementById(id); if(el) el.innerText=val; }
+        
         async function loadData() {
             if(!session) return;
             const { data } = await sb.from('cards').select('*').order('created_at', {ascending:false});
             cardsCache = data || [];
             let count=0, val=0;
             cardsCache.forEach(c => { if(c.quantity > 0) { count += c.quantity; val += (c.market_price_usd || 0) * c.quantity; } });
-            document.getElementById('stat-count').innerText = count;
-            document.getElementById('stat-value').innerText = "$"+val.toFixed(2);
-            document.getElementById('col-filtered-val').innerText = "$"+val.toFixed(2);
+            
+            safeSetText('stat-count', count); safeSetText('stat-value', "$"+val.toFixed(2)); safeSetText('col-filtered-val', "$"+val.toFixed(2));
             renderValueChart(val);
-            document.getElementById('top-cards-list').innerHTML = cardsCache.slice(0,5).map(c => `<div class="list-row"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
+            const list = document.getElementById('top-cards-list');
+            list.innerHTML = cardsCache.slice(0,5).map(c => `<div class="list-row" onclick="openCardDetails('${c.id}')"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
             if(!document.getElementById('view-collection').classList.contains('hidden')) filterVault();
         }
 
@@ -481,16 +505,26 @@
             s.value = idx;
         }
         function updateToolVersion() { selectToolCard(document.getElementById('tool-version').value); }
+
         async function quickAdd() {
             if(!toolCardData) return;
             const qty = parseInt(document.getElementById('tool-qty').value);
             const existing = cardsCache.find(c => c.set_code === toolCardData.set && c.collector_number === toolCardData.collector_number);
-            if(existing) { await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id); showToast("Essence strengthened."); }
-            else { await sb.from('cards').insert({ user_id: session.user.id, name: toolCardData.name, set_code: toolCardData.set, collector_number: toolCardData.collector_number, image_url: toolCardData.image_uris?.normal || toolCardData.image_url, quantity: qty, market_price_usd: parseFloat(toolCardData.prices.usd||0), type_line: toolCardData.type_line, cmc: toolCardData.cmc||0, color_identity: toolCardData.color_identity, rarity: toolCardData.rarity }); showToast("Artifact Summoned."); }
+            if(existing) {
+                await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id);
+                showToast("Essence strengthened.");
+            } else {
+                await sb.from('cards').insert({
+                    user_id: session.user.id, name: toolCardData.name, set_code: toolCardData.set, collector_number: toolCardData.collector_number,
+                    image_url: toolCardData.image_uris?.normal || toolCardData.image_url, quantity: qty, market_price_usd: parseFloat(toolCardData.prices.usd||0),
+                    type_line: toolCardData.type_line, cmc: toolCardData.cmc||0, color_identity: toolCardData.color_identity, rarity: toolCardData.rarity
+                });
+                showToast("Artifact Summoned.");
+            }
             loadData();
         }
 
-        /* --- VAULT --- */
+        /* --- VAULT & DETAILS --- */
         function filterVault() {
             const q = document.getElementById('vaultSearch').value.toLowerCase();
             const fColor = document.getElementById('filterColor').value;
@@ -504,32 +538,67 @@
             if(fSort === 'price-desc') filtered.sort((a,b) => (b.market_price_usd||0) - (a.market_price_usd||0));
             if(fSort === 'price-asc') filtered.sort((a,b) => (a.market_price_usd||0) - (b.market_price_usd||0));
             if(fSort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
-            
+
             const grid = document.getElementById('collection-grid');
-            if(collectionMode === 'grid') grid.innerHTML = filtered.map(c => `<div class="magic-card"><div class="qty-seal">${c.quantity}</div><div class="price-tag">$${c.market_price_usd}</div><img src="${c.image_url}" loading="lazy"></div>`).join('');
-            else grid.innerHTML = `<table class="ledger-table"><thead><tr><th>Artifact</th><th>Set</th><th>Value</th><th>Qty</th></tr></thead><tbody>` + filtered.map(c => `<tr><td>${c.name}</td><td>${c.set_code}</td><td style="color:var(--hellfire);">$${c.market_price_usd}</td><td>${c.quantity}</td></tr>`).join('') + `</tbody></table>`;
+            if(collectionMode === 'grid') {
+                grid.className = 'collection-grid';
+                grid.innerHTML = filtered.map(c => 
+                    `<div class="magic-card" onclick="openCardDetails('${c.id}')">
+                        <div class="qty-seal">${c.quantity}</div>
+                        <div class="price-tag">$${c.market_price_usd}</div>
+                        <img src="${c.image_url}" loading="lazy">
+                    </div>`
+                ).join('');
+            } else {
+                grid.className = '';
+                grid.innerHTML = `<table class="ledger-table"><thead><tr><th>Artifact</th><th>Type</th><th>Set</th><th>Value</th><th>Qty</th></tr></thead><tbody>` + 
+                filtered.map(c => `<tr onclick="openCardDetails('${c.id}')"><td>${c.name}</td><td>${c.type_line.split('—')[0]}</td><td>${c.set_code}</td><td style="color:var(--hellfire);">$${c.market_price_usd}</td><td>${c.quantity}</td></tr>`).join('') + `</tbody></table>`;
+            }
             const total = filtered.reduce((a,b)=>a+(b.market_price_usd*b.quantity),0);
             document.getElementById('col-filtered-val').innerText = "$"+total.toFixed(2);
         }
         function toggleCollectionView() { collectionMode = (collectionMode==='grid'?'list':'grid'); filterVault(); }
 
-        /* --- DECK LOGIC (UPDATED V110) --- */
+        async function openCardDetails(id) {
+            const c = cardsCache.find(x => x.id == id);
+            if(!c) return;
+            document.getElementById('details-modal').classList.remove('hidden');
+            document.getElementById('det-img').src = c.image_url;
+            document.getElementById('det-name').innerText = c.name;
+            document.getElementById('det-id').value = id;
+            document.getElementById('det-mana').innerText = "Loading...";
+            
+            // Fetch live details
+            try {
+                const res = await fetch(`https://api.scryfall.com/cards/${c.set_code}/${c.collector_number}`);
+                const d = await res.json();
+                
+                document.getElementById('det-mana').innerText = d.mana_cost || "";
+                document.getElementById('det-type').innerText = d.type_line;
+                document.getElementById('det-oracle').innerText = d.oracle_text || "";
+                
+                let legs = "";
+                for(const [fmt, status] of Object.entries(d.legalities)) {
+                    if(status !== 'not_legal') {
+                        legs += `<span class="legality-badge ${status === 'legal' ? 'legal' : 'not-legal'}">${fmt}</span>`;
+                    }
+                }
+                document.getElementById('det-legalities').innerHTML = legs;
+            } catch(e) { console.log(e); }
+        }
+
+        /* --- DECK LOGIC --- */
         function toggleCommanderField() {
             const fmt = document.getElementById('deckFormat').value;
             document.getElementById('deckCommander').style.display = (fmt === 'Commander') ? 'block' : 'none';
         }
 
         async function loadDecks() {
-            if(!session) return;
             const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
             if(data) {
                 document.getElementById('deck-grid').innerHTML = data.map(d => 
-                    `<div class="magic-card" style="height:250px;" onclick="viewDeck('${d.id}')">
-                        <img src="${d.cover_url}" style="filter:sepia(0.5) brightness(0.7);">
-                        <div style="position:absolute; bottom:0; width:100%; padding:20px; background:linear-gradient(to top, black, transparent);">
-                            <h3 style="margin:0; font-size:16px;">${d.name}</h3>
-                            <div style="font-size:12px; color:var(--ash);">${d.format}</div>
-                        </div>
+                    `<div class="card-panel" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; text-align:center;" onclick="viewDeck('${d.id}')">
+                        <h3 style="margin-bottom:5px;">${d.name}</h3><div style="color:var(--ash); font-size:12px;">${d.format}</div>
                     </div>`
                 ).join('');
                 document.getElementById('stat-decks').innerText = data.length;
@@ -543,23 +612,13 @@
             btn.innerText = "Divining...";
             const mainText = document.getElementById('deckMain').value; 
             const sideText = document.getElementById('deckSide').value;
-            
-            // Parse Main
             const mainLines = mainText.split('\n').filter(l=>l.trim());
             const idents = mainLines.map(l=>{ const m=l.match(/^(\d+)\s+(.+)/); return m ? {name:m[2]} : {name:l} }).slice(0, 75);
-            
             try {
                 const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:idents})});
                 const d = await res.json();
                 if(d.data) {
-                    // Enrich data
-                    currentDeckStructuredList = d.data.map(c => ({
-                        ...c, 
-                        qty: 1, // Simplified count for demo, ideally parse from input line
-                        img: c.image_uris?.normal || c.image_url,
-                        cmc: c.cmc || 0,
-                        type: c.type_line.split('—')[0].trim()
-                    }));
+                    currentDeckStructuredList = d.data.map(c => ({...c, qty:1, img: c.image_uris?.normal || c.image_url, cmc: c.cmc || 0, type: c.type_line.split('—')[0].trim()}));
                     renderDeckStats(currentDeckStructuredList, mainLines.length, sideText.split('\n').filter(l=>l.trim()).length);
                 }
             } catch(e) {}
@@ -567,19 +626,10 @@
         }
         
         function renderDeckStats(cards, mainCount, sideCount) {
-            let val = 0; let totalCmc = 0; let spellCount = 0;
-            const types = {};
-            cards.forEach(c => { 
-                val += parseFloat(c.prices.usd||0); 
-                types[c.type]=(types[c.type]||0)+1;
-                if(!c.type_line.includes('Land')) { totalCmc += c.cmc; spellCount++; }
-            });
-            
+            let val = 0; let totalCmc = 0; let spellCount = 0; const types = {};
+            cards.forEach(c => { val += parseFloat(c.prices.usd||0); types[c.type]=(types[c.type]||0)+1; if(!c.type_line.includes('Land')) { totalCmc += c.cmc; spellCount++; } });
             document.getElementById('deck-value').innerText = "$"+val.toFixed(2);
-            document.getElementById('deck-count-main').innerText = mainCount;
-            document.getElementById('deck-count-side').innerText = sideCount;
-            document.getElementById('deck-cmc').innerText = spellCount > 0 ? (totalCmc/spellCount).toFixed(2) : "0.00";
-            
+            document.getElementById('deck-count').innerText = mainCount;
             const ctxT = document.getElementById('typeChart').getContext('2d'); if(typeChart) typeChart.destroy();
             typeChart = new Chart(ctxT, {type:'doughnut', data:{labels:Object.keys(types), datasets:[{data:Object.values(types), backgroundColor:['#8a0000','#ff3300','#dcd0c0','#5c5c5c'], borderWidth:0}]}, options:{plugins:{legend:{position:'right',labels:{color:'#dcd0c0'}}}}});
         }
@@ -589,46 +639,30 @@
             const name = document.getElementById('deckName').value;
             const main = document.getElementById('deckMain').value;
             const side = document.getElementById('deckSide').value;
-            
-            // SEPARATION PROTOCOL: Concatenate with delimiter
-            const fullList = main + (side ? SIDEBOARD_SEPARATOR + side : "");
-            
-            const payload = { 
-                user_id: session.user.id, name, card_list: fullList, 
-                format: document.getElementById('deckFormat').value, 
-                cover_url: currentDeckStructuredList[0]?.img || CARD_BACK 
-            };
-            
+            const fullList = main + (side ? SIDEBOARD_SEP + side : "");
+            const payload = { user_id: session.user.id, name, card_list: fullList, format: document.getElementById('deckFormat').value, cover_url: currentDeckStructuredList[0]?.img || CARD_BACK };
             if(currentDeckId) await sb.from('decks').update(payload).eq('id',currentDeckId); else await sb.from('decks').insert(payload);
             loadDecks(); closeDeckEditor(); btn.innerText = "Bind Tome";
         }
         
         function viewDeck(id) {
-            showDeckEditor(); 
-            const d = window.myDecks.find(x=>x.id==id); currentDeckId=id;
+            showDeckEditor(); const d = window.myDecks.find(x=>x.id==id); currentDeckId=id;
             document.getElementById('deckName').value = d.name; 
             document.getElementById('deckFormat').value = d.format;
-            toggleCommanderField(); // Update visibility based on loaded format
-            
-            // SPLIT PROTOCOL
-            if(d.card_list.includes(SIDEBOARD_SEPARATOR.trim())) {
-                const parts = d.card_list.split(SIDEBOARD_SEPARATOR.trim());
+            toggleCommanderField();
+            if(d.card_list.includes(SIDEBOARD_SEP.trim())) {
+                const parts = d.card_list.split(SIDEBOARD_SEP.trim());
                 document.getElementById('deckMain').value = parts[0].trim();
                 document.getElementById('deckSide').value = parts[1].trim();
             } else {
                 document.getElementById('deckMain').value = d.card_list;
                 document.getElementById('deckSide').value = "";
             }
-            
             validateDeck(document.createElement('button'));
         }
 
         /* --- HAND SIM --- */
-        function openHandSim() {
-            document.getElementById('hand-sim-modal').classList.remove('hidden');
-            simDeck = [...currentDeckStructuredList]; simDeck.sort(() => Math.random() - 0.5);
-            renderSimHand(simDeck.slice(0, 7));
-        }
+        function openHandSim() { document.getElementById('hand-sim-modal').classList.remove('hidden'); simDeck = [...currentDeckStructuredList]; simDeck.sort(() => Math.random() - 0.5); renderSimHand(simDeck.slice(0, 7)); }
         function renderSimHand(cards) { document.getElementById('sim-hand-display').innerHTML = cards.map(c => `<img src="${c.img}" style="width:120px; border-radius:6px;">`).join(''); }
         function simMulligan() { openHandSim(); }
         function simDraw() { if(simDeck.length > 7) { const c = simDeck[7]; document.getElementById('sim-hand-display').innerHTML += `<img src="${c.img}" style="width:120px; border-radius:6px;">`; } }
@@ -642,11 +676,7 @@
         }
         function renderBF() { document.getElementById('bf-hand').innerHTML = gameState.hand.map((c, i) => `<img src="${c.img || CARD_BACK}" class="bf-card" ondragstart="drag(event, ${i})" draggable="true" style="width:100px; margin-right:-40px;">`).join(''); }
         function drag(ev, index) { ev.dataTransfer.setData("index", index); }
-        function drop(ev, targetZone) { 
-            ev.preventDefault(); const idx = ev.dataTransfer.getData("index"); const card = gameState.hand[idx];
-            const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; 
-            ev.target.closest('.bf-zone').appendChild(img);
-        }
+        function drop(ev, targetZone) { ev.preventDefault(); const idx = ev.dataTransfer.getData("index"); const card = gameState.hand[idx]; const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; ev.target.closest('.bf-zone').appendChild(img); }
         function allowDrop(ev) { ev.preventDefault(); }
         function drawCard() { const img = document.createElement('img'); img.src=CARD_BACK; img.className='bf-card'; document.getElementById('bf-hand').appendChild(img); }
         function updateLife(n) { gameState.life+=n; document.getElementById('bf-life').innerText=gameState.life; }
@@ -661,6 +691,21 @@
             if(v==='collection') filterVault();
         }
         function showToast(msg) { const t=document.createElement('div'); t.className="toast"; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000); }
+        async function deleteCard(id) { 
+            document.getElementById('details-modal').classList.add('hidden');
+            if(confirm("Incinerate?")) { await sb.from('cards').delete().eq('id',id); showToast("Ash."); loadData(); } 
+        }
+        function openEditModal(id) { 
+             document.getElementById('details-modal').classList.add('hidden');
+             const c=cardsCache.find(x=>x.id==id); 
+             if(c) { 
+                 document.getElementById('edit-id').value=id; 
+                 document.getElementById('edit-qty').value=c.quantity; 
+                 document.getElementById('edit-cost').value=c.buy_price; 
+                 document.getElementById('edit-modal').classList.remove('hidden'); 
+            } 
+        }
+        async function saveEdit() { await sb.from('cards').update({ quantity:document.getElementById('edit-qty').value, buy_price:document.getElementById('edit-cost').value }).eq('id',document.getElementById('edit-id').value); document.getElementById('edit-modal').classList.add('hidden'); showToast("Done."); loadData(); }
         async function syncPrices(btn) { btn.innerText="Divining..."; const chunk=cardsCache.map(c=>({set:c.set_code,collector_number:c.collector_number})).slice(0,75); try{const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})}); const d=await res.json(); if(d.data) { for(const s of d.data) { const l=cardsCache.find(c=>c.set_code===s.set&&c.collector_number===s.collector_number); if(l) await sb.from('cards').update({market_price_usd:parseFloat(s.prices.usd||0)}).eq('id',l.id); } } showToast("Aligned."); loadData(); }catch(e){} btn.innerText="Divinate"; }
         function handleCSVUpload(input) { 
             const file = input.files[0]; if(!file) return;
@@ -686,8 +731,8 @@
             valueChart = new Chart(ctx, { type:'line', data: { labels:['M','T','W','T','F','S','S'], datasets:[{label:'Souls', data:[val*0.9, val*0.95, val*0.92, val*0.98, val, val, val], borderColor:'#ff3300', backgroundColor:'rgba(255, 51, 0, 0.1)', fill:true}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{display:false}}} });
         }
 
-        const SIDEBOARD_SEPARATOR = "\n### SIDEBOARD ###\n";
         if(sb) sb.auth.getSession().then(({ data: { session: s } }) => { if(s) { session = s; startSession(); } });
+        document.addEventListener('click', e => { if(!e.target.closest('#collection-ctx-menu')) document.getElementById('collection-ctx-menu').classList.add('hidden'); if(!e.target.closest('.search-wrapper')) document.getElementById('search-results').style.display='none'; });
     </script>
 </body>
 </html>
