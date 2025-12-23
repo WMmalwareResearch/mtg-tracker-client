@@ -497,7 +497,7 @@
     </div>
 
     <script>
-        /* CONFIG */
+        /* --- CONFIGURATION --- */
         const SUPABASE_URL="https://mdirqlntcxqkthbwubmj.supabase.co";
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         const SIDEBOARD_SEP = "\n### SIDEBOARD ###\n";
@@ -507,25 +507,22 @@
         let session, cardsCache=[], searchTimer, toolCardData, allVersions=[], collectionMode='grid';
         let currentDeckStructuredList=[], currentDeckId, valueChart, typeChart, manaChart, gameState={life:40}, simDeck=[];
 
-        /* --- IMAGES OPTIMIZATION --- */
-        function optimizeImg(url) {
-            if(!url) return CARD_BACK;
-            return url.replace(/\/large\/|\/normal\/|\/png\//, '/small/');
-        }
-
-        /* AUTH & INIT */
+        /* --- AUTHENTICATION --- */
         async function handleAuthAction(btn) {
             if(!sb) return alert("System Offline");
             btn.innerText = "Bleeding...";
             const e=document.getElementById('email').value, p=document.getElementById('password').value;
             const { data, error } = await sb.auth.signInWithPassword({ email:e, password:p });
-            if(!error) { session=data.session; startSession(); } else { await sb.auth.signUp({ email:e, password:p }); alert("Check Email"); }
+            if(!error) { session=data.session; startSession(); } 
+            else { await sb.auth.signUp({ email:e, password:p }); alert("Owl sent."); }
             btn.innerText = "Unseal";
         }
         function startSession() { document.getElementById('auth-screen').style.display='none'; document.getElementById('app').classList.remove('hidden'); loadData(); loadDecks(); }
         async function handleLogout() { await sb.auth.signOut(); location.reload(); }
 
-        /* CORE DATA */
+        /* --- CORE DATA --- */
+        function safeSetText(id, val) { const el=document.getElementById(id); if(el) el.innerText=val; }
+        
         async function loadData() {
             if(!session) return;
             const { data } = await sb.from('cards').select('*').order('created_at', {ascending:false});
@@ -533,19 +530,157 @@
             let count=0, val=0;
             cardsCache.forEach(c => { if(c.quantity>0) { count+=c.quantity; val+=(c.market_price_usd||0)*c.quantity; } });
             
-            document.getElementById('stat-count').innerText = count;
-            document.getElementById('stat-value').innerText = "$"+val.toFixed(2);
-            document.getElementById('col-filtered-val').innerText = "$"+val.toFixed(2);
-            
+            safeSetText('stat-count', count); safeSetText('stat-value', "$"+val.toFixed(2)); safeSetText('col-filtered-val', "$"+val.toFixed(2));
             renderValueChart(val);
-            document.getElementById('top-cards-list').innerHTML = cardsCache.slice(0,5).map(c => 
-                `<div class="search-item" onclick="openCardDetails('${c.id}')"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`
-            ).join('');
+            const list = document.getElementById('top-cards-list');
+            if(list) list.innerHTML = cardsCache.slice(0,5).map(c => `<div class="search-item" onclick="openCardDetails('${c.id}')"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
             if(!document.getElementById('view-collection').classList.contains('hidden')) filterVault();
         }
 
-        /* SEARCH & ADD */
-        function debounceSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(fetchMeta, 500); }
+        /* --- UNIVERSAL IMPORT ENGINE (THE VOID WALKER) --- */
+        async function handleCSVUpload(input) { 
+            const file = input.files[0]; if(!file) return;
+            const reader = new FileReader();
+            
+            showToast("Deciphering Scrolls...");
+
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = parseCSV(text); // Helper to handle commas inside quotes
+                if(rows.length < 2) return showToast("Scroll empty.");
+
+                // 1. Detect Columns (Heuristic Mapping)
+                const headers = rows[0].map(h => h.toLowerCase().trim().replace(/['"]+/g, ''));
+                const map = {
+                    qty: headers.findIndex(h => ['quantity','count','qty','q','amount'].includes(h)),
+                    name: headers.findIndex(h => ['name','card name','card','english name'].includes(h)),
+                    set: headers.findIndex(h => ['set code','set','edition','code','expansion'].includes(h)),
+                    cn: headers.findIndex(h => ['collector number','card number','number','cn','#'].includes(h))
+                };
+
+                // Fallback for simple "Qty Name" text files without headers
+                const isSimpleText = map.name === -1 && rows[0].length === 1;
+
+                let batchQueue = []; // For fast set+cn lookup
+                let slowQueue = [];  // For name-only lookup
+
+                // 2. Process Rows
+                for(let i = (isSimpleText ? 0 : 1); i < rows.length; i++) {
+                    const row = rows[i];
+                    if(!row || row.length === 0) continue;
+
+                    let q = 1, n = "", s = "", c = "";
+
+                    if(isSimpleText) {
+                        // "4 Lightning Bolt" logic
+                        const line = row[0];
+                        const match = line.match(/^(\d+)\s+(.+)/);
+                        if(match) { q = parseInt(match[1]); n = match[2]; } 
+                        else { n = line; }
+                    } else {
+                        // CSV Logic
+                        q = map.qty > -1 ? (parseInt(row[map.qty]) || 1) : 1;
+                        n = map.name > -1 ? row[map.name] : "Unknown";
+                        s = map.set > -1 ? row[map.set] : "";
+                        c = map.cn > -1 ? row[map.cn] : "";
+                    }
+
+                    if(n && s && c) batchQueue.push({ name:n, set:s, collector_number:c, quantity:q });
+                    else if(n) slowQueue.push({ name:n, quantity:q });
+                }
+
+                showToast(`Found ${batchQueue.length + slowQueue.length} signatures. Summoning...`);
+
+                // 3. Execute Batch Fetch (Fast Lane)
+                const chunkSize = 75;
+                for (let i = 0; i < batchQueue.length; i += chunkSize) {
+                    const chunk = batchQueue.slice(i, i + chunkSize);
+                    const identifiers = chunk.map(x => ({ set: x.set, collector_number: x.collector_number }));
+                    
+                    try {
+                        const res = await fetch('https://api.scryfall.com/cards/collection', {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ identifiers })
+                        });
+                        const d = await res.json();
+                        
+                        if(d.data) {
+                            for(const card of d.data) {
+                                // Match back to get quantity
+                                const original = chunk.find(x => x.set.toLowerCase() === card.set && x.collector_number === card.collector_number);
+                                const qty = original ? original.quantity : 1;
+                                await upsertCard(card, qty);
+                            }
+                        }
+                    } catch(err) { console.error("Batch fail", err); }
+                }
+
+                // 4. Execute Fuzzy Fetch (Slow Lane)
+                for (const item of slowQueue) {
+                    try {
+                        const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(item.name)}`);
+                        if(res.ok) {
+                            const card = await res.json();
+                            await upsertCard(card, item.quantity);
+                        }
+                        await new Promise(r => setTimeout(r, 75)); // Rate limit respect
+                    } catch(err) { console.error("Fuzzy fail", err); }
+                }
+
+                showToast("Import Complete.");
+                loadData();
+                input.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        // Helper: Robust CSV Parsing (Handle commas in quotes)
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentVal = "";
+            let insideQuote = false;
+            
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (char === '"') { insideQuote = !insideQuote; }
+                else if (char === ',' && !insideQuote) { currentRow.push(currentVal.trim()); currentVal = ""; }
+                else if ((char === '\n' || char === '\r') && !insideQuote) {
+                    if(currentVal || currentRow.length > 0) currentRow.push(currentVal.trim());
+                    if(currentRow.length > 0) rows.push(currentRow);
+                    currentRow = []; currentVal = "";
+                } else { currentVal += char; }
+            }
+            if(currentVal || currentRow.length > 0) { currentRow.push(currentVal.trim()); rows.push(currentRow); }
+            return rows;
+        }
+
+        // Helper: Insert or Update (Merge)
+        async function upsertCard(card, qty) {
+            // Check existing
+            const existing = cardsCache.find(c => c.set_code === card.set && c.collector_number === card.collector_number);
+            
+            if(existing) {
+                await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id);
+            } else {
+                await sb.from('cards').insert({
+                    user_id: session.user.id,
+                    name: card.name,
+                    set_code: card.set,
+                    collector_number: card.collector_number,
+                    image_url: card.image_uris?.normal || card.image_url,
+                    quantity: qty,
+                    market_price_usd: parseFloat(card.prices.usd || 0),
+                    type_line: card.type_line,
+                    cmc: card.cmc || 0,
+                    color_identity: card.color_identity,
+                    rarity: card.rarity
+                });
+            }
+        }
+
+        /* --- SEARCH & ADD --- */
+        function debounceSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(fetchMeta, 600); }
         async function fetchMeta() {
             const q = document.getElementById('global-search').value;
             if(q.length<3) { document.getElementById('search-results').style.display='none'; return; }
@@ -575,49 +710,39 @@
             s.value = idx;
         }
         function updateToolVersion() { selectToolCard(document.getElementById('tool-version').value); }
-        
         async function quickAdd() {
             if(!toolCardData) return;
-            const qty = parseInt(document.getElementById('tool-qty').value);
-            const existing = cardsCache.find(c => c.set_code === toolCardData.set && c.collector_number === toolCardData.collector_number);
-            if(existing) { await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id); showToast("Essence strengthened."); }
-            else { 
-                await sb.from('cards').insert({
-                    user_id: session.user.id, name: toolCardData.name, set_code: toolCardData.set, collector_number: toolCardData.collector_number,
-                    image_url: toolCardData.image_uris?.normal || toolCardData.image_url, quantity: qty, market_price_usd: parseFloat(toolCardData.prices.usd||0),
-                    type_line: toolCardData.type_line, cmc: toolCardData.cmc||0, color_identity: toolCardData.color_identity, rarity: toolCardData.rarity
-                });
-                showToast("Artifact Summoned.");
-            }
+            await upsertCard(toolCardData, parseInt(document.getElementById('tool-qty').value));
+            showToast("Artifact Summoned.");
             loadData();
         }
 
-        /* VAULT LOGIC */
+        /* --- VAULT --- */
         function nav(v) { 
             document.querySelectorAll('.view-section').forEach(d => d.classList.add('hidden')); 
             document.getElementById('view-'+v).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.bookmark').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-'+v)?.classList.add('active');
             if(v==='collection') filterVault();
         }
-        
         function filterVault() {
             const q = document.getElementById('vaultSearch').value.toLowerCase();
             const fColor = document.getElementById('filterColor').value;
+            const fRarity = document.getElementById('filterRarity').value;
             const fType = document.getElementById('filterType').value;
             const fSort = document.getElementById('sortOrder').value;
             let filtered = cardsCache.filter(c => c.name.toLowerCase().includes(q) && c.quantity > 0);
             
             if(fColor !== 'all') filtered = filtered.filter(c => { const basis = (c.type_line.includes('Land')) ? c.color_identity : c.colors; return (basis||[]).includes(fColor); });
+            if(fRarity !== 'all') filtered = filtered.filter(c => c.rarity === fRarity);
             if(fType !== 'all') filtered = filtered.filter(c => c.type_line.includes(fType));
-            
             if(fSort === 'price-desc') filtered.sort((a,b) => (b.market_price_usd||0) - (a.market_price_usd||0));
             if(fSort === 'price-asc') filtered.sort((a,b) => (a.market_price_usd||0) - (b.market_price_usd||0));
             if(fSort === 'name') filtered.sort((a,b) => a.name.localeCompare(b.name));
 
             const grid = document.getElementById('collection-grid');
             if(collectionMode === 'grid') {
-                grid.className = 'card-grid';
+                grid.className = 'collection-grid';
                 grid.innerHTML = filtered.map(c => 
                     `<div class="magic-card" onclick="openCardDetails('${c.id}')">
                         <div class="qty-seal">${c.quantity}</div>
@@ -634,8 +759,9 @@
             document.getElementById('col-filtered-val').innerText = "$"+total.toFixed(2);
         }
         function toggleCollectionView() { collectionMode = (collectionMode==='grid'?'list':'grid'); filterVault(); }
+        function optimizeImg(url) { if(!url) return CARD_BACK; return url.replace(/\/large\/|\/normal\/|\/png\//, '/small/'); }
 
-        /* CARD DETAILS */
+        /* --- CARD DETAILS --- */
         async function openCardDetails(id) {
             const c = cardsCache.find(x => x.id == id);
             if(!c) return;
@@ -644,14 +770,12 @@
             document.getElementById('det-name').innerText = c.name;
             document.getElementById('det-id').value = id;
             document.getElementById('det-mana').innerText = "...";
-            
             try {
                 const res = await fetch(`https://api.scryfall.com/cards/${c.set_code}/${c.collector_number}`);
                 const d = await res.json();
                 document.getElementById('det-mana').innerText = d.mana_cost || "";
                 document.getElementById('det-type').innerText = d.type_line;
                 document.getElementById('det-oracle').innerText = d.oracle_text || "";
-                
                 let legs = "";
                 for(const [fmt, status] of Object.entries(d.legalities)) {
                     if(status !== 'not_legal') legs += `<span class="legal-badge ${status==='legal'?'legal':'not-legal'}">${fmt}</span>`;
@@ -660,7 +784,7 @@
             } catch(e) {}
         }
 
-        /* DECK LOGIC */
+        /* --- DECK LOGIC --- */
         function toggleCommanderField() {
             const fmt = document.getElementById('deckFormat').value;
             document.getElementById('deckCommander').style.display = (fmt === 'Commander') ? 'block' : 'none';
@@ -684,7 +808,6 @@
         }
         function showDeckEditor() { document.getElementById('deck-list-view').classList.add('hidden'); document.getElementById('deck-edit-view').classList.remove('hidden'); currentDeckId=null; document.getElementById('deckName').value=''; document.getElementById('deckMain').value=''; document.getElementById('deckSide').value=''; toggleCommanderField(); }
         function closeDeckEditor() { document.getElementById('deck-list-view').classList.remove('hidden'); document.getElementById('deck-edit-view').classList.add('hidden'); }
-        
         async function validateDeck(btn) {
             btn.innerText = "Divining...";
             const mainText = document.getElementById('deckMain').value; const sideText = document.getElementById('deckSide').value;
@@ -701,7 +824,6 @@
             } catch(e) {}
             btn.innerText = "Read Runes";
         }
-        
         function renderDeckStats(cards, mainCount, sideCount) {
             let val = 0; let totalCmc = 0; let spellCount = 0; const types = {};
             cards.forEach(c => { val += parseFloat(c.prices.usd||0); types[c.type]=(types[c.type]||0)+1; if(!c.type_line.includes('Land')) { totalCmc += c.cmc; spellCount++; } });
@@ -709,11 +831,9 @@
             document.getElementById('deck-count-main').innerText = mainCount;
             document.getElementById('deck-count-side').innerText = sideCount;
             document.getElementById('deck-cmc').innerText = spellCount > 0 ? (totalCmc/spellCount).toFixed(2) : "0.00";
-            
             const ctxT = document.getElementById('typeChart').getContext('2d'); if(typeChart) typeChart.destroy();
             typeChart = new Chart(ctxT, {type:'doughnut', data:{labels:Object.keys(types), datasets:[{data:Object.values(types), backgroundColor:['#8a0000','#ff3300','#dcd0c0','#5c5c5c'], borderWidth:0}]}, options:{plugins:{legend:{position:'right',labels:{color:'#dcd0c0'}}}}});
         }
-
         async function saveDeck(btn) {
             btn.innerText = "Binding...";
             const name = document.getElementById('deckName').value; const main = document.getElementById('deckMain').value; const side = document.getElementById('deckSide').value;
@@ -722,7 +842,6 @@
             if(currentDeckId) await sb.from('decks').update(payload).eq('id',currentDeckId); else await sb.from('decks').insert(payload);
             loadDecks(); closeDeckEditor(); btn.innerText = "Blood Bind";
         }
-        
         function viewDeck(id) {
             showDeckEditor(); const d = window.myDecks.find(x=>x.id==id); currentDeckId=id;
             document.getElementById('deckName').value = d.name; document.getElementById('deckFormat').value = d.format; toggleCommanderField();
@@ -733,19 +852,12 @@
             validateDeck(document.createElement('button'));
         }
 
-        /* --- HAND SIM --- */
+        /* --- BATTLEFIELD & TOOLS --- */
         function openHandSim() { document.getElementById('hand-sim-modal').classList.remove('hidden'); simDeck = [...currentDeckStructuredList]; simDeck.sort(() => Math.random() - 0.5); renderSimHand(simDeck.slice(0, 7)); }
         function renderSimHand(cards) { document.getElementById('sim-hand-display').innerHTML = cards.map(c => `<img src="${c.img}" style="width:120px; border-radius:6px;">`).join(''); }
         function simMulligan() { openHandSim(); }
         function simDraw() { if(simDeck.length > 7) { const c = simDeck[7]; document.getElementById('sim-hand-display').innerHTML += `<img src="${c.img}" style="width:120px; border-radius:6px;">`; } }
-
-        /* --- BATTLEFIELD --- */
-        function initBattlefield(useDeck) {
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState.hand = useDeck ? currentDeckStructuredList.slice(0,7) : [];
-            if(gameState.hand.length === 0) for(let i=0;i<7;i++) drawCard();
-            renderBF();
-        }
+        function initBattlefield(useDeck) { document.getElementById('view-battlefield').classList.remove('hidden'); gameState.hand = useDeck ? currentDeckStructuredList.slice(0,7) : []; if(gameState.hand.length === 0) for(let i=0;i<7;i++) drawCard(); renderBF(); }
         function renderBF() { document.getElementById('bf-hand').innerHTML = gameState.hand.map((c, i) => `<img src="${c.img || CARD_BACK}" class="bf-card" ondragstart="drag(event, ${i})" draggable="true" style="width:100px; margin-right:-40px;">`).join(''); }
         function drag(ev, index) { ev.dataTransfer.setData("index", index); }
         function drop(ev, targetZone) { ev.preventDefault(); const idx = ev.dataTransfer.getData("index"); const card = gameState.hand[idx]; const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; ev.target.closest('.bf-zone').appendChild(img); }
@@ -753,92 +865,20 @@
         function drawCard() { const img = document.createElement('img'); img.src=CARD_BACK; img.className='bf-card'; document.getElementById('bf-hand').appendChild(img); }
         function updateLife(n) { gameState.life+=n; document.getElementById('bf-life').innerText=gameState.life; }
         function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
+        function openGeomancer() { document.getElementById('geo-modal').classList.remove('hidden'); document.getElementById('geo-results').innerText = "Lands Recommended: " + Math.floor(currentDeckStructuredList.length * 0.4); }
 
         /* --- UTILS --- */
         async function deleteCard(id) { document.getElementById('details-modal').classList.add('hidden'); if(confirm("Incinerate?")) { await sb.from('cards').delete().eq('id',id); showToast("Ash."); loadData(); } }
         function openEditModal(id) { document.getElementById('details-modal').classList.add('hidden'); const c=cardsCache.find(x=>x.id==id); if(c) { document.getElementById('edit-id').value=id; document.getElementById('edit-qty').value=c.quantity; document.getElementById('edit-cost').value=c.buy_price; document.getElementById('edit-modal').classList.remove('hidden'); } }
         async function saveEdit() { await sb.from('cards').update({ quantity:document.getElementById('edit-qty').value, buy_price:document.getElementById('edit-cost').value }).eq('id',document.getElementById('edit-id').value); document.getElementById('edit-modal').classList.add('hidden'); showToast("Done."); loadData(); }
         async function syncPrices(btn) { btn.innerText="Divining..."; const chunk=cardsCache.map(c=>({set:c.set_code,collector_number:c.collector_number})).slice(0,75); try{const res=await fetch('https://api.scryfall.com/cards/collection',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({identifiers:chunk})}); const d=await res.json(); if(d.data) { for(const s of d.data) { const l=cardsCache.find(c=>c.set_code===s.set&&c.collector_number===s.collector_number); if(l) await sb.from('cards').update({market_price_usd:parseFloat(s.prices.usd||0)}).eq('id',l.id); } } showToast("Aligned."); loadData(); }catch(e){} btn.innerText="Divinate"; }
-       /* --- REPLACES THE MOCK CSV FUNCTION --- */
-async function handleCSVUpload(input) { 
-    const file = input.files[0]; 
-    if(!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-        const text = e.target.result; 
-        const lines = text.split(/\r\n|\n/); // Split by new line
-        
-        showToast(`Reading ${lines.length} lines...`);
-        let successCount = 0;
-
-        // Loop through every line
-        for(let line of lines) {
-            line = line.trim();
-            if(!line) continue;
-
-            // Regex to find "Quantity Name" (e.g., "4 Lightning Bolt")
-            const match = line.match(/^(\d+)\s+(.+)/);
-            
-            if(match) {
-                const qty = parseInt(match[1]);
-                const name = match[2];
-
-                try {
-                    // 1. Ask Scryfall for the card details
-                    const res = await fetch(`https://api.scryfall.com/cards/named?fuzzy=${encodeURIComponent(name)}`);
-                    
-                    if(res.ok) {
-                        const card = await res.json();
-                        
-                        // 2. Insert into your Vault
-                        await sb.from('cards').insert({
-                            user_id: session.user.id, 
-                            name: card.name, 
-                            set_code: card.set, 
-                            collector_number: card.collector_number,
-                            image_url: card.image_uris?.normal || card.image_url, 
-                            quantity: qty, 
-                            market_price_usd: parseFloat(card.prices.usd||0),
-                            type_line: card.type_line, 
-                            cmc: card.cmc||0, 
-                            color_identity: card.color_identity, 
-                            rarity: card.rarity
-                        });
-                        successCount++;
-                    }
-                } catch(err) {
-                    console.error(`Failed to scribe ${name}`, err);
-                }
-
-                // 3. Small delay to prevent Scryfall from blocking us (Rate Limiting)
-                await new Promise(r => setTimeout(r, 100));
-            }
-        }
-        
-        showToast(`Ritual Complete: ${successCount} Artifacts Summoned.`);
-        loadData(); // Refresh the Vault view
-        input.value = ''; // Reset input so you can re-upload if needed
-    };
-    reader.readAsText(file);
-}
-        function openGeomancer() { document.getElementById('geo-modal').classList.remove('hidden'); document.getElementById('geo-results').innerText = "Lands Recommended: " + Math.floor(currentDeckStructuredList.length * 0.4); }
-        function exportCSV() { 
-            let csv = "Name,Set,Price,Qty\n" + cardsCache.map(c => `${c.name},${c.set_code},${c.market_price_usd},${c.quantity}`).join("\n");
-            const blob = new Blob([csv], {type:'text/csv'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href=url; a.download='vault.csv'; a.click();
-        }
-        function exportDecks() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.myDecks)); const a = document.createElement('a'); a.href = dataStr; a.download = "tomes.json"; a.click(); }
-        function renderValueChart(val) {
-            const ctx = document.getElementById('valueChart').getContext('2d'); if(valueChart) valueChart.destroy();
-            valueChart = new Chart(ctx, { type:'line', data: { labels:['M','T','W','T','F','S','S'], datasets:[{label:'Souls', data:[val*0.9, val*0.95, val*0.92, val*0.98, val, val, val], borderColor:'#ff1a1a', backgroundColor:'rgba(255, 26, 26, 0.1)', fill:true}] }, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{display:false}}} });
-        }
-        function showToast(msg) { const t=document.createElement('div'); t.className="toast"; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000); }
+        function exportCSV() { let csv="Name,Set,Price,Qty\n"+cardsCache.map(c=>`${c.name},${c.set_code},${c.market_price_usd},${c.quantity}`).join("\n"); const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='vault.csv'; a.click(); }
+        function exportDecks() { const dataStr="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(window.myDecks)); const a=document.createElement('a'); a.href=dataStr; a.download="tomes.json"; a.click(); }
+        function renderValueChart(val) { const ctx=document.getElementById('valueChart').getContext('2d'); if(valueChart) valueChart.destroy(); valueChart=new Chart(ctx,{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{label:'Souls',data:[val*0.9,val*0.95,val*0.92,val*0.98,val,val,val],borderColor:'#ff1a1a',backgroundColor:'rgba(255,26,26,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}}); }
+        function showToast(msg) { const t=document.createElement('div'); t.className="toast"; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2000); }
 
         if(sb) sb.auth.getSession().then(({ data: { session: s } }) => { if(s) { session = s; startSession(); } });
-        document.addEventListener('click', e => { if(!e.target.closest('.search-wrapper')) document.getElementById('search-results').style.display='none'; });
+        document.addEventListener('click', e => { if(!e.target.closest('#collection-ctx-menu')) document.getElementById('collection-ctx-menu').classList.add('hidden'); if(!e.target.closest('.search-wrapper')) document.getElementById('search-results').style.display='none'; });
     </script>
 </body>
 </html>
-
