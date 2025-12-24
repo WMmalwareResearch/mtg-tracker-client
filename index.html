@@ -410,12 +410,17 @@
 
         <main class="stage">
             
-            <div id="view-dashboard" class="stage-content">
+           <div id="view-dashboard" class="stage-content">
     
     <div class="hero-banner" style="padding: 30px;">
         <div>
             <div class="hero-label">Treasury</div>
             <div class="hero-val" id="stat-value">$0.00</div>
+            <div style="font-size: 11px; color: #666; margin-top: 8px;">
+                <span id="stat-count" style="color: #ccc; font-weight: bold;">0</span> Artifacts Secured 
+                <span style="margin: 0 8px; color: #333;">|</span>
+                <span id="stat-decks" style="color: #ccc; font-weight: bold;">0</span> Active Tomes
+            </div>
         </div>
         
         <div class="action-card" style="padding:10px 20px; height:auto; border:1px solid var(--border-subtle); background:rgba(0,0,0,0.5); min-width: 250px;">
@@ -761,9 +766,10 @@
 
         /* --- REPLACES updateStats & renderCompChart --- */
 
+/* --- REPLACES EXISTING updateStats --- */
 function updateStats() {
     let count = 0, value = 0;
-    // New Counters: Legality
+    // Legality Counters
     const legalCounts = { Commander: 0, Modern: 0, Standard: 0, Legacy: 0, Pauper: 0 };
     
     cardsCache.forEach(x => { 
@@ -771,8 +777,7 @@ function updateStats() {
             count += x.quantity; 
             value += (x.market_price_usd || 0) * x.quantity;
             
-            // Assume cards are legal in Commander/Legacy if not specified (Simplified for speed)
-            // Ideally, we store legality in the DB. For now, we mock distribution based on set age/type.
+            // Mock Legality Logic
             legalCounts.Commander += x.quantity; 
             legalCounts.Legacy += x.quantity;
             if(!['SOL','CMD'].includes(x.set_code)) legalCounts.Modern += x.quantity;
@@ -780,18 +785,25 @@ function updateStats() {
         } 
     });
 
-    document.getElementById('stat-count').innerText = count;
-    document.getElementById('stat-value').innerText = "$" + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    // --- SAFETY CHECK START ---
+    const elCount = document.getElementById('stat-count');
+    const elValue = document.getElementById('stat-value');
+    
+    if (elCount) elCount.innerText = count;
+    if (elValue) elValue.innerText = "$" + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    // --- SAFETY CHECK END ---
     
     if (window.myDecks && window.myDecks.length > 0) {
-        document.getElementById('hero-deck-name').innerText = window.myDecks[0].name;
-        document.getElementById('hero-deck-name').style.color = "white";
+        const elDeckName = document.getElementById('hero-deck-name');
+        if (elDeckName) {
+            elDeckName.innerText = window.myDecks[0].name;
+            elDeckName.style.color = "white";
+        }
     }
 
     if (typeof renderValueChart === "function") renderValueChart(value);
-    renderLegalityChart(legalCounts); // New Chart Function
+    if (typeof renderLegalityChart === "function") renderLegalityChart(legalCounts);
 
-    // Recent Feed
     const feed = document.getElementById('recent-feed');
     if (feed) {
         feed.innerHTML = cardsCache.slice(0, 7).map(card => `
@@ -1187,4 +1199,5 @@ function renderLegalityChart(counts) {
     </script>
 </body>
 </html>
+
 
