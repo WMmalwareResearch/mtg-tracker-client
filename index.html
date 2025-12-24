@@ -406,9 +406,38 @@
 .action-icon.play:hover { color: var(--accent-gold); }
 .action-icon.burn:hover { color: var(--accent-crimson); }
 
-        /* --- CITADEL DASHBOARD --- */
+        /* --- HIGH SANCTUM STYLES --- */
 
-.sanctum-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+/* Adjust Grid for new Layout */
+.sanctum-grid { 
+    display: grid; 
+    grid-template-columns: 2.5fr 1fr; /* Wider left column for charts */
+    gap: 30px; 
+}
+
+/* Ensure Charts fit container */
+canvas { width: 100% !important; height: 100% !important; }
+
+/* Deck Spotlight Specifics */
+#hero-deck-spotlight {
+    transition: 0.3s;
+    min-width: 200px;
+}
+#hero-deck-spotlight:hover {
+    background: rgba(197, 160, 89, 0.15) !important;
+    transform: translateY(-2px);
+    cursor: pointer;
+}
+
+/* Panel Header Utility */
+.panel-header {
+    font-family: var(--font-head);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border-subtle);
+}
 
 /* Hero Treasury Banner */
 .hero-banner {
@@ -877,52 +906,97 @@
 
         /* --- DATA VISUALIZATION ENGINE --- */
 
+/* --- REPLACES EXISTING updateStats --- */
 function updateStats() {
-    let count = 0;
-    let value = 0;
+    let count = 0, value = 0;
+    const comps = { W:0, U:0, B:0, R:0, G:0, C:0, M:0 }; // Color counters
     
-    // 1. Calculate Totals
+    // 1. Calculate Totals & Colors
     cardsCache.forEach(x => { 
         if(x.quantity > 0) { 
             count += x.quantity; 
-            // Handle null prices gracefully
-            value += (x.market_price_usd || 0) * x.quantity; 
+            value += (x.market_price_usd || 0) * x.quantity;
+            
+            // Color Logic
+            const ci = x.color_identity || [];
+            if(ci.length === 0) comps.C++;
+            else if(ci.length > 1) comps.M++;
+            else comps[ci[0]]++;
         } 
     });
 
-    // 2. Update Hero Numbers (Safety Check)
-    const elCount = document.getElementById('stat-count');
-    const elValue = document.getElementById('stat-value');
-    const elDeckCount = document.getElementById('stat-decks');
-
-    if (elCount) elCount.innerText = count;
-    if (elValue) elValue.innerText = "$" + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    // 2. Update Hero Numbers
+    document.getElementById('stat-count').innerText = count;
+    document.getElementById('stat-value').innerText = "$" + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     
-    // Update Deck Count if decks are loaded
-    if (elDeckCount && window.myDecks) {
-        elDeckCount.innerText = window.myDecks.length;
-    }
-    
-    // 3. Render Chart
-    if (typeof renderValueChart === "function") {
-        renderValueChart(value);
+    // 3. Update Deck Spotlight
+    if (window.myDecks && window.myDecks.length > 0) {
+        const lastDeck = window.myDecks[0]; // Assumes sorted by updated_at desc
+        document.getElementById('hero-deck-name').innerText = lastDeck.name;
+        document.getElementById('hero-deck-name').style.color = "white";
     }
 
-    // 4. Render Recent Feed (The Art Strips)
+    // 4. Render Charts
+    if (typeof renderValueChart === "function") renderValueChart(value);
+    renderCompChart(comps); // New Color Chart
+
+    // 5. Render Recent Feed
     const feed = document.getElementById('recent-feed');
     if (feed) {
-        // Take top 6 most recent cards
-        feed.innerHTML = cardsCache.slice(0, 6).map(card => `
+        feed.innerHTML = cardsCache.slice(0, 7).map(card => `
             <div class="recent-row" onclick="openCardDetails('${card.id}')">
                 <img src="${optimizeImg(card.image_url)}" class="recent-art" onerror="this.src='${CARD_BACK}'">
                 <div class="recent-meta">
                     <div class="recent-name">${card.name}</div>
-                    <div class="recent-set">${(card.set_code || '???').toUpperCase()} • #${card.collector_number || '000'}</div>
+                    <div class="recent-set" style="font-size:9px;">${(card.set_code||'').toUpperCase()} #${card.collector_number}</div>
                 </div>
-                <div class="recent-price">$${(card.market_price_usd || 0).toFixed(2)}</div>
+                <div class="recent-price" style="font-size:12px;">$${(card.market_price_usd||0).toFixed(2)}</div>
             </div>
         `).join('');
     }
+}
+
+/* --- NEW: COLOR CHART RENDERER --- */
+function renderCompChart(comps) {
+    const ctx = document.getElementById('compositionChart');
+    if (!ctx) return;
+    
+    // cleanup old instance
+    if (window.compChartInstance) window.compChartInstance.destroy();
+
+    const dataValues = [comps.W, comps.U, comps.B, comps.R, comps.G, comps.C, comps.M];
+    
+    window.compChartInstance = new Chart(ctx.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless', 'Multi'],
+            datasets: [{
+                data: dataValues,
+                backgroundColor: [
+                    '#f0f2c0', // W
+                    '#b5cde3', // U
+                    '#ccc',    // B (Greyish for visibility on black)
+                    '#db8664', // R
+                    '#93b483', // G
+                    '#666',    // C
+                    '#d4af37'  // Multi (Gold)
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    position: 'right', 
+                    labels: { color: '#888', boxWidth: 10, font: { size: 10 } } 
+                }
+            },
+            cutout: '70%' // Thinner ring
+        }
+    });
 }
 
 // Chart.js Renderer (Just in case you need it)
@@ -1507,6 +1581,7 @@ function openCtxMenu(e, id) {
     </script>
 </body>
 </html>
+
 
 
 
