@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v550.0 (Oracle)</title>
+    <title>The Grimoire | v550.1 (Tactician)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -180,19 +180,82 @@
         .ac-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
         .ac-item:hover { background: #222; }
 
-        /* BATTLEFIELD */
+        /* BATTLEFIELD OVERLAY (v550.1) */
         .bf-overlay { position: fixed; inset: 0; background: #020101; z-index: 6000; display: flex; flex-direction: column; }
-        .bf-hud { height: 80px; border-bottom: 2px solid var(--accent-crimson); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; background: #080303; }
-        .bf-mat { flex: 1; display: flex; flex-direction: column; background: radial-gradient(circle at center, #150505 0%, #000 100%); }
-        .bf-zone { flex: 1; border: 2px dashed rgba(138, 0, 0, 0.2); margin: 15px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; overflow-y: auto; border-radius: 8px; }
-        .bf-hand { height: 200px; background: linear-gradient(to top, #0a0000 80%, transparent); display: flex; align-items: flex-end; justify-content: center; gap: -40px; padding-bottom: 30px; overflow-x: visible; }
         
-        .bf-card { width: 110px; border-radius: 6px; cursor: grab; transition: 0.2s; box-shadow: 0 5px 15px black; position:relative; }
-        .bf-card:hover { transform: scale(1.4) translateY(-60px); z-index: 1000; border: 1px solid var(--accent-bright); }
-        .bf-card.tapped { transform: rotate(90deg); filter: sepia(1) brightness(0.6); }
-        .drag-over { background: rgba(138, 0, 0, 0.15); box-shadow: inset 0 0 50px rgba(138, 0, 0, 0.2); }
+        .bf-top-bar {
+            height: 60px; background: #0a0a0a; border-bottom: 1px solid var(--border-subtle);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        }
+        
+        .bf-main {
+            flex: 1; display: grid; grid-template-columns: 140px 1fr 140px; height: 100%; overflow: hidden;
+        }
+        
+        /* Left/Right Panels */
+        .bf-side-panel {
+            background: #050505; border-right: 1px solid var(--border-subtle);
+            display: flex; flex-direction: column; align-items: center; padding: 10px; gap: 20px;
+        }
+        .bf-side-panel.right { border-right: none; border-left: 1px solid var(--border-subtle); }
+        
+        .bf-pile {
+            width: 100px; height: 140px; border: 2px dashed var(--border-subtle); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555;
+            position: relative; cursor: pointer;
+        }
+        .bf-pile:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+        .bf-pile-count { 
+            position: absolute; top: -8px; right: -8px; background: var(--accent-crimson); 
+            color: white; border-radius: 50%; width: 20px; height: 20px; 
+            display: flex; align-items: center; justify-content: center; font-size: 10px;
+        }
+        
+        /* Central Mat */
+        .bf-mat {
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            padding: 20px; display: flex; flex-direction: column; position: relative;
+        }
+        
+        /* Field Area */
+        .bf-field {
+            flex: 1; display: flex; flex-wrap: wrap; gap: 15px; align-content: flex-start;
+            padding: 20px; overflow-y: auto;
+        }
+        
+        /* Hand Area */
+        .bf-hand-area {
+            height: 180px; border-top: 1px solid var(--accent-gold);
+            background: linear-gradient(to top, #0a0a0a, transparent);
+            display: flex; align-items: center; justify-content: center; gap: -30px;
+            padding: 10px; overflow-x: visible;
+        }
+        
+        /* Card Styles */
+        .bf-card {
+            width: 100px; border-radius: 5px; cursor: grab; transition: 0.2s; 
+            box-shadow: 0 5px 15px black; position: relative; z-index: 10;
+        }
+        .bf-card:hover { transform: scale(1.5) translateY(-40px); z-index: 1000; border: 1px solid var(--accent-gold); }
+        .bf-card.tapped { transform: rotate(90deg); filter: sepia(0.5) brightness(0.7); border-color: #555; }
+        .bf-card-counter {
+            position: absolute; top: 0; right: 0; width: 24px; height: 24px;
+            background: white; color: black; border-radius: 50%; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            box-shadow: 0 2px 5px black; z-index: 20;
+        }
 
-        /* UTILS */
+        /* Context Menu */
+        .bf-ctx-menu {
+            position: absolute; background: #111; border: 1px solid var(--accent-gold);
+            min-width: 150px; z-index: 5000; display: none; flex-direction: column;
+        }
+        .bf-ctx-item {
+            padding: 10px 15px; cursor: pointer; color: #ccc; border-bottom: 1px solid #222; font-size: 12px;
+        }
+        .bf-ctx-item:hover { background: var(--accent-gold); color: black; }
+
+        /* Utils */
         .deck-editor-grid { display: grid; grid-template-columns: 1fr 350px; gap: 30px; height: 100%; }
         .editor-col { display: flex; flex-direction: column; gap: 15px; }
         .chart-cont { height: 200px; width: 100%; margin-top: 20px; }
@@ -233,7 +296,6 @@
         </aside>
 
         <main class="stage">
-            
             <div id="view-dashboard" class="stage-content">
                 <div style="margin-bottom:30px;"><h2 style="font-family:var(--font-head);">Sanctum Overview</h2></div>
                 <div class="stat-bar">
@@ -311,17 +373,10 @@
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>Value</span> <span class="text-gold" id="deck-value">$0.00</span></div>
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>Main Count</span> <span id="deck-count-main">0</span></div>
                                 <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span>Avg CMC</span> <span id="deck-cmc">0.00</span></div>
-                                
-                                <div style="margin-top:20px; font-size:12px; color:var(--text-muted);">PIP ANALYSIS</div>
-                                <div style="height:120px; margin-top:5px;"><canvas id="pipChart"></canvas></div>
-                                
-                                <div style="margin-top:20px; font-size:12px; color:var(--text-muted);">TYPE DISTRIBUTION</div>
-                                <div style="height:120px; margin-top:5px;"><canvas id="typeChart"></canvas></div>
-                                
-                                <div style="margin-top:20px; font-size:12px; color:var(--text-muted);">MANA CURVE</div>
-                                <div style="height:120px; margin-top:5px;"><canvas id="manaCurve"></canvas></div>
+                                <div style="height:150px; margin-top:20px;"><canvas id="pipChart"></canvas></div>
+                                <div style="height:150px; margin-top:20px;"><canvas id="typeChart"></canvas></div>
+                                <div style="height:150px; margin-top:20px;"><canvas id="manaCurve"></canvas></div>
                             </div>
-                            
                             <div class="stat-box" style="padding:15px; text-align:left;">
                                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">VIEW OPTIONS</div>
                                 <select id="deckGroupBy" class="input-dark" style="padding:8px;" onchange="renderDeckVisuals()">
@@ -332,7 +387,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div id="visual-deck-list" style="margin-top:40px;"></div>
                 </div>
             </div>
@@ -380,10 +434,7 @@
             <div class="det-layout">
                 <div><img id="det-img" style="width:100%; border-radius:8px; box-shadow:0 0 30px black;"></div>
                 <div>
-                    <div class="det-header">
-                        <h2 id="det-name" class="det-title"></h2>
-                        <div id="det-mana" class="det-mana"></div>
-                    </div>
+                    <div class="det-header"><h2 id="det-name" class="det-title"></h2><div id="det-mana" class="det-mana"></div></div>
                     <div id="det-type" style="color:var(--text-muted); font-style:italic; margin-bottom:20px;"></div>
                     <div id="det-oracle" class="det-text"></div>
                     <div style="margin-bottom:10px; font-size:11px; text-transform:uppercase; color:var(--text-muted);">Legal Status</div>
@@ -403,14 +454,65 @@
         <div class="modal-box" style="width:400px; text-align:center;">
             <h2 style="font-family:var(--font-head);">Transmute</h2>
             <input type="hidden" id="edit-id">
-            <div style="text-align:left; color:var(--text-muted); margin-top:20px;">Count</div>
-            <input type="number" id="edit-qty" class="input-dark">
-            <div style="text-align:left; color:var(--text-muted); margin-top:10px;">Value (Gold)</div>
-            <input type="number" id="edit-cost" class="input-dark" step="0.01">
+            <div style="text-align:left; color:var(--text-muted); margin-top:20px;">Count</div><input type="number" id="edit-qty" class="input-dark">
+            <div style="text-align:left; color:var(--text-muted); margin-top:10px;">Value (Gold)</div><input type="number" id="edit-cost" class="input-dark" step="0.01">
             <div style="display:flex; gap:10px; margin-top:30px; justify-content:center;">
                 <button class="btn" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
                 <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
             </div>
+        </div>
+    </div>
+
+    <div id="view-battlefield" class="bf-overlay hidden">
+        <div class="bf-top-bar">
+            <button class="btn" onclick="exitBattlefield()">Exit Arena</button>
+            <div style="display:flex; gap:20px; align-items:center;">
+                <div style="color:var(--text-muted); font-size:12px;">LIFE</div>
+                <div style="color:var(--accent-bright); font-size:32px; font-family:var(--font-num); cursor:pointer;" onclick="updateLife(1)" oncontextmenu="event.preventDefault(); updateLife(-1)" id="bf-life">40</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="untapAll()">Untap All (U)</button>
+                <button class="btn btn-primary" onclick="drawCard()">Draw (D)</button>
+            </div>
+        </div>
+        
+        <div class="bf-main">
+            <div class="bf-side-panel">
+                <div class="bf-pile" onclick="alert('Command Zone')">
+                    <div style="text-align:center;">COMMAND<br>ZONE</div>
+                    <div id="bf-cmd-count" class="bf-pile-count">0</div>
+                </div>
+                <div class="bf-pile" onclick="alert('Graveyard')">
+                    <div style="text-align:center;">GRAVE<br>YARD</div>
+                    <div id="bf-grave-count" class="bf-pile-count">0</div>
+                </div>
+                <div class="bf-pile" onclick="alert('Exile')">
+                    <div style="text-align:center;">EXILE</div>
+                    <div id="bf-exile-count" class="bf-pile-count">0</div>
+                </div>
+            </div>
+            
+            <div class="bf-mat">
+                <div id="bf-field" class="bf-field" ondragover="allowDrop(event)" ondrop="drop(event, 'field')"></div>
+                <div id="bf-hand" class="bf-hand-area" ondragover="allowDrop(event)" ondrop="drop(event, 'hand')"></div>
+            </div>
+            
+            <div class="bf-side-panel right">
+                <div class="bf-pile" style="border:none;" onclick="drawCard()">
+                    <img src="https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg" style="width:100%; border-radius:6px;">
+                    <div id="bf-lib-count" class="bf-pile-count" style="top:5px; right:5px;">99</div>
+                </div>
+                <button class="btn-sm" style="margin-top:auto;" onclick="alert('Token Gen')">Create Token</button>
+            </div>
+        </div>
+        
+        <div id="bf-ctx-menu" class="bf-ctx-menu">
+            <div class="bf-ctx-item" onclick="bfAction('counter', 1)">Add +1/+1 Counter</div>
+            <div class="bf-ctx-item" onclick="bfAction('counter', -1)">Remove Counter</div>
+            <div style="border-top:1px solid #333; margin:5px 0;"></div>
+            <div class="bf-ctx-item" onclick="bfAction('move', 'graveyard')">To Graveyard</div>
+            <div class="bf-ctx-item" onclick="bfAction('move', 'exile')">To Exile</div>
+            <div class="bf-ctx-item" onclick="bfAction('move', 'hand')">Bounce to Hand</div>
         </div>
     </div>
 
@@ -424,29 +526,12 @@
             </div>
         </div>
     </div>
-
+    
     <div id="geo-modal" class="modal-overlay hidden">
         <div class="modal-box" style="width:400px; text-align:center;">
             <h2>The Geomancer</h2>
             <div id="geo-results" style="font-family:monospace; margin:30px 0; font-size:24px; color:var(--accent-bright);"></div>
             <button class="btn" onclick="document.getElementById('geo-modal').classList.add('hidden')">Close</button>
-        </div>
-    </div>
-
-    <div id="view-battlefield" class="bf-overlay hidden">
-        <div class="bf-hud">
-            <button class="btn" onclick="exitBattlefield()">Exit Arena</button>
-            <div style="color:var(--accent-bright); font-size:36px; font-family:var(--font-num);" id="bf-life">40</div>
-            <div style="display:flex; gap:15px;">
-                <button class="btn" onclick="updateLife(1)">Heal</button>
-                <button class="btn" onclick="updateLife(-1)">Bleed</button>
-                <button class="btn btn-primary" onclick="drawCard()">Draw</button>
-            </div>
-        </div>
-        <div class="bf-mat">
-            <div id="bf-frontline" class="bf-zone" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
-            <div id="bf-backline" class="bf-zone" ondrop="drop(event, 'field')" ondragover="allowDrop(event)"></div>
-            <div id="bf-hand" class="bf-hand" ondrop="drop(event, 'hand')" ondragover="allowDrop(event)"></div>
         </div>
     </div>
 
@@ -459,7 +544,13 @@
         const SIDEBOARD_SEP = "\n### SIDEBOARD ###\n";
         
         let session, cardsCache=[], searchTimer, filterTimer, toolCardData, allVersions=[], collectionMode='grid';
-        let currentDeckStructuredList=[], currentDeckId, valueChart, compositionChart, typeChart, manaChart, pipChart, gameState={life:40}, simDeck=[];
+        let currentDeckStructuredList=[], currentDeckId, valueChart, compositionChart, typeChart, manaChart, pipChart;
+        
+        // BATTLEFIELD STATE
+        let bfState = {
+            library: [], hand: [], field: [], graveyard: [], exile: [], command: [],
+            life: 40, selectedId: null
+        };
 
         /* HELPERS */
         function getCardImg(c) { return c.image_uris?.normal || c.card_faces?.[0]?.image_uris?.normal || c.image_url || CARD_BACK; }
@@ -471,6 +562,7 @@
             document.getElementById('toast-container').appendChild(t); 
             setTimeout(()=>t.remove(), 3000); 
         }
+        function uuid() { return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) { var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8); return v.toString(16); }); }
 
         /* AUTH */
         async function handleAuthAction(btn) {
@@ -494,7 +586,6 @@
         function updateStats() {
             let c=0, v=0;
             const comps = {W:0, U:0, B:0, R:0, G:0, C:0, M:0};
-            
             cardsCache.forEach(x => { 
                 if(x.quantity>0) { 
                     c+=x.quantity; v+=(x.market_price_usd||0)*x.quantity; 
@@ -508,6 +599,8 @@
             document.getElementById('stat-value').innerText = "$"+v.toFixed(2);
             renderValueChart(v);
             renderCompChart(comps);
+            const list = document.getElementById('top-cards-list');
+            if(list) list.innerHTML = cardsCache.slice(0,5).map(c => `<div class="ac-item" style="position:static" onclick="openCardDetails('${c.id}')"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
         }
 
         /* VAULT LOGIC */
@@ -555,19 +648,14 @@
         }
         function toggleCollectionView() { collectionMode = (collectionMode==='grid'?'list':'grid'); filterVault(); }
 
-        /* SMART SEARCH & ADD */
+        /* SEARCH & ADD */
         function debounceSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(runGlobalSearch, 500); }
         async function runGlobalSearch() {
             let q = document.getElementById('global-search').value.trim();
             if(q.length<2) { document.getElementById('search-results').style.display='none'; return; }
-            
-            // HEURISTIC: "NEO 5" -> "set:neo cn:5"
             const setMatch = q.match(/^([a-zA-Z0-9]{3,4})\s+(\d+)$/);
             let apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints`;
-            if(setMatch) {
-                const smartQ = `set:${setMatch[1]} cn:${setMatch[2]}`;
-                apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(smartQ)}`;
-            }
+            if(setMatch) apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`set:${setMatch[1]} cn:${setMatch[2]}`)}`;
 
             const res = await fetch(apiUrl);
             const d = await res.json();
@@ -645,7 +733,7 @@
             document.getElementById('edit-modal').classList.add('hidden'); showToast("Transmuted."); loadData();
         }
 
-        /* DECK LOGIC (UPDATED WITH TAGS) */
+        /* DECK LOGIC */
         function toggleCommanderField() {
             const fmt = document.getElementById('deckFormat').value;
             document.getElementById('deckCommander').style.display = (fmt === 'Commander') ? 'block' : 'none';
@@ -673,21 +761,15 @@
         async function validateDeck(btn) {
             btn.innerText = "Divining...";
             const mainText = document.getElementById('deckMain').value; const sideText = document.getElementById('deckSide').value;
-            
-            // PARSE TAGS: "1 Sol Ring #Ramp"
             const lines = (mainText + "\n" + sideText).split('\n').filter(l=>l.trim());
-            const idents = [];
-            const tagsMap = {};
+            const idents = []; const tagsMap = {};
             
             lines.forEach(l => {
                 const tagMatch = l.match(/#(\w+)/);
                 const tag = tagMatch ? tagMatch[1] : 'Untagged';
                 const cleanLine = l.replace(/#\w+/, '').trim();
                 const m = cleanLine.match(/^(\d+)\s+(.+)/);
-                if(m) {
-                    idents.push({name: m[2]});
-                    tagsMap[m[2].toLowerCase()] = tag;
-                }
+                if(m) { idents.push({name: m[2]}); tagsMap[m[2].toLowerCase()] = tag; }
             });
 
             try {
@@ -695,13 +777,8 @@
                 const d = await res.json();
                 if(d.data) {
                     currentDeckStructuredList = d.data.map(c => ({
-                        ...c, 
-                        qty:1, 
-                        img: getCardImg(c), 
-                        cmc: c.cmc || 0, 
-                        type: c.type_line.split('—')[0].trim(),
-                        tag: tagsMap[c.name.toLowerCase()] || 'Untagged',
-                        colors: c.colors || []
+                        ...c, qty:1, img: getCardImg(c), cmc: c.cmc || 0, type: c.type_line.split('—')[0].trim(),
+                        tag: tagsMap[c.name.toLowerCase()] || 'Untagged', colors: c.colors || []
                     }));
                     renderDeckStats(currentDeckStructuredList, mainText.split('\n').filter(l=>l.trim()).length, sideText.split('\n').filter(l=>l.trim()).length);
                     renderDeckVisuals();
@@ -712,54 +789,29 @@
         
         function renderDeckVisuals() {
             const groupBy = document.getElementById('deckGroupBy').value;
-            const container = document.getElementById('visual-deck-list');
-            container.innerHTML = '';
-            
+            const container = document.getElementById('visual-deck-list'); container.innerHTML = '';
             const groups = {};
             currentDeckStructuredList.forEach(c => {
-                let key = "Other";
-                if(groupBy === 'type') key = c.type;
-                else if(groupBy === 'tag') key = c.tag;
-                else if(groupBy === 'cmc') key = c.cmc + " Mana";
-                
-                if(!groups[key]) groups[key] = [];
-                groups[key].push(c);
+                let key = groupBy === 'type' ? c.type : groupBy === 'tag' ? c.tag : c.cmc + " Mana";
+                if(!groups[key]) groups[key] = []; groups[key].push(c);
             });
-            
             Object.keys(groups).sort().forEach(g => {
-                const head = document.createElement('div');
-                head.className = 'group-head';
+                const head = document.createElement('div'); head.className = 'group-head';
                 head.innerHTML = `<span>${g}</span><span>${groups[g].length}</span>`;
                 container.appendChild(head);
-                
-                const grid = document.createElement('div');
-                grid.className = 'card-grid deck-group';
-                grid.innerHTML = groups[g].map(c => 
-                    `<div class="card-item">
-                        <div class="card-badge badge-qty">${c.qty}</div>
-                        ${c.tag !== 'Untagged' ? `<div class="card-badge badge-tag">#${c.tag}</div>` : ''}
-                        <img src="${optimizeImg(c.img)}" class="card-img">
-                    </div>`
-                ).join('');
+                const grid = document.createElement('div'); grid.className = 'card-grid deck-group';
+                grid.innerHTML = groups[g].map(c => `<div class="card-item"><div class="card-badge badge-qty">${c.qty}</div>${c.tag!=='Untagged'?`<div class="card-badge badge-tag">#${c.tag}</div>`:''}<img src="${optimizeImg(c.img)}" class="card-img"></div>`).join('');
                 container.appendChild(grid);
             });
         }
 
         function renderDeckStats(cards, mainCount, sideCount) {
-            let val = 0; let totalCmc = 0; let spellCount = 0; 
-            const types = {}; const pips = {W:0, U:0, B:0, R:0, G:0, C:0};
-            
+            let val = 0; let totalCmc = 0; let spellCount = 0; const types = {}; const pips = {W:0, U:0, B:0, R:0, G:0, C:0};
             cards.forEach(c => { 
-                val += parseFloat(c.prices.usd||0); 
-                types[c.type]=(types[c.type]||0)+1; 
+                val += parseFloat(c.prices.usd||0); types[c.type]=(types[c.type]||0)+1; 
                 if(!c.type_line.includes('Land')) { totalCmc += c.cmc; spellCount++; }
-                
-                const cost = c.mana_cost || "";
-                for(let char of cost) {
-                    if(['W','U','B','R','G'].includes(char)) pips[char]++;
-                }
+                for(let char of (c.mana_cost||"")) { if(['W','U','B','R','G'].includes(char)) pips[char]++; }
             });
-            
             document.getElementById('deck-value').innerText = "$"+val.toFixed(2);
             document.getElementById('deck-count-main').innerText = mainCount;
             document.getElementById('deck-count-side').innerText = sideCount;
@@ -767,15 +819,14 @@
             
             const ctxT = document.getElementById('typeChart').getContext('2d'); if(typeChart) typeChart.destroy();
             typeChart = new Chart(ctxT, {type:'doughnut', data:{labels:Object.keys(types), datasets:[{data:Object.values(types), backgroundColor:['#990000','#ff3333','#e0d8cf','#888'], borderWidth:0}]}, options:{plugins:{legend:{display:false}}}});
-            
             const ctxP = document.getElementById('pipChart').getContext('2d'); if(pipChart) pipChart.destroy();
             pipChart = new Chart(ctxP, {type:'bar', data:{labels:Object.keys(pips), datasets:[{label:'Pips', data:Object.values(pips), backgroundColor:['#fff','#00f','#333','#f00','#0f0','#ccc']}]}, options:{plugins:{legend:{display:false}}, scales:{y:{display:false}}}});
         }
 
         async function saveDeck(btn) {
             btn.innerText = "Binding...";
-            const name = document.getElementById('deckName').value; const main = document.getElementById('deckMain').value; const side = document.getElementById('deckSide').value;
-            const fullList = main + (side ? SIDEBOARD_SEP + side : "");
+            const name = document.getElementById('deckName').value;
+            const fullList = document.getElementById('deckMain').value + (document.getElementById('deckSide').value ? SIDEBOARD_SEP + document.getElementById('deckSide').value : "");
             const payload = { user_id: session.user.id, name, card_list: fullList, format: document.getElementById('deckFormat').value, cover_url: currentDeckStructuredList[0]?.img || CARD_BACK };
             if(currentDeckId) await sb.from('decks').update(payload).eq('id',currentDeckId); else await sb.from('decks').insert(payload);
             loadDecks(); closeDeckEditor(); btn.innerText = "Blood Bind";
@@ -791,41 +842,134 @@
             validateDeck(document.createElement('button'));
         }
 
+        /* --- BATTLEFIELD 2.0 (TACTICIAN) --- */
+        function initBattlefield(useDeck) {
+            document.getElementById('view-battlefield').classList.remove('hidden');
+            bfState = { library: [], hand: [], field: [], graveyard: [], exile: [], command: [], life: 40 };
+            
+            if(useDeck && currentDeckStructuredList.length > 0) {
+                // Shuffle Library
+                bfState.library = [...currentDeckStructuredList];
+                for (let i = bfState.library.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [bfState.library[i], bfState.library[j]] = [bfState.library[j], bfState.library[i]];
+                }
+                // Initial Draw 7
+                for(let i=0; i<7; i++) {
+                    if(bfState.library.length > 0) bfState.hand.push({ ...bfState.library.pop(), uid: uuid(), tapped: false, counters: 0 });
+                }
+                document.getElementById('bf-lib-count').innerText = bfState.library.length;
+            } else {
+                // Sandbox Mode
+                for(let i=0; i<7; i++) bfState.hand.push({ img: CARD_BACK, uid: uuid(), tapped: false, counters: 0 });
+            }
+            renderBF();
+        }
+
+        function renderBF() {
+            // Hand
+            document.getElementById('bf-hand').innerHTML = bfState.hand.map(c => 
+                `<div class="bf-card" ondragstart="drag(event, '${c.uid}')" draggable="true" onclick="playCard('${c.uid}')">
+                    <img src="${c.img}" style="width:100%; border-radius:6px;">
+                </div>`
+            ).join('');
+            
+            // Field
+            document.getElementById('bf-field').innerHTML = bfState.field.map(c => 
+                `<div class="bf-card ${c.tapped?'tapped':''}" oncontextmenu="openBfCtx(event, '${c.uid}')" onclick="toggleTap('${c.uid}')">
+                    ${c.counters > 0 ? `<div class="bf-card-counter">${c.counters}</div>` : ''}
+                    <img src="${c.img}" style="width:100%; border-radius:6px;">
+                </div>`
+            ).join('');
+            
+            // Counts
+            document.getElementById('bf-lib-count').innerText = bfState.library.length;
+            document.getElementById('bf-grave-count').innerText = bfState.graveyard.length;
+            document.getElementById('bf-exile-count').innerText = bfState.exile.length;
+            document.getElementById('bf-life').innerText = bfState.life;
+        }
+
+        // Interaction Logic
+        function drawCard() {
+            if(bfState.library.length > 0) {
+                const c = bfState.library.pop();
+                bfState.hand.push({ ...c, uid: uuid(), tapped: false, counters: 0 });
+                renderBF();
+            }
+        }
+        
+        function playCard(uid) {
+            const idx = bfState.hand.findIndex(c => c.uid === uid);
+            if(idx > -1) {
+                const c = bfState.hand.splice(idx, 1)[0];
+                bfState.field.push(c);
+                renderBF();
+            }
+        }
+        
+        function toggleTap(uid) {
+            const c = bfState.field.find(c => c.uid === uid);
+            if(c) { c.tapped = !c.tapped; renderBF(); }
+        }
+        
+        function updateLife(n) { bfState.life += n; renderBF(); }
+        
+        function untapAll() {
+            bfState.field.forEach(c => c.tapped = false);
+            renderBF();
+        }
+
+        // Drag & Drop
+        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drop(ev, target) {
+            ev.preventDefault();
+            const uid = ev.dataTransfer.getData("uid");
+            // Simple logic: if moving from hand to field
+            const handIdx = bfState.hand.findIndex(c => c.uid === uid);
+            if(handIdx > -1 && target === 'field') playCard(uid);
+        }
+
+        // Context Menu
+        function openBfCtx(e, uid) {
+            e.preventDefault();
+            bfState.selectedId = uid;
+            const m = document.getElementById('bf-ctx-menu');
+            m.style.display = 'flex';
+            m.style.left = e.clientX + 'px';
+            m.style.top = e.clientY + 'px';
+        }
+        
+        function bfAction(action, val) {
+            const idx = bfState.field.findIndex(c => c.uid === bfState.selectedId);
+            if(idx === -1) return;
+            
+            if(action === 'counter') bfState.field[idx].counters += val;
+            else if(action === 'move') {
+                const c = bfState.field.splice(idx, 1)[0];
+                bfState[val].push(c); // graveyard, exile, hand
+            }
+            
+            document.getElementById('bf-ctx-menu').style.display = 'none';
+            renderBF();
+        }
+        
+        function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
+        
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if(document.getElementById('view-battlefield').classList.contains('hidden')) return;
+            if(e.key === 'd' || e.key === 'D') drawCard();
+            if(e.key === 'u' || e.key === 'U') untapAll();
+        });
+        document.addEventListener('click', e => { if(!e.target.closest('.bf-ctx-menu')) document.getElementById('bf-ctx-menu').style.display='none'; });
+
         /* SIMS */
         function openHandSim() { document.getElementById('hand-sim-modal').classList.remove('hidden'); simDeck = [...currentDeckStructuredList]; simDeck.sort(() => Math.random() - 0.5); renderSimHand(simDeck.slice(0, 7)); }
         function renderSimHand(cards) { document.getElementById('sim-hand-display').innerHTML = cards.map(c => `<img src="${c.img}" style="width:120px; border-radius:6px;">`).join(''); }
         function simMulligan() { openHandSim(); }
         function simDraw() { if(simDeck.length > 7) { const c = simDeck[7]; document.getElementById('sim-hand-display').innerHTML += `<img src="${c.img}" style="width:120px; border-radius:6px;">`; } }
         function openGeomancer() { document.getElementById('geo-modal').classList.remove('hidden'); document.getElementById('geo-results').innerText = "Lands Recommended: " + Math.floor(currentDeckStructuredList.length * 0.4); }
-
-        /* BATTLEFIELD */
-        function initBattlefield(useDeck) {
-            document.getElementById('view-battlefield').classList.remove('hidden');
-            gameState.hand = useDeck ? currentDeckStructuredList.slice(0,7) : [];
-            // If empty, draw 7 placeholders
-            if(gameState.hand.length === 0) for(let i=0;i<7;i++) gameState.hand.push({img:CARD_BACK});
-            renderBF();
-        }
-        function renderBF() { 
-            document.getElementById('bf-hand').innerHTML = gameState.hand.map((c, i) => 
-                `<img src="${c.img || CARD_BACK}" class="bf-card" ondragstart="drag(event, ${i})" draggable="true">`
-            ).join(''); 
-        }
-        function drag(ev, index) { ev.dataTransfer.setData("index", index); }
-        function drop(ev, targetZone) { 
-            ev.preventDefault(); const idx = ev.dataTransfer.getData("index"); const card = gameState.hand[idx]; 
-            const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; 
-            ev.target.closest('.bf-zone').appendChild(img);
-        }
-        function allowDrop(ev) { ev.preventDefault(); }
-        function drawCard() { 
-            const card = (simDeck.length > 0) ? simDeck.pop() : {img: CARD_BACK};
-            gameState.hand.push(card);
-            const img = document.createElement('img'); img.src=card.img || CARD_BACK; img.className='bf-card'; 
-            document.getElementById('bf-hand').appendChild(img); 
-        }
-        function updateLife(n) { gameState.life+=n; document.getElementById('bf-life').innerText=gameState.life; }
-        function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
 
         /* CSV & EXPORT */
         function handleCSVUpload(input) { 
