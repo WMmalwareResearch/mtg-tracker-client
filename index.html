@@ -174,7 +174,32 @@
         
         /* UTILS & MODALS */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
-        .modal-box { background: #0f0f0f; border: 1px solid var(--border-subtle); width: 800px; max-height: 90vh; padding: 40px; overflow-y: auto; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .modal-box {
+    width: 650px !important; /* Forces smaller width */
+    padding: 25px;           /* Reduces whitespace */
+    max-height: 85vh;
+}
+        .det-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr; /* Image takes less space */
+    gap: 25px; /* Reduces gap between image and text */
+}
+
+.det-title {
+    font-size: 24px; /* Scaled down header */
+    margin-bottom: 5px;
+}
+
+.det-mana {
+    font-size: 16px; /* Scaled down mana symbols */
+}
+
+/* Adjust image container to fit the new column width */
+#det-img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px black;
+}
         .ac-list { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid var(--border-subtle); z-index: 100; max-height: 300px; overflow-y: auto; }
         .ac-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #222; display:flex; justify-content:space-between; }
         .ac-item:hover { background: #222; }
@@ -462,7 +487,7 @@
     </div>
 
     <div id="details-modal" class="modal-overlay hidden">
-    <div class="modal-box" style="width: 900px; max-width: 95vw;">
+    <div class="modal-box">
         <div class="det-layout">
             <div style="text-align: center;">
                 <img id="det-img" style="width: 100%; border-radius: 12px; box-shadow: 0 0 30px black; border: 1px solid #333;">
@@ -935,5 +960,6 @@ function parseMana(cost) {
     </script>
 </body>
 </html>
+
 
 
