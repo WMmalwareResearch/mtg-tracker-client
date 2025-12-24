@@ -351,6 +351,7 @@
     </style>
 </head>
 <body>
+    <div id="collection-ctx-menu" class="ctx-menu hidden"></div>
     <div id="toast-container"></div>
 
     <div id="auth-screen" class="modal-overlay">
@@ -1097,9 +1098,44 @@ function parseMana(cost) {
 
         if(sb) sb.auth.getSession().then(({ data: { session: s } }) => { if(s) { session = s; startSession(); } });
         document.addEventListener('click', e => { if(!e.target.closest('#collection-ctx-menu')) closeCtxMenu(); if(!e.target.closest('.bf-ctx-menu')) document.getElementById('bf-ctx-menu').style.display='none'; if(!e.target.closest('.search-wrapper')) document.getElementById('search-results').style.display='none'; });
+    /* --- EMERGENCY REPAIR UTILS --- */
+
+// Fixes "optimizeImg is not defined"
+function optimizeImg(url) {
+    // Fallback to card back if URL is null/undefined
+    if (!url) return "https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg";
+    // Optimizes Scryfall images to load faster
+    return url.replace(/\/large\/|\/normal\/|\/png\//, '/small/');
+}
+
+// Fixes "Cannot read properties of null (reading 'classList')"
+function closeCtxMenu() {
+    const menu = document.getElementById('collection-ctx-menu');
+    // Only try to hide it if the element actually exists
+    if (menu) {
+        menu.classList.add('hidden');
+    }
+}
+
+// Ensure the menu opens correctly (Fixes ReferenceError if missing)
+function openCtxMenu(e, id) { 
+    e.preventDefault(); 
+    const m = document.getElementById('collection-ctx-menu');
+    if(m) {
+        m.style.top = e.clientY + 'px'; 
+        m.style.left = e.clientX + 'px'; 
+        m.classList.remove('hidden'); 
+        m.innerHTML = `
+            <div class="ctx-item" onclick="openEditModal('${id}')">Transmute (Edit)</div>
+            <div class="ctx-item" onclick="deleteCard('${id}')" style="color:#ff3333;">Incinerate (Delete)</div>
+        `; 
+    }
+}
+    
     </script>
 </body>
 </html>
+
 
 
 
