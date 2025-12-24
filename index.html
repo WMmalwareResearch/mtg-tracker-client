@@ -277,6 +277,67 @@
     color: var(--text-muted);
     margin-bottom: 2px;
 }
+
+        /* --- DECK LIBRARY STYLES --- */
+
+.deck-shelf { margin-bottom: 40px; animation: fadeIn 0.5s; }
+.shelf-header { 
+    font-family: var(--font-head); font-size: 20px; color: var(--text-main); 
+    border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.shelf-tag { 
+    font-family: var(--font-body); font-size: 11px; background: rgba(255,255,255,0.05); 
+    padding: 4px 8px; border-radius: 4px; color: var(--text-muted); 
+}
+
+/* The New Deck Box */
+.deck-box {
+    position: relative; height: 260px; background: #080808; 
+    border: 1px solid var(--border-subtle); border-radius: 8px; overflow: hidden;
+    transition: 0.3s var(--ease); display: flex; flex-direction: column;
+}
+.deck-box:hover { 
+    transform: translateY(-5px); border-color: var(--accent-gold); 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6); 
+}
+
+/* Cover Art with Gradient Mask */
+.deck-cover-art {
+    height: 140px; width: 100%; object-fit: cover;
+    mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+    transition: 0.5s; opacity: 0.8;
+}
+.deck-box:hover .deck-cover-art { opacity: 1; transform: scale(1.05); }
+
+/* Info Section */
+.deck-info { padding: 15px; margin-top: -30px; position: relative; z-index: 2; flex: 1; }
+.deck-title { 
+    font-family: var(--font-head); font-size: 18px; color: #fff; margin: 0 0 5px 0; 
+    text-shadow: 0 2px 5px black; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+}
+.deck-stats { 
+    font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; align-items: center; 
+}
+.count-badge { color: var(--accent-gold); font-weight: bold; }
+
+/* Action Overlay (Appears on Hover) */
+.deck-actions-overlay {
+    position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(10,10,10,0.95);
+    border-top: 1px solid var(--accent-crimson); padding: 15px;
+    display: flex; justify-content: space-around; transform: translateY(100%); transition: 0.3s;
+}
+.deck-box:hover .deck-actions-overlay { transform: translateY(0); }
+
+.action-icon { 
+    cursor: pointer; color: var(--text-muted); font-size: 20px; transition: 0.2s; 
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.action-icon span { font-size: 9px; text-transform: uppercase; font-family: var(--font-body); }
+.action-icon:hover { color: var(--text-main); transform: scale(1.1); }
+.action-icon.play:hover { color: var(--accent-gold); }
+.action-icon.burn:hover { color: var(--accent-crimson); }
         
         .text-gold { color: var(--accent-gold); }
         .deck-editor-grid { display: grid; grid-template-columns: 1fr 350px; gap: 30px; height: 100%; }
@@ -350,12 +411,17 @@
 
             <div id="view-decks" class="hidden">
                 <div id="deck-list-view" class="stage-content">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
-                        <h2 style="font-family:var(--font-head); color:#fff;">Grimoires</h2>
-                        <button class="btn btn-primary" onclick="showDeckEditor()">Inscribe New</button>
-                    </div>
-                    <div id="deck-grid" class="card-grid"></div>
-                </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:30px; align-items:center;">
+        <div>
+            <h2 style="font-family:var(--font-head); color:#fff; margin:0;">Grimoires</h2>
+            <div style="color:var(--text-muted); font-size:12px; margin-top:5px;">Manage your forbidden knowledge.</div>
+        </div>
+        <button class="btn btn-primary" style="display:flex; align-items:center; gap:10px;" onclick="showDeckEditor()">
+            <span>+</span> Inscribe New
+        </button>
+    </div>
+    <div id="deck-grid"></div>
+</div>
 
                 <div id="deck-edit-view" class="stage-content hidden">
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
@@ -623,21 +689,95 @@
         function toggleCollectionView() { collectionMode=(collectionMode==='grid'?'list':'grid'); filterVault(); }
 
         /* --- DECK LOGIC --- */
-        async function loadDecks() {
-            const {data} = await sb.from('decks').select('*');
-            if(data) {
-                document.getElementById('deck-grid').innerHTML = data.map(d=>
-                    `<div class="card-item" onclick="viewDeck('${d.id}')">
-                        <div style="position:absolute; bottom:0; padding:10px; background:rgba(0,0,0,0.8); width:100%;">
-                            <h3 style="margin:0; font-size:16px;">${d.name}</h3>
-                        </div>
-                        <img src="${d.cover_url||CARD_BACK}" class="card-img">
-                    </div>`
-                ).join('');
-                document.getElementById('stat-decks').innerText = data.length;
-                window.myDecks = data;
-            }
-        }
+        /* --- REPLACES EXISTING loadDecks --- */
+async function loadDecks() {
+    if(!session) return;
+    const { data } = await sb.from('decks').select('*').order('updated_at', {ascending:false});
+    
+    if(data) {
+        document.getElementById('stat-decks').innerText = data.length;
+        window.myDecks = data;
+        
+        // 1. Group by Format
+        const shelves = {};
+        data.forEach(d => {
+            const fmt = d.format || "Unsorted";
+            if(!shelves[fmt]) shelves[fmt] = [];
+            shelves[fmt].push(d);
+        });
+
+        // 2. Render Shelves
+        const container = document.getElementById('deck-grid');
+        container.className = ''; // Remove grid class, we use shelf containers now
+        container.innerHTML = '';
+
+        Object.keys(shelves).sort().forEach(fmt => {
+            // Create Shelf
+            const shelfDiv = document.createElement('div');
+            shelfDiv.className = 'deck-shelf';
+            shelfDiv.innerHTML = `
+                <div class="shelf-header">
+                    <span>${fmt}</span>
+                    <span class="shelf-tag">${shelves[fmt].length} Tomes</span>
+                </div>
+                <div class="card-grid">
+                    ${shelves[fmt].map(d => renderDeckBox(d)).join('')}
+                </div>
+            `;
+            container.appendChild(shelfDiv);
+        });
+    }
+}
+
+// Helper: Render Individual Deck Box
+function renderDeckBox(d) {
+    // Quick Count Analysis (Heuristic)
+    const lines = (d.card_list || "").split('\n').filter(l => l.trim().length > 0);
+    let count = 0;
+    lines.forEach(l => {
+        const m = l.match(/^(\d+)/);
+        count += m ? parseInt(m[1]) : 1;
+    });
+
+    return `
+    <div class="deck-box">
+        <img src="${optimizeImg(d.cover_url)}" class="deck-cover-art" onerror="this.src='${CARD_BACK}'">
+        <div class="deck-info">
+            <h3 class="deck-title">${d.name}</h3>
+            <div class="deck-stats">
+                <span class="count-badge">${count} Cards</span>
+                <span>• ${new Date(d.updated_at).toLocaleDateString()}</span>
+            </div>
+        </div>
+        
+        <div class="deck-actions-overlay">
+            <div class="action-icon" onclick="viewDeck('${d.id}')">
+                ✏️ <span>Inscribe</span>
+            </div>
+            <div class="action-icon play" onclick="quickBattle('${d.id}')">
+                ⚔️ <span>Battle</span>
+            </div>
+            <div class="action-icon burn" onclick="deleteDeck('${d.id}')">
+                🔥 <span>Burn</span>
+            </div>
+        </div>
+    </div>`;
+}
+
+// Helper: Quick Actions
+async function deleteDeck(id) {
+    if(confirm("Are you sure you want to incinerate this tome? This cannot be undone.")) {
+        await sb.from('decks').delete().eq('id', id);
+        showToast("Tome Incinerated.");
+        loadDecks();
+    }
+}
+
+function quickBattle(id) {
+    // Load deck data then jump straight to battle
+    viewDeck(id); // Loads data into memory
+    setTimeout(() => initBattlefield(true), 500); // Launches battle after load
+}
         function showDeckEditor() { document.getElementById('deck-list-view').classList.add('hidden'); document.getElementById('deck-edit-view').classList.remove('hidden'); currentDeckId=null; document.getElementById('deckName').value=''; document.getElementById('deckMain').value=''; document.getElementById('deckSide').value=''; toggleCommanderField(); }
         function closeDeckEditor() { document.getElementById('deck-list-view').classList.remove('hidden'); document.getElementById('deck-edit-view').classList.add('hidden'); }
         function toggleCommanderField() { document.getElementById('deckCommander').style.display = (document.getElementById('deckFormat').value === 'Commander') ? 'block' : 'none'; }
@@ -960,6 +1100,7 @@ function parseMana(cost) {
     </script>
 </body>
 </html>
+
 
 
 
