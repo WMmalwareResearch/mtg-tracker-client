@@ -206,7 +206,56 @@
         .toast { position: fixed; bottom: 30px; right: 30px; z-index: 7000; background: #0f0505; border: 1px solid var(--accent-gold); color: #fff; padding: 15px 25px; animation: slideUp 0.3s; }
         @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
 
-        /* ADD TO YOUR <style> BLOCK */
+        /* --- STRATEGIST EDITOR STYLES --- */
+
+/* The HUD (Top Bar) */
+.editor-hud {
+    display: flex; justify-content: space-between; align-items: center;
+    background: #0f0f0f; border: 1px solid var(--border-subtle);
+    padding: 15px 25px; border-radius: 8px; margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.hud-meta { display: flex; gap: 15px; align-items: center; flex: 1; margin: 0 30px; }
+.hud-input { 
+    background: transparent; border: none; border-bottom: 2px solid #333; 
+    color: white; font-size: 18px; padding: 5px; width: 100%; font-family: var(--font-head);
+}
+.hud-input:focus { border-color: var(--accent-gold); outline: none; }
+
+/* KPI Stats Row */
+.kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.kpi-card {
+    background: #111; border: 1px solid var(--border-subtle); padding: 12px;
+    text-align: center; border-radius: 6px;
+}
+.kpi-val { font-size: 20px; color: var(--text-main); font-weight: 700; }
+.kpi-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+
+/* Analysis Panels */
+.analysis-panel {
+    background: #0a0a0a; border: 1px solid var(--border-subtle);
+    padding: 20px; border-radius: 8px; margin-bottom: 20px;
+}
+.panel-header {
+    font-size: 11px; text-transform: uppercase; color: var(--accent-gold);
+    border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px; margin-bottom: 15px;
+    display: flex; justify-content: space-between;
+}
+
+/* Text Areas */
+.deck-text-area {
+    background: #050505; border: 1px solid var(--border-subtle); color: #ccc;
+    font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.5;
+    padding: 15px; border-radius: 6px; resize: vertical; width: 100%;
+    transition: 0.3s;
+}
+.deck-text-area:focus { border-color: var(--accent-gold); box-shadow: 0 0 15px rgba(197, 160, 89, 0.1); }
+
+/* Visual Grid Header */
+.visuals-header {
+    margin-top: 40px; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end;
+}
 
 .det-text-box {
     background: #111; 
@@ -276,6 +325,18 @@
     font-size: 10px;
     color: var(--text-muted);
     margin-bottom: 2px;
+}
+
+        .group-head { 
+    font-family: var(--font-head); 
+    color: var(--accent-gold); 
+    border-bottom: 1px solid var(--border-subtle); 
+    padding-bottom: 5px; 
+    margin-bottom: 15px; 
+    margin-top: 30px;
+    font-size: 18px; 
+    display: flex; 
+    justify-content: space-between; 
 }
 
         /* --- DECK LIBRARY STYLES --- */
@@ -431,35 +492,90 @@
 </div>
 
                 <div id="deck-edit-view" class="stage-content hidden">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                        <button class="btn" onclick="closeDeckEditor()">← Back</button>
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn" onclick="openGeomancer()">Geomancer</button>
-                            <button class="btn" onclick="openHandSim()">Simulate Hand</button>
-                            <button class="btn btn-primary" onclick="initBattlefield(true)">Enter Battlefield</button>
-                        </div>
-                    </div>
-                    <div class="deck-editor-grid">
-                        <div class="editor-col">
-                            <input id="deckName" class="input-dark" style="font-size:24px; border:none; border-bottom:2px solid var(--accent-crimson); background:transparent;" placeholder="Tome Name">
-                            <select id="deckFormat" class="input-dark" onchange="toggleCommanderField()"><option value="Commander">Commander</option><option value="Standard">Standard</option><option value="Modern">Modern</option></select>
-                            <input id="deckCommander" class="input-dark" placeholder="Commander Name" style="display:none;">
-                            <div style="font-size:12px; color:var(--text-muted);">MAINBOARD (Format: "1 Sol Ring")</div>
-                            <textarea id="deckMain" class="input-dark" style="flex:1; font-family:monospace;" placeholder="1 Sol Ring..."></textarea>
-                            <div style="font-size:12px; color:var(--text-muted);">SIDEBOARD</div>
-                            <textarea id="deckSide" class="input-dark" style="height:100px; font-family:monospace;" placeholder="Sideboard..."></textarea>
-                            <button class="btn btn-primary" onclick="saveDeck(this)">Save Changes</button>
-                        </div>
-                        <div class="editor-col">
-                            <div class="stat-box" style="text-align:left;">
-                                <h3 style="margin-bottom:15px; color:var(--text-main);">Analytics</h3>
-                                <div>Value: <span id="deck-value" class="text-gold">$0.00</span></div>
-                                <div>Count: <span id="deck-count-main">0</span></div>
-                                <div style="height:150px; margin-top:20px;"><canvas id="typeChart"></canvas></div>
-                            </div>
-                        </div>
-                    </div>
+    
+    <div class="editor-hud">
+        <button class="btn" onclick="closeDeckEditor()">← Library</button>
+        
+        <div class="hud-meta">
+            <input id="deckName" class="hud-input" placeholder="Tome Name">
+            <select id="deckFormat" class="filter-select" style="width:120px;" onchange="toggleCommanderField()">
+                <option value="Commander">Commander</option>
+                <option value="Standard">Standard</option>
+                <option value="Modern">Modern</option>
+                <option value="Legacy">Legacy</option>
+            </select>
+            <input id="deckCommander" class="hud-input" style="font-size:14px; display:none;" placeholder="Commander Name">
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button class="btn" onclick="openGeomancer()">Geomancer</button>
+            <button class="btn" onclick="openHandSim()">Simulate</button>
+            <button class="btn btn-primary" onclick="initBattlefield(true)">Battle</button>
+        </div>
+    </div>
+
+    <div class="deck-editor-grid">
+        <div class="editor-col">
+            <div class="analysis-panel" style="flex:1; display:flex; flex-direction:column;">
+                <div class="panel-header">
+                    <span>Mainboard</span>
+                    <span style="color:#666">One card per line</span>
                 </div>
+                <textarea id="deckMain" class="deck-text-area" style="flex:1; min-height:400px;" placeholder="1 Sol Ring #Ramp..."></textarea>
+            </div>
+            
+            <div class="analysis-panel">
+                <div class="panel-header">Sideboard</div>
+                <textarea id="deckSide" class="deck-text-area" style="height:120px;" placeholder="1 Red Elemental Blast..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" style="width:100%; padding:15px;" onclick="saveDeck(this)">Save & Analyze</button>
+        </div>
+
+        <div class="editor-col">
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-val text-gold" id="deck-value">$0</div>
+                    <div class="kpi-label">Value</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val" id="deck-count-main">0</div>
+                    <div class="kpi-label">Cards</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-val" id="deck-cmc">0.0</div>
+                    <div class="kpi-label">Avg CMC</div>
+                </div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="panel-header">Mana Curve</div>
+                <div class="chart-cont" style="height:140px;"><canvas id="manaCurve"></canvas></div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="panel-header">Type Distribution</div>
+                <div class="chart-cont" style="height:140px;"><canvas id="typeChart"></canvas></div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="panel-header">Pip Density</div>
+                <div class="chart-cont" style="height:100px;"><canvas id="pipChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="visuals-header">
+        <h3 style="font-family:var(--font-head); color:#fff; margin:0;">Visual Breakdown</h3>
+        <select id="deckGroupBy" class="filter-select" onchange="renderDeckVisuals()">
+            <option value="type">Group by Type</option>
+            <option value="tag">Group by Tag</option>
+            <option value="cmc">Group by Cost</option>
+            <option value="color">Group by Color</option>
+        </select>
+    </div>
+    <div id="visual-deck-list"></div>
+</div>
             </div>
             
             <div id="view-settings" class="hidden stage-content">
@@ -832,7 +948,63 @@ function quickBattle(id) {
             const ctxT = document.getElementById('typeChart').getContext('2d'); if(typeChart) typeChart.destroy();
             typeChart = new Chart(ctxT, {type:'doughnut', data:{labels:Object.keys(types), datasets:[{data:Object.values(types), backgroundColor:['#990000','#ff3333','#e0d8cf','#888'], borderWidth:0}]}, options:{plugins:{legend:{display:false}}}});
         }
-
+/* --- MISSING FUNCTION: DECK VISUALS --- */
+function renderDeckVisuals() {
+    const groupBy = document.getElementById('deckGroupBy').value;
+    const container = document.getElementById('visual-deck-list');
+    
+    // Safety check if we aren't on the deck page
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    // 1. Group Cards
+    const groups = {};
+    currentDeckStructuredList.forEach(c => {
+        let key = "Other";
+        
+        if (groupBy === 'type') {
+            key = c.type; // e.g. "Creature", "Land"
+        } else if (groupBy === 'tag') {
+            key = c.tag || 'Untagged';
+        } else if (groupBy === 'cmc') {
+            key = c.cmc + " Mana";
+        } else if (groupBy === 'color') {
+            const colors = c.colors || [];
+            if (colors.length === 0) key = "Colorless";
+            else if (colors.length > 1) key = "Multicolor";
+            else {
+                const map = { 'W':'White', 'U':'Blue', 'B':'Black', 'R':'Red', 'G':'Green' };
+                key = map[colors[0]] || "Unknown";
+            }
+        }
+        
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(c);
+    });
+    
+    // 2. Render Groups
+    // Sort keys alphabetically, but maybe put Lands last? For now, simple sort.
+    Object.keys(groups).sort().forEach(g => {
+        // Group Header
+        const head = document.createElement('div');
+        head.className = 'group-head'; // Ensure this class exists in CSS
+        head.innerHTML = `<span>${g}</span><span style="color:#666">${groups[g].length}</span>`;
+        container.appendChild(head);
+        
+        // Group Grid
+        const grid = document.createElement('div');
+        grid.className = 'card-grid deck-group'; // Re-use main grid styles
+        grid.innerHTML = groups[g].map(c => 
+            `<div class="card-item" onclick="openCardDetails('${c.id || ''}')">
+                <div class="card-badge badge-qty">${c.qty}</div>
+                ${c.tag && c.tag !== 'Untagged' ? `<div class="card-badge badge-tag" style="top:6px; right:6px; font-size:9px; border:1px solid #555;">#${c.tag}</div>` : ''}
+                <img src="${optimizeImg(c.img)}" class="card-img" loading="lazy" onerror="this.src='${CARD_BACK}'">
+            </div>`
+        ).join('');
+        container.appendChild(grid);
+    });
+}
         async function saveDeck(btn) {
             btn.innerText="Binding...";
             const name = document.getElementById('deckName').value;
@@ -1143,6 +1315,7 @@ function openCtxMenu(e, id) {
     </script>
 </body>
 </html>
+
 
 
 
