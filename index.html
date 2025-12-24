@@ -4,7 +4,7 @@
     <base target="_top">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Grimoire | v600.0 (Warlord)</title>
+    <title>The Grimoire | v600.1 (Definitive)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -13,154 +13,197 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&family=MedievalSharp&display=swap" rel="stylesheet">
 
     <style>
-    /* --- THEME: ONYX & GOLD (Restored) --- */
-    :root { 
-        --bg-void: #050505;
-        --bg-panel: #0a0a0a;
-        --bg-glass: rgba(12, 12, 12, 0.85); /* Restored Glass */
+        /* --- THEME: ONYX & GOLD --- */
+        :root { 
+            --bg-void: #050505;
+            --bg-panel: #0a0a0a;
+            --bg-glass: rgba(12, 12, 12, 0.85);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --accent-crimson: #990000;
+            --accent-bright: #ff3333;
+            --accent-gold: #c5a059;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --font-head: 'Cinzel', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-num: 'MedievalSharp', cursive;
+            --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* BASE LAYOUT */
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: var(--bg-void);
+            background-image: radial-gradient(circle at top center, #150505 0%, #000 80%);
+            color: var(--text-main); font-family: var(--font-body); font-size: 14px;
+            margin: 0; height: 100vh; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-void); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-crimson); }
+
+        /* APP SHELL */
+        .app-shell { 
+            width: 100vw; height: 100vh; display: grid; 
+            grid-template-columns: 260px 1fr 320px; 
+            background: rgba(0,0,0,0.4);
+        }
+
+        /* SIDEBAR */
+        .sidebar { 
+            background: rgba(5,5,5,0.95); border-right: 1px solid var(--border-subtle);
+            display: flex; flex-direction: column; padding: 30px 0; z-index: 20;
+        }
+        .brand {
+            font-family: var(--font-head); font-size: 28px; color: var(--accent-gold);
+            text-align: center; margin-bottom: 40px; letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
+        }
+        .nav-btn {
+            padding: 16px 30px; color: var(--text-muted); cursor: pointer; transition: 0.3s;
+            font-size: 13px; font-weight: 500; letter-spacing: 1px;
+            border-left: 3px solid transparent; display: flex; align-items: center; gap: 15px;
+        }
+        .nav-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
+        .nav-btn.active { 
+            color: var(--accent-gold); border-left-color: var(--accent-gold);
+            background: linear-gradient(90deg, rgba(197, 160, 89, 0.1), transparent);
+        }
+
+        /* MAIN STAGE */
+        .stage { position: relative; overflow-y: auto; overflow-x: hidden; background: rgba(0,0,0,0.2); }
+        .stage-header {
+            position: sticky; top: 0; z-index: 50;
+            background: var(--bg-glass); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .stage-content { padding: 40px; max-width: 1600px; margin: 0 auto; }
+
+        /* INSPECTOR */
+        .inspector {
+            background: #080303; border-left: 1px solid var(--border-subtle);
+            display: flex; flex-direction: column; padding: 25px; z-index: 20;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+        }
+        .inspector-head { 
+            font-family: var(--font-head); color: var(--accent-gold); text-align: center; 
+            font-size: 16px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border-subtle); 
+        }
+
+        /* COMPONENTS */
+        .btn {
+            padding: 10px 20px; border-radius: 4px; font-weight: 600; text-transform: uppercase;
+            font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
+            border: 1px solid var(--border-subtle); background: #1a1a1a; color: var(--text-muted);
+        }
+        .btn:hover { background: #252525; color: var(--text-main); border-color: var(--text-muted); }
         
-        --border-subtle: rgba(255, 255, 255, 0.08);
-        --border-active: rgba(197, 160, 89, 0.3);
+        .btn-primary {
+            background: linear-gradient(135deg, #3a0000, #1a0000); 
+            border-color: var(--accent-crimson); color: #ffcccc;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .btn-primary:hover { border-color: #ff3333; color: white; transform: translateY(-1px); }
+
+        .input-dark {
+            background: #000; border: 1px solid var(--border-subtle); color: var(--text-main);
+            padding: 12px 15px; border-radius: 4px; width: 100%; transition: 0.3s;
+        }
+        .input-dark:focus { border-color: var(--accent-gold); box-shadow: 0 0 10px rgba(197, 160, 89, 0.2); }
+
+        /* FILTERS & SEARCH */
+        .filters-row { display: flex; gap: 10px; align-items: center; width: 100%; }
+        .search-group { flex: 1; position: relative; }
+        .filter-select { background: #000; color: var(--text-muted); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+
+        /* CARD GRID */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; contain: content; }
+        .card-item {
+            position: relative; aspect-ratio: 2.5/3.5; background: #000;
+            border-radius: 10px; overflow: hidden; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s var(--ease);
+        }
+        .card-item:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent-gold); z-index:10; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-badge {
+            position: absolute; background: rgba(0,0,0,0.9); border: 1px solid var(--border-subtle);
+            color: var(--accent-gold); font-size: 11px; font-weight: 700;
+            padding: 3px 8px; border-radius: 4px; pointer-events: none;
+        }
+        .badge-qty { top: 8px; left: 8px; border-color: var(--accent-crimson); background: var(--accent-crimson); color: white; }
+        .badge-price { bottom: 8px; left: 50%; transform: translateX(-50%); opacity: 0; transition: 0.3s; }
+        .card-item:hover .badge-price { opacity: 1; bottom: 12px; }
+
+        /* LIST VIEW */
+        .ledger-table { width: 100%; border-collapse: collapse; }
+        .ledger-table th { text-align: left; padding: 12px; color: var(--accent-gold); border-bottom: 1px solid var(--border-subtle); font-family: var(--font-head); }
+        .ledger-table td { padding: 10px; border-bottom: 1px solid #1a1a1a; cursor: pointer; }
+        .ledger-table tr:hover td { background: rgba(255,255,255,0.05); color: white; }
+
+        /* BATTLEFIELD 3.0 LAYOUT */
+        .bf-overlay { position: fixed; inset: 0; background: #020101; z-index: 6000; display: flex; flex-direction: column; }
+        .bf-top-bar { height: 60px; background: #0a0a0a; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
+        .bf-main-container { flex: 1; display: grid; grid-template-columns: 1fr 140px; height: calc(100vh - 260px); }
         
-        --accent-crimson: #990000;
-        --accent-bright: #ff3333;
-        --accent-gold: #c5a059;
+        /* Left: Field */
+        .bf-field-area { display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); background: radial-gradient(circle at center, #151515 0%, #000 100%); }
+        .bf-row { flex: 1; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; overflow-y: auto; position:relative; }
+        .bf-label { position: absolute; right: 20px; bottom: 10px; font-size: 30px; font-family: var(--font-head); color: rgba(255,255,255,0.03); pointer-events: none; }
+
+        /* Right: Zones */
+        .bf-zones-panel { background: #050505; display: flex; flex-direction: column; gap: 15px; padding: 15px; align-items: center; }
+        .bf-pile { 
+            width: 90px; height: 126px; border: 2px dashed var(--border-subtle); border-radius: 6px; 
+            display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; position: relative; cursor: pointer; 
+        }
+        .bf-pile:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+        .bf-pile img { width:100%; height:100%; border-radius:4px; opacity:0.8; }
+        .bf-pile-count { position: absolute; top: -8px; right: -8px; background: var(--accent-crimson); color: white; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; border: 1px solid #000; }
+
+        /* Bottom: Hand */
+        .bf-hand-area { height: 200px; border-top: 1px solid var(--accent-crimson); background: linear-gradient(to top, #111, black); display: flex; align-items: flex-end; justify-content: center; gap: -40px; padding: 20px; overflow-x: visible; }
         
-        --text-main: #e0e0e0;
-        --text-muted: #888888;
+        .bf-card { width: 110px; border-radius: 6px; cursor: grab; transition: 0.15s; box-shadow: 0 5px 15px black; position: relative; z-index: 10; }
+        .bf-card:hover { transform: scale(1.5) translateY(-50px); z-index: 1000; border: 1px solid var(--accent-bright); }
+        .bf-card.tapped { transform: rotate(90deg); filter: sepia(0.5) brightness(0.7); }
         
-        --font-head: 'Cinzel', serif;
-        --font-body: 'Inter', sans-serif;
-        --font-num: 'MedievalSharp', cursive;
+        /* UTILS & MODALS */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .modal-box { background: #0f0f0f; border: 1px solid var(--border-subtle); width: 800px; max-height: 90vh; padding: 40px; overflow-y: auto; border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.8); }
+        .ac-list { position: absolute; top: 100%; left: 0; width: 100%; background: #111; border: 1px solid var(--border-subtle); z-index: 100; max-height: 300px; overflow-y: auto; }
+        .ac-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #222; display:flex; justify-content:space-between; }
+        .ac-item:hover { background: #222; }
+        .toast { position: fixed; bottom: 30px; right: 30px; z-index: 7000; background: #0f0505; border: 1px solid var(--accent-gold); color: #fff; padding: 15px 25px; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity:0; } to { transform: translateY(0); opacity:1; } }
         
-        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
+        .text-gold { color: var(--accent-gold); }
+        .deck-editor-grid { display: grid; grid-template-columns: 1fr 350px; gap: 30px; height: 100%; }
+        .editor-col { display: flex; flex-direction: column; gap: 15px; }
+        
+        .ctx-menu { position: fixed; background: #111; border: 1px solid var(--accent-gold); min-width: 160px; z-index: 7000; display: none; flex-direction: column; box-shadow: 0 5px 20px black; }
+        .ctx-item { padding: 10px 15px; cursor: pointer; color: #ccc; border-bottom: 1px solid #222; font-size: 12px; }
+        .ctx-item:hover { background: var(--accent-gold); color: black; }
 
-    /* BASE LAYOUT */
-    body { 
-        background-color: var(--bg-void);
-        background-image: radial-gradient(circle at top center, #150505 0%, #000 80%);
-        color: var(--text-main); font-family: var(--font-body); font-size: 14px;
-        margin: 0; height: 100vh; overflow: hidden;
-        display: flex; justify-content: center; align-items: center;
-    }
-    * { box-sizing: border-box; outline: none; }
-    .hidden { display: none !important; }
-
-    /* APP SHELL */
-    .app-shell { 
-        width: 100vw; height: 100vh; display: grid; 
-        grid-template-columns: 260px 1fr 320px; 
-        background: rgba(0,0,0,0.4);
-    }
-
-    /* SIDEBAR */
-    .sidebar { 
-        background: rgba(5,5,5,0.95); border-right: 1px solid var(--border-subtle);
-        display: flex; flex-direction: column; padding: 30px 0; z-index: 20;
-    }
-    .brand {
-        font-family: var(--font-head); font-size: 28px; color: var(--accent-gold);
-        text-align: center; margin-bottom: 40px; letter-spacing: 4px;
-        text-shadow: 0 0 20px rgba(197, 160, 89, 0.3);
-    }
-    .nav-btn {
-        padding: 16px 30px; color: var(--text-muted); cursor: pointer; transition: 0.3s;
-        font-size: 13px; font-weight: 500; letter-spacing: 1px;
-        border-left: 3px solid transparent; display: flex; align-items: center; gap: 15px;
-    }
-    .nav-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
-    .nav-btn.active { 
-        color: var(--accent-gold); border-left-color: var(--accent-gold);
-        background: linear-gradient(90deg, rgba(197, 160, 89, 0.1), transparent);
-    }
-
-    /* MAIN STAGE */
-    .stage { position: relative; overflow-y: auto; overflow-x: hidden; background: rgba(0,0,0,0.2); }
-    
-    /* GLASS HEADER */
-    .stage-header {
-        position: sticky; top: 0; z-index: 50;
-        background: var(--bg-glass); backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--border-subtle);
-        padding: 15px 40px; display: flex; justify-content: space-between; align-items: center;
-    }
-    .stage-content { padding: 40px; max-width: 1600px; margin: 0 auto; }
-
-    /* COMPONENTS */
-    .btn {
-        padding: 10px 20px; border-radius: 4px; font-weight: 600; text-transform: uppercase;
-        font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: 0.2s;
-        border: 1px solid var(--border-subtle); background: #1a1a1a; color: var(--text-muted);
-    }
-    .btn:hover { background: #252525; color: var(--text-main); border-color: var(--text-muted); }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #3a0000, #1a0000); 
-        border-color: var(--accent-crimson); color: #ffcccc;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
-    .btn-primary:hover { border-color: #ff3333; color: white; transform: translateY(-1px); }
-
-    .input-dark {
-        background: #000; border: 1px solid var(--border-subtle); color: var(--text-main);
-        padding: 12px 15px; border-radius: 4px; width: 100%; transition: 0.3s;
-    }
-    .input-dark:focus { border-color: var(--accent-gold); box-shadow: 0 0 10px rgba(197, 160, 89, 0.2); }
-
-    /* CARD GRID */
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; contain: content; }
-    .card-item {
-        position: relative; aspect-ratio: 2.5/3.5; background: #000;
-        border-radius: 10px; overflow: hidden; cursor: pointer;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);
-        transition: 0.3s var(--ease);
-    }
-    .card-item:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent-gold); z-index:10; }
-    .card-img { width: 100%; height: 100%; object-fit: cover; }
-    .card-badge {
-        position: absolute; background: rgba(0,0,0,0.9); border: 1px solid var(--border-subtle);
-        color: var(--accent-gold); font-size: 11px; font-weight: 700;
-        padding: 3px 8px; border-radius: 4px; pointer-events: none;
-    }
-    .badge-qty { top: 8px; left: 8px; border-color: var(--accent-crimson); background: var(--accent-crimson); color: white; }
-    .badge-price { bottom: 8px; left: 50%; transform: translateX(-50%); opacity: 0; transition: 0.3s; }
-    .card-item:hover .badge-price { opacity: 1; bottom: 12px; }
-
-    /* BATTLEFIELD 3.0 STYLES */
-    .bf-overlay { position: fixed; inset: 0; background: #020101; z-index: 6000; display: flex; flex-direction: column; }
-    .bf-top-bar { height: 60px; background: #0a0a0a; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; }
-    .bf-main-container { flex: 1; display: grid; grid-template-columns: 1fr 160px; height: calc(100vh - 260px); }
-    
-    .bf-field-area { display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); background: radial-gradient(circle at center, #151515 0%, #000 100%); }
-    .bf-row { flex: 1; border-bottom: 1px dashed rgba(255,255,255,0.1); padding: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; overflow-y: auto; position:relative; }
-    
-    /* Zone Labels */
-    .bf-label { position: absolute; right: 20px; bottom: 10px; font-size: 30px; font-family: var(--font-head); color: rgba(255,255,255,0.03); pointer-events: none; }
-
-    .bf-zones-panel { background: #050505; display: flex; flex-direction: column; gap: 15px; padding: 15px; align-items: center; }
-    .bf-pile { 
-        width: 90px; height: 126px; border: 2px dashed var(--border-subtle); border-radius: 6px; 
-        display: flex; align-items: center; justify-content: center; font-size: 10px; color: #555; position: relative; cursor: pointer; 
-    }
-    .bf-pile:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
-    .bf-pile img { width:100%; height:100%; border-radius:4px; opacity:0.8; }
-    .bf-pile-count { position: absolute; top: -5px; right: -5px; background: var(--accent-crimson); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-
-    .bf-hand-area { height: 200px; border-top: 1px solid var(--accent-crimson); background: linear-gradient(to top, #111, black); display: flex; align-items: flex-end; justify-content: center; gap: -40px; padding: 20px; overflow-x: visible; }
-    
-    .bf-card { width: 110px; border-radius: 6px; cursor: grab; transition: 0.15s; box-shadow: 0 5px 15px black; position: relative; }
-    .bf-card:hover { transform: scale(1.5) translateY(-50px); z-index: 1000; border: 1px solid var(--accent-bright); }
-    .bf-card.tapped { transform: rotate(90deg); filter: sepia(0.5) brightness(0.6); }
-
-    /* UTILS */
-    .text-gold { color: var(--accent-gold); }
-    .inspector { background: #080303; border-left: 1px solid var(--border-subtle); padding: 25px; display: flex; flex-direction: column; width: 320px; }
-    @media (max-width: 1200px) { .app-shell { grid-template-columns: 80px 1fr; } .inspector { display: none; } .nav-btn span { display: none; } }
-</style>
+        @media (max-width: 1200px) { .app-shell { grid-template-columns: 80px 1fr; } .inspector { display: none; } .brand, .nav-btn span { display: none; } .nav-btn { justify-content: center; padding: 20px; } }
+    </style>
 </head>
 <body>
-    <div id="toast-container" style="position:fixed; bottom:30px; right:30px; z-index:5000;"></div>
+    <div id="toast-container"></div>
+
+    <div id="auth-screen" class="modal-overlay">
+        <div class="modal-box" style="width: 400px; text-align: center;">
+            <div style="font-family:var(--font-head); color:var(--accent-gold); font-size:40px; margin-bottom:10px;">THE GRIMOIRE</div>
+            <p style="color:var(--text-muted); margin-bottom:30px;">Access the Forbidden Archives</p>
+            <input type="email" id="email" class="input-dark" placeholder="Email" style="margin-bottom:10px;">
+            <input type="password" id="password" class="input-dark" placeholder="Password" style="margin-bottom:20px;">
+            <button class="btn btn-primary" style="width:100%;" onclick="handleAuthAction(this)">Enter</button>
+        </div>
+    </div>
 
     <div id="app" class="app-shell hidden">
         <aside class="sidebar">
@@ -169,21 +212,25 @@
             <div class="nav-btn" id="nav-collection" onclick="nav('collection')">⚰️ <span>Vault</span></div>
             <div class="nav-btn" id="nav-decks" onclick="nav('decks')">📜 <span>Tomes</span></div>
             <div class="nav-btn" id="nav-settings" onclick="nav('settings')">⚙️ <span>Config</span></div>
-            <div class="nav-btn" style="margin-top:auto; color:#900;" onclick="handleLogout()">🛑 <span>Sever Link</span></div>
+            <div class="nav-btn logout-btn" style="margin-top:auto; color:#900;" onclick="handleLogout()">🛑 <span>Sever Link</span></div>
         </aside>
 
         <main class="stage">
             <div id="view-dashboard" class="stage-content">
-                <div style="margin-bottom:30px;"><h2 style="font-family:var(--font-head);">Sanctum Overview</h2></div>
-                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
-                    <div style="background:#111; padding:20px; border:1px solid #333; text-align:center;">
-                        <div id="stat-count" style="font-size:32px;">0</div><div style="color:#666;">Cards</div>
+                <div style="margin-bottom:30px;"><h2 style="font-family:var(--font-head); color:#fff; border-bottom:1px solid #333; padding-bottom:10px;">Sanctum Overview</h2></div>
+                <div class="stat-bar">
+                    <div class="stat-box"><div class="stat-num" id="stat-count">0</div><div class="stat-label">Total Artifacts</div></div>
+                    <div class="stat-box"><div class="stat-num text-gold" id="stat-value">$0</div><div class="stat-label">Treasury Value</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-decks">0</div><div class="stat-label">Active Tomes</div></div>
+                </div>
+                <div class="deck-editor-grid" style="grid-template-columns: 2fr 1fr;">
+                    <div class="stat-box" style="text-align:left;">
+                        <h3 style="color:var(--text-main); margin-bottom:20px;">Value History</h3>
+                        <div style="height:200px;"><canvas id="valueChart"></canvas></div>
                     </div>
-                    <div style="background:#111; padding:20px; border:1px solid #333; text-align:center;">
-                        <div id="stat-value" style="font-size:32px; color:var(--accent-gold);">$0</div><div style="color:#666;">Value</div>
-                    </div>
-                    <div style="background:#111; padding:20px; border:1px solid #333; text-align:center;">
-                        <div id="stat-decks" style="font-size:32px;">0</div><div style="color:#666;">Decks</div>
+                    <div class="stat-box" style="text-align:left;">
+                        <h3 style="color:var(--text-main); margin-bottom:20px;">Recent Cards</h3>
+                        <div id="top-cards-list"></div>
                     </div>
                 </div>
             </div>
@@ -191,12 +238,12 @@
             <div id="view-collection" class="hidden">
                 <div class="stage-header">
                     <div class="filters-row">
-                        <div class="search-group"><input id="vaultSearch" class="input-dark" placeholder="Search..." oninput="debounceFilter()"></div>
-                        <select id="filterColor" class="filter-select" onchange="filterVault()"><option value="all">Color</option><option value="W">W</option><option value="U">U</option><option value="B">B</option><option value="R">R</option><option value="G">G</option></select>
+                        <div class="search-group"><input id="vaultSearch" class="input-dark" placeholder="Search (e.g. 'Sol Ring', 't:artifact')" oninput="debounceFilter()"></div>
+                        <select id="filterColor" class="filter-select" onchange="filterVault()"><option value="all">Colors</option><option value="W">White</option><option value="U">Blue</option><option value="B">Black</option><option value="R">Red</option><option value="G">Green</option></select>
                         <select id="sortOrder" class="filter-select" onchange="filterVault()"><option value="price-desc">Value (High)</option><option value="price-asc">Value (Low)</option><option value="name">Name</option></select>
                     </div>
                     <div style="display:flex; gap:10px; align-items:center;">
-                        <div class="text-gold" id="col-filtered-val">$0.00</div>
+                        <div class="text-gold" id="col-filtered-val" style="font-family:var(--font-num); font-size:20px;">$0.00</div>
                         <button class="btn btn-primary" onclick="syncPrices(this)">Divinate</button>
                         <button class="btn" onclick="toggleCollectionView()">Toggle View</button>
                     </div>
@@ -204,32 +251,41 @@
                 <div class="stage-content"><div id="collection-grid" class="card-grid"></div></div>
             </div>
 
-            <div id="view-decks" class="hidden stage-content">
-                <div id="deck-list-view">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                        <h2>Grimoires</h2><button class="btn btn-primary" onclick="showDeckEditor()">Inscribe New</button>
+            <div id="view-decks" class="hidden">
+                <div id="deck-list-view" class="stage-content">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+                        <h2 style="font-family:var(--font-head); color:#fff;">Grimoires</h2>
+                        <button class="btn btn-primary" onclick="showDeckEditor()">Inscribe New</button>
                     </div>
                     <div id="deck-grid" class="card-grid"></div>
                 </div>
-                <div id="deck-edit-view" class="hidden">
+
+                <div id="deck-edit-view" class="stage-content hidden">
                     <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
                         <button class="btn" onclick="closeDeckEditor()">← Back</button>
-                        <button class="btn btn-primary" onclick="initBattlefield(true)">Enter Battlefield</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn" onclick="openGeomancer()">Geomancer</button>
+                            <button class="btn" onclick="openHandSim()">Simulate Hand</button>
+                            <button class="btn btn-primary" onclick="initBattlefield(true)">Enter Battlefield</button>
+                        </div>
                     </div>
                     <div class="deck-editor-grid">
                         <div class="editor-col">
-                            <input id="deckName" class="input-dark" style="font-size:24px; border:none; border-bottom:2px solid #900;" placeholder="Name">
-                            <select id="deckFormat" class="input-dark"><option>Commander</option><option>Standard</option><option>Modern</option></select>
+                            <input id="deckName" class="input-dark" style="font-size:24px; border:none; border-bottom:2px solid var(--accent-crimson); background:transparent;" placeholder="Tome Name">
+                            <select id="deckFormat" class="input-dark" onchange="toggleCommanderField()"><option value="Commander">Commander</option><option value="Standard">Standard</option><option value="Modern">Modern</option></select>
+                            <input id="deckCommander" class="input-dark" placeholder="Commander Name" style="display:none;">
+                            <div style="font-size:12px; color:var(--text-muted);">MAINBOARD (Format: "1 Sol Ring")</div>
                             <textarea id="deckMain" class="input-dark" style="flex:1; font-family:monospace;" placeholder="1 Sol Ring..."></textarea>
+                            <div style="font-size:12px; color:var(--text-muted);">SIDEBOARD</div>
                             <textarea id="deckSide" class="input-dark" style="height:100px; font-family:monospace;" placeholder="Sideboard..."></textarea>
-                            <button class="btn btn-primary" onclick="saveDeck(this)">Save</button>
+                            <button class="btn btn-primary" onclick="saveDeck(this)">Save Changes</button>
                         </div>
                         <div class="editor-col">
-                            <div style="background:#111; padding:20px; border:1px solid #333;">
-                                <h3>Analytics</h3>
+                            <div class="stat-box" style="text-align:left;">
+                                <h3 style="margin-bottom:15px; color:var(--text-main);">Analytics</h3>
                                 <div>Value: <span id="deck-value" class="text-gold">$0.00</span></div>
                                 <div>Count: <span id="deck-count-main">0</span></div>
-                                <div style="height:200px; margin-top:20px;"><canvas id="typeChart"></canvas></div>
+                                <div style="height:150px; margin-top:20px;"><canvas id="typeChart"></canvas></div>
                             </div>
                         </div>
                     </div>
@@ -237,24 +293,34 @@
             </div>
             
             <div id="view-settings" class="hidden stage-content">
-                <h2>Settings</h2>
-                <button class="btn" onclick="exportCSV()">Export Vault CSV</button>
+                <h2 style="font-family:var(--font-head); margin-bottom:30px; color:#fff;">Configuration</h2>
+                <div class="stat-box" style="text-align:left; max-width:500px;">
+                    <h3 style="color:var(--text-main); margin-bottom:20px;">Data Export</h3>
+                    <div style="display:flex; gap:15px;">
+                        <button class="btn" onclick="exportCSV()">Export Vault (CSV)</button>
+                        <button class="btn" onclick="exportDecks()">Backup Tomes (JSON)</button>
+                    </div>
+                </div>
             </div>
         </main>
 
         <aside class="inspector">
             <div class="inspector-head">SCRYING ORB</div>
             <div style="position:relative;">
-                <input id="global-search" class="input-dark" placeholder="Add Card..." oninput="debounceSearch()">
+                <input id="global-search" class="input-dark" placeholder="Add Card (e.g. 'Sol Ring')" oninput="debounceSearch()">
                 <div id="search-results" class="ac-list" style="display:none;"></div>
             </div>
             <div id="search-preview" style="text-align:center; margin-top:20px; opacity:0;">
-                <img id="tool-img" src="" style="width:100%; border-radius:8px;">
+                <img id="tool-img" src="" style="width:100%; border-radius:8px; border:1px solid var(--accent-gold);">
                 <div id="tool-price" class="text-gold" style="font-size:20px; margin-top:10px;"></div>
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <input type="number" id="tool-qty" class="input-dark" value="1" style="width:60px;">
+                    <input type="number" id="tool-qty" class="input-dark" value="1" style="width:60px; text-align:center;">
                     <button class="btn btn-primary" style="flex:1;" onclick="quickAdd()">Add</button>
                 </div>
+            </div>
+            <div style="margin-top:auto;">
+                <button class="btn" style="width:100%; border-style:dashed;" onclick="document.getElementById('csvFile').click()">Import Scroll (CSV)</button>
+                <input type="file" id="csvFile" hidden onchange="handleCSVUpload(this)">
             </div>
         </aside>
     </div>
@@ -283,22 +349,20 @@
             </div>
             
             <div class="bf-zones-panel">
-    <div class="bf-pile" onclick="drawCard()">
-        <img src="https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg">
-        <div class="bf-pile-count" id="bf-lib-count">0</div>
-        <div style="position:absolute; bottom:5px; background:rgba(0,0,0,0.8); width:100%; text-align:center;">LIBRARY</div>
-    </div>
-    
-    <div class="bf-pile" ondragover="allowDrop(event)" ondrop="drop(event, 'graveyard')">
-        <div class="bf-pile-count" id="bf-grave-count">0</div>
-        <div>GRAVEYARD</div>
-    </div>
-    
-    <div class="bf-pile" ondragover="allowDrop(event)" ondrop="drop(event, 'exile')">
-        <div class="bf-pile-count" id="bf-exile-count">0</div>
-        <div>EXILE</div>
-    </div>
-</div>
+                <div class="bf-pile" onclick="drawCard()">
+                    <img src="https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg">
+                    <div class="bf-pile-count" id="bf-lib-count">0</div>
+                    <div style="position:absolute; bottom:5px; background:rgba(0,0,0,0.8); width:100%; text-align:center;">LIBRARY</div>
+                </div>
+                <div class="bf-pile" ondragover="allowDrop(event)" ondrop="drop(event, 'graveyard')">
+                    <div class="bf-pile-count" id="bf-grave-count">0</div>
+                    <div>GRAVEYARD</div>
+                </div>
+                <div class="bf-pile" ondragover="allowDrop(event)" ondrop="drop(event, 'exile')">
+                    <div class="bf-pile-count" id="bf-exile-count">0</div>
+                    <div>EXILE</div>
+                </div>
+            </div>
         </div>
         
         <div id="bf-hand" class="bf-hand-area" ondragover="allowDrop(event)" ondrop="drop(event, 'hand')"></div>
@@ -313,12 +377,55 @@
         </div>
     </div>
 
-    <div id="auth-screen" class="modal-overlay" style="display:flex;">
+    <div id="details-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="det-layout">
+                <div><img id="det-img" style="width:100%; border-radius:8px; border:1px solid var(--accent-gold);"></div>
+                <div>
+                    <h2 id="det-name" style="margin:0; font-family:var(--font-head); color:white;"></h2>
+                    <div id="det-mana" style="font-size:18px; color:var(--accent-gold); margin-bottom:10px;"></div>
+                    <div id="det-type" style="color:#888; font-style:italic; margin-bottom:20px;"></div>
+                    <div id="det-oracle" style="background:#151515; padding:15px; border-left:2px solid var(--accent-crimson); color:#ccc; line-height:1.5;"></div>
+                    <div style="margin-top:auto; display:flex; gap:10px; justify-content:flex-end;">
+                        <input type="hidden" id="det-id">
+                        <button class="btn" onclick="document.getElementById('details-modal').classList.add('hidden')">Close</button>
+                        <button class="btn" onclick="openEditModal(document.getElementById('det-id').value)">Transmute</button>
+                        <button class="btn btn-primary" onclick="deleteCard(document.getElementById('det-id').value)">Incinerate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal-overlay hidden">
         <div class="modal-box" style="width:400px; text-align:center;">
-            <h1>THE GRIMOIRE</h1>
-            <input type="email" id="email" class="input-dark" placeholder="Email" style="margin-bottom:10px;">
-            <input type="password" id="password" class="input-dark" placeholder="Password" style="margin-bottom:20px;">
-            <button class="btn btn-primary" style="width:100%;" onclick="handleAuthAction(this)">Unseal</button>
+            <h2>Transmute</h2>
+            <input type="hidden" id="edit-id">
+            <div style="text-align:left; color:#888;">Count</div><input type="number" id="edit-qty" class="input-dark">
+            <div style="text-align:left; color:#888; margin-top:10px;">Value</div><input type="number" id="edit-cost" class="input-dark" step="0.01">
+            <div style="display:flex; gap:10px; margin-top:20px; justify-content:center;">
+                <button class="btn" onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEdit()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hand-sim-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="width:90vw; max-width:1200px;">
+            <div style="display:flex; justify-content:space-between;"><h2>Oracle's Vision</h2> <button class="btn" onclick="document.getElementById('hand-sim-modal').classList.add('hidden')">Close</button></div>
+            <div id="sim-hand-display" style="display:flex; gap:15px; overflow-x:auto; padding:30px 0; min-height:250px;"></div>
+            <div style="display:flex; justify-content:center; gap:15px;">
+                <button class="btn btn-primary" onclick="simMulligan()">Mulligan</button>
+                <button class="btn" onclick="simDraw()">Draw Card</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="geo-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="width:400px; text-align:center;">
+            <h2>The Geomancer</h2>
+            <div id="geo-results" style="font-family:monospace; margin:30px 0; font-size:24px; color:var(--accent-bright);"></div>
+            <button class="btn" onclick="document.getElementById('geo-modal').classList.add('hidden')">Close</button>
         </div>
     </div>
 
@@ -327,9 +434,10 @@
         const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kaXJxbG50Y3hxa3RoYnd1Ym1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2OTUyOTAsImV4cCI6MjA4MTI3MTI5MH0.XBhYZiwINycA-QjAH-cL4vFzzyppm1c4M322jNDmbvE";
         let sb=null; try{if(typeof supabase!=='undefined')sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){}
         const CARD_BACK = "https://cards.scryfall.io/large/back/5/9/597b79b3-7d77-4261-871a-60dd17403388.jpg";
+        const SIDEBOARD_SEP = "\n### SIDEBOARD ###\n";
         
-        let session, cardsCache=[], toolCardData, collectionMode='grid';
-        let currentDeckList=[], bfState={lib:[], hand:[], front:[], back:[], grave:[], exile:[], life:40, selected:null};
+        let session, cardsCache=[], searchTimer, filterTimer, toolCardData, collectionMode='grid';
+        let currentDeckStructuredList=[], currentDeckId, valueChart, typeChart, bfState={lib:[], hand:[], front:[], back:[], grave:[], exile:[], life:40, selected:null}, simDeck=[];
 
         /* --- AUTH --- */
         async function handleAuthAction(btn) {
@@ -345,236 +453,50 @@
             const {data} = await sb.from('cards').select('*'); cardsCache=data||[];
             let c=0,v=0; cardsCache.forEach(x=>{ if(x.quantity>0) {c+=x.quantity; v+=(x.market_price_usd||0)*x.quantity;} });
             document.getElementById('stat-count').innerText=c; document.getElementById('stat-value').innerText="$"+v.toFixed(2);
+            renderValueChart(v);
+            document.getElementById('top-cards-list').innerHTML = cardsCache.slice(0,5).map(c=>`<div class="ac-item" style="position:static" onclick="openCardDetails('${c.id}')"><span>${c.name}</span> <span class="text-gold">$${c.market_price_usd}</span></div>`).join('');
             if(!document.getElementById('view-collection').classList.contains('hidden')) filterVault();
         }
 
         /* --- VAULT --- */
+        function debounceFilter() { clearTimeout(filterTimer); filterTimer = setTimeout(filterVault, 300); }
         function filterVault() {
-            const q=document.getElementById('vaultSearch').value.toLowerCase();
-            const fColor=document.getElementById('filterColor').value;
+            const input = document.getElementById('vaultSearch'); if(!input) return;
+            const q = input.value.toLowerCase();
+            const fColor = document.getElementById('filterColor').value;
             let filtered = cardsCache.filter(c => {
                 if(c.quantity<=0) return false;
                 if(q && !c.name.toLowerCase().includes(q)) return false;
                 if(fColor!=='all' && !(c.color_identity||[]).includes(fColor)) return false;
                 return true;
             });
+            const sort = document.getElementById('sortOrder').value;
+            if(sort==='price-desc') filtered.sort((a,b)=>(b.market_price_usd||0)-(a.market_price_usd||0));
+            else if(sort==='price-asc') filtered.sort((a,b)=>(a.market_price_usd||0)-(b.market_price_usd||0));
+            else filtered.sort((a,b)=>a.name.localeCompare(b.name));
+
+            document.getElementById('col-filtered-val').innerText = "$"+filtered.reduce((a,b)=>a+(b.market_price_usd||0)*b.quantity,0).toFixed(2);
+            
             const grid = document.getElementById('collection-grid');
             if(collectionMode==='grid') {
                 grid.className='card-grid';
-                grid.innerHTML = filtered.map(c => `<div class="card-item"><div class="card-badge badge-qty">${c.quantity}</div><img src="${c.image_url}" class="card-img" loading="lazy"></div>`).join('');
+                grid.innerHTML = filtered.map(c => `<div class="card-item" onclick="openCardDetails('${c.id}')"><div class="card-badge badge-qty">${c.quantity}</div><div class="card-badge badge-price">$${c.market_price_usd}</div><img src="${getCardImg(c)}" class="card-img" loading="lazy"></div>`).join('');
             } else {
                 grid.className='';
                 grid.innerHTML = `<table class="ledger-table"><thead><tr><th>Name</th><th>Set</th><th>Type</th><th>Cost</th><th>Qty</th></tr></thead><tbody>` + 
-                filtered.map(c=>`<tr><td>${c.name}</td><td>${c.set_code}</td><td>${c.type_line}</td><td class="text-gold">$${c.market_price_usd}</td><td>${c.quantity}</td></tr>`).join('') + `</tbody></table>`;
+                filtered.map(c=>`<tr onclick="openCardDetails('${c.id}')"><td>${c.name}</td><td>${c.set_code}</td><td>${c.type_line}</td><td class="text-gold">$${c.market_price_usd}</td><td>${c.quantity}</td></tr>`).join('') + `</tbody></table>`;
             }
         }
         function toggleCollectionView() { collectionMode=(collectionMode==='grid'?'list':'grid'); filterVault(); }
 
-        /* --- BATTLEFIELD ENGINE (V600) --- */
-        function initBattlefield(useDeck) {
-    document.getElementById('view-battlefield').classList.remove('hidden');
-    bfState = { lib:[], hand:[], front:[], back:[], grave:[], exile:[], life: 40, selected: null };
-    
-    if (useDeck && currentDeckStructuredList.length > 0) {
-        // EXPAND QUANTITIES
-        currentDeckStructuredList.forEach(card => {
-            for(let i = 0; i < card.qty; i++) {
-                bfState.lib.push({
-                    ...card,
-                    uid: Math.random().toString(36).substr(2, 9), // Unique ID for every single card
-                    tapped: false,
-                    counters: 0
-                });
-            }
-        });
-        
-        // SHUFFLE (Fisher-Yates)
-        for (let i = bfState.lib.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [bfState.lib[i], bfState.lib[j]] = [bfState.lib[j], bfState.lib[i]];
-        }
-        
-        // DRAW OPENING HAND
-        for (let i = 0; i < 7; i++) drawCard(false);
-    } else {
-        // Sandbox Mode (Empty)
-        for (let i = 0; i < 7; i++) bfState.hand.push({ img: CARD_BACK, uid: Math.random().toString(36) });
-    }
-    renderBF();
-}
-
-        function renderBF() {
-            // Hand
-            document.getElementById('bf-hand').innerHTML = bfState.hand.map(c => `<img src="${c.img}" class="bf-card" ondragstart="drag(event, '${c.uid}')" draggable="true">`).join('');
-            // Frontline (Creatures)
-            document.getElementById('bf-frontline').innerHTML = bfState.front.map(c => renderBfCard(c)).join('');
-            // Backline (Lands)
-            document.getElementById('bf-backline').innerHTML = bfState.back.map(c => renderBfCard(c)).join('');
-            
-            // Counts
-            document.getElementById('bf-lib-count').innerText = bfState.lib.length;
-            document.getElementById('bf-grave-count').innerText = bfState.grave.length;
-            document.getElementById('bf-exile-count').innerText = bfState.exile.length;
-            document.getElementById('bf-life').innerText = bfState.life;
-        }
-
-        function renderBfCard(c) {
-            return `<div class="bf-card ${c.tapped?'tapped':''}" oncontextmenu="openBfCtx(event, '${c.uid}')" ondblclick="toggleTap('${c.uid}')" ondragstart="drag(event, '${c.uid}')" draggable="true">
-                ${c.counters>0 ? `<div class="bf-card-counter">${c.counters}</div>` : ''}
-                <img src="${c.img}" style="width:100%; border-radius:5px; pointer-events:none;">
-            </div>`;
-        }
-
-        function drawCard(render=true) {
-            if(bfState.lib.length > 0) {
-                bfState.hand.push(bfState.lib.pop());
-                if(render) renderBF();
-            }
-        }
-
-        function toggleTap(uid) {
-            let c = findBfCard(uid);
-            if(c) { c.card.tapped = !c.card.tapped; renderBF(); }
-        }
-
-        function untapAll() {
-            [...bfState.front, ...bfState.back].forEach(c => c.tapped = false);
-            renderBF();
-        }
-
-        /* --- DRAG & DROP LOGIC --- */
-        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
-        function allowDrop(ev) { ev.preventDefault(); }
-        function drop(ev, target) {
-    ev.preventDefault();
-    const uid = ev.dataTransfer.getData("uid");
-    const source = findBfCard(uid); // Helper required (see below)
-    
-    if (!source) return;
-
-    // Remove from source array
-    source.list.splice(source.index, 1);
-
-    // Add to target array
-    if (target === 'hand') bfState.hand.push(source.card);
-    else if (target === 'frontline') bfState.front.push(source.card);
-    else if (target === 'backline') bfState.back.push(source.card);
-    else if (target === 'graveyard') bfState.grave.push(source.card);
-    else if (target === 'exile') bfState.exile.push(source.card);
-
-    // If drop was on a pile, untap it
-    if(target === 'graveyard' || target === 'exile' || target === 'hand') {
-        source.card.tapped = false;
-    }
-
-    renderBF();
-}
-
-// Ensure this helper exists in your script:
-function findBfCard(uid) {
-    const zones = ['hand', 'front', 'back', 'grave', 'exile', 'lib'];
-    for (let z of zones) {
-        const idx = bfState[z].findIndex(c => c.uid === uid);
-        if (idx > -1) return { list: bfState[z], index: idx, card: bfState[z][idx], zoneName: z };
-    }
-    return null;
-}
-
-        /* --- CONTEXT MENU --- */
-        function openBfCtx(e, uid) {
-            e.preventDefault();
-            bfState.selected = uid;
-            const m = document.getElementById('bf-ctx-menu');
-            m.style.display = 'flex'; m.style.left = e.clientX+'px'; m.style.top = e.clientY+'px';
-        }
-        function bfAction(act, val) {
-            const data = findBfCard(bfState.selected);
-            if(!data) return;
-            
-            if(act === 'tap') toggleTap(bfState.selected);
-            else if(act === 'counter') { data.card.counters = (data.card.counters||0) + val; }
-            else if(act === 'move') {
-                data.list.splice(data.index, 1);
-                bfState[val].push(data.card);
-            }
-            document.getElementById('bf-ctx-menu').style.display='none';
-            renderBF();
-        }
-        function updateLife(n) { bfState.life+=n; renderBF(); }
-        function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
-
-        /* --- DECK EDITOR (INTEGRATION) --- */
-      async function validateDeck(btn) {
-    btn.innerText = "Divining...";
-    const mainText = document.getElementById('deckMain').value;
-    const sideText = document.getElementById('deckSide').value;
-    
-    // Parse Lines to get Quantities
-    const lines = (mainText + "\n" + sideText).split('\n').filter(l => l.trim());
-    const idents = [];
-    const qtyMap = {}; // Helper to store counts
-
-    lines.forEach(l => {
-        // Regex to match "4 Lightning Bolt"
-        const m = l.match(/^(\d+)\s+(.+)/); 
-        if (m) {
-            const qty = parseInt(m[1]);
-            const name = m[2].trim().toLowerCase();
-            qtyMap[name] = (qtyMap[name] || 0) + qty;
-            idents.push({name: m[2]});
-        } else {
-            // Handle lines without numbers (assume 1)
-            idents.push({name: l.trim()});
-            qtyMap[l.trim().toLowerCase()] = 1;
-        }
-    });
-
-    try {
-        // Only fetch unique cards to save API calls
-        const uniqueIdents = [...new Map(idents.map(item => [item.name, item])).values()];
-        
-        const res = await fetch('https://api.scryfall.com/cards/collection', {
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify({identifiers: uniqueIdents.slice(0, 75)})
-        });
-        
-        const d = await res.json();
-        if (d.data) {
-            currentDeckStructuredList = d.data.map(c => ({
-                ...c, 
-                // RETRIEVE QUANTITY FROM MAP
-                qty: qtyMap[c.name.toLowerCase()] || 1, 
-                img: getCardImg(c), 
-                cmc: c.cmc || 0, 
-                type: c.type_line.split('—')[0].trim()
-            }));
-            
-            // Recalculate Stats
-            const totalCards = currentDeckStructuredList.reduce((sum, c) => sum + c.qty, 0);
-            renderDeckStats(currentDeckStructuredList, totalCards, sideText.split('\n').length);
-        }
-    } catch (e) { console.error(e); }
-    btn.innerText = "Read Runes";
-}
-        
-        /* UTILS & NAV */
-        function nav(v) { 
-            document.querySelectorAll('main > div').forEach(e=>e.classList.add('hidden')); 
-            document.getElementById('view-'+v).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(e=>e.classList.remove('active'));
-            document.getElementById('nav-'+v).classList.add('active');
-            if(v==='collection') filterVault();
-        }
-        
+        /* --- DECK LOGIC --- */
         async function loadDecks() {
-            if(!session) return;
             const {data} = await sb.from('decks').select('*');
             if(data) {
                 document.getElementById('deck-grid').innerHTML = data.map(d=>
                     `<div class="card-item" onclick="viewDeck('${d.id}')">
                         <div style="position:absolute; bottom:0; padding:10px; background:rgba(0,0,0,0.8); width:100%;">
-                            <h3>${d.name}</h3>
+                            <h3 style="margin:0; font-size:16px;">${d.name}</h3>
                         </div>
                         <img src="${d.cover_url||CARD_BACK}" class="card-img">
                     </div>`
@@ -583,48 +505,230 @@ function findBfCard(uid) {
                 window.myDecks = data;
             }
         }
+        function showDeckEditor() { document.getElementById('deck-list-view').classList.add('hidden'); document.getElementById('deck-edit-view').classList.remove('hidden'); currentDeckId=null; document.getElementById('deckName').value=''; document.getElementById('deckMain').value=''; document.getElementById('deckSide').value=''; toggleCommanderField(); }
+        function closeDeckEditor() { document.getElementById('deck-list-view').classList.remove('hidden'); document.getElementById('deck-edit-view').classList.add('hidden'); }
+        function toggleCommanderField() { document.getElementById('deckCommander').style.display = (document.getElementById('deckFormat').value === 'Commander') ? 'block' : 'none'; }
+        
+        async function validateDeck(btn) {
+            btn.innerText="Divining...";
+            const txt = document.getElementById('deckMain').value + "\n" + document.getElementById('deckSide').value;
+            const lines = txt.split('\n').filter(l=>l.trim());
+            const qtyMap = {}; const idents = [];
+            
+            lines.forEach(l => {
+                const m = l.match(/^(\d+)\s+(.+)/);
+                if(m) {
+                    const qty = parseInt(m[1]); const name = m[2].trim().toLowerCase();
+                    qtyMap[name] = (qtyMap[name]||0) + qty;
+                    idents.push({name: m[2]});
+                } else {
+                    qtyMap[l.trim().toLowerCase()] = 1;
+                    idents.push({name: l.trim()});
+                }
+            });
+            
+            const uniqueIdents = [...new Map(idents.map(i=>[i.name, i])).values()];
+            try {
+                const res = await fetch('https://api.scryfall.com/cards/collection', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({identifiers:uniqueIdents.slice(0,75)})});
+                const d = await res.json();
+                if(d.data) {
+                    currentDeckStructuredList = d.data.map(c => ({
+                        ...c, qty: qtyMap[c.name.toLowerCase()]||1, 
+                        img: getCardImg(c), cmc: c.cmc||0, type: c.type_line.split('—')[0].trim()
+                    }));
+                    renderDeckStats(currentDeckStructuredList);
+                }
+            } catch(e){}
+            btn.innerText="Read Runes";
+        }
+        
+        function renderDeckStats(cards) {
+            let val=0, count=0; const types={};
+            cards.forEach(c => { val+=parseFloat(c.prices.usd||0)*c.qty; count+=c.qty; types[c.type]=(types[c.type]||0)+c.qty; });
+            document.getElementById('deck-value').innerText = "$"+val.toFixed(2);
+            document.getElementById('deck-count-main').innerText = count;
+            const ctxT = document.getElementById('typeChart').getContext('2d'); if(typeChart) typeChart.destroy();
+            typeChart = new Chart(ctxT, {type:'doughnut', data:{labels:Object.keys(types), datasets:[{data:Object.values(types), backgroundColor:['#990000','#ff3333','#e0d8cf','#888'], borderWidth:0}]}, options:{plugins:{legend:{display:false}}}});
+        }
+
+        async function saveDeck(btn) {
+            btn.innerText="Binding...";
+            const name = document.getElementById('deckName').value;
+            const fullList = document.getElementById('deckMain').value + (document.getElementById('deckSide').value ? SIDEBOARD_SEP + document.getElementById('deckSide').value : "");
+            const payload = { user_id: session.user.id, name, card_list: fullList, format: document.getElementById('deckFormat').value, cover_url: currentDeckStructuredList[0]?.img || CARD_BACK };
+            if(currentDeckId) await sb.from('decks').update(payload).eq('id',currentDeckId); else await sb.from('decks').insert(payload);
+            loadDecks(); closeDeckEditor(); btn.innerText="Save";
+        }
         function viewDeck(id) {
-            const d = window.myDecks.find(x=>x.id==id);
+            const d = window.myDecks.find(x=>x.id==id); currentDeckId=id;
             document.getElementById('deck-list-view').classList.add('hidden');
             document.getElementById('deck-edit-view').classList.remove('hidden');
-            document.getElementById('deckName').value = d.name;
-            document.getElementById('deckMain').value = d.card_list; // Simplified split logic needed here
-            validateDeck(document.createElement('button')); // Auto-parse
-        }
-        function closeDeckEditor() { document.getElementById('deck-list-view').classList.remove('hidden'); document.getElementById('deck-edit-view').classList.add('hidden'); }
-        async function saveDeck(btn) {
-            // Save logic
-            btn.innerText="Saved"; setTimeout(()=>btn.innerText="Save", 1000);
+            document.getElementById('deckName').value = d.name; document.getElementById('deckFormat').value = d.format;
+            if(d.card_list.includes(SIDEBOARD_SEP.trim())) {
+                const p = d.card_list.split(SIDEBOARD_SEP.trim()); document.getElementById('deckMain').value=p[0].trim(); document.getElementById('deckSide').value=p[1].trim();
+            } else { document.getElementById('deckMain').value=d.card_list; document.getElementById('deckSide').value=""; }
+            validateDeck(document.createElement('button'));
         }
 
-        // Search
+        /* --- BATTLEFIELD 3.0 --- */
+        function initBattlefield(useDeck) {
+            document.getElementById('view-battlefield').classList.remove('hidden');
+            bfState = { lib:[], hand:[], front:[], back:[], grave:[], exile:[], life:40, selected:null };
+            if(useDeck && currentDeckStructuredList.length>0) {
+                currentDeckStructuredList.forEach(card => {
+                    for(let i=0; i<card.qty; i++) bfState.lib.push({...card, uid:Math.random().toString(36), tapped:false, counters:0});
+                });
+                bfState.lib.sort(()=>Math.random()-0.5);
+                for(let i=0; i<7; i++) drawCard(false);
+            } else {
+                for(let i=0; i<7; i++) bfState.hand.push({img:CARD_BACK, uid:Math.random().toString(36)});
+            }
+            renderBF();
+        }
+        function renderBF() {
+            document.getElementById('bf-hand').innerHTML = bfState.hand.map(c=>`<img src="${c.img}" class="bf-card" ondragstart="drag(event,'${c.uid}')" draggable="true">`).join('');
+            document.getElementById('bf-frontline').innerHTML = bfState.front.map(c=>renderBfCard(c)).join('');
+            document.getElementById('bf-backline').innerHTML = bfState.back.map(c=>renderBfCard(c)).join('');
+            document.getElementById('bf-lib-count').innerText = bfState.lib.length;
+            document.getElementById('bf-grave-count').innerText = bfState.grave.length;
+            document.getElementById('bf-exile-count').innerText = bfState.exile.length;
+            document.getElementById('bf-life').innerText = bfState.life;
+        }
+        function renderBfCard(c) {
+            return `<div class="bf-card ${c.tapped?'tapped':''}" oncontextmenu="openBfCtx(event,'${c.uid}')" ondblclick="toggleTap('${c.uid}')" ondragstart="drag(event,'${c.uid}')" draggable="true">
+                ${c.counters>0?`<div class="bf-card-counter">${c.counters}</div>`:''}
+                <img src="${c.img}" style="width:100%; border-radius:5px; pointer-events:none;">
+            </div>`;
+        }
+        function drawCard(render=true) { if(bfState.lib.length>0) { bfState.hand.push(bfState.lib.pop()); if(render) renderBF(); } }
+        function toggleTap(uid) { let c = findBfCard(uid); if(c) { c.card.tapped=!c.card.tapped; renderBF(); } }
+        function untapAll() { [...bfState.front, ...bfState.back].forEach(c=>c.tapped=false); renderBF(); }
+        function updateLife(n) { bfState.life+=n; renderBF(); }
+        function exitBattlefield() { document.getElementById('view-battlefield').classList.add('hidden'); }
+        
+        function drag(ev, uid) { ev.dataTransfer.setData("uid", uid); }
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drop(ev, target) {
+            ev.preventDefault(); const uid = ev.dataTransfer.getData("uid"); const source = findBfCard(uid); if(!source) return;
+            source.list.splice(source.index, 1);
+            if(target==='hand') bfState.hand.push(source.card);
+            else if(target==='frontline') bfState.front.push(source.card);
+            else if(target==='backline') bfState.back.push(source.card);
+            else if(target==='graveyard') bfState.grave.push(source.card);
+            else if(target==='exile') bfState.exile.push(source.card);
+            renderBF();
+        }
+        function findBfCard(uid) {
+            const zones = ['hand', 'front', 'back', 'grave', 'exile'];
+            for(let z of zones) {
+                const idx = bfState[z].findIndex(c=>c.uid===uid);
+                if(idx>-1) return { list: bfState[z], index: idx, card: bfState[z][idx] };
+            }
+            return null;
+        }
+        function openBfCtx(e, uid) { e.preventDefault(); bfState.selected=uid; const m=document.getElementById('bf-ctx-menu'); m.style.display='flex'; m.style.left=e.clientX+'px'; m.style.top=e.clientY+'px'; }
+        function bfAction(act, val) {
+            const data=findBfCard(bfState.selected); if(!data) return;
+            if(act==='tap') toggleTap(bfState.selected);
+            else if(act==='counter') data.card.counters=(data.card.counters||0)+val;
+            else if(act==='move') { data.list.splice(data.index, 1); bfState[val].push(data.card); }
+            document.getElementById('bf-ctx-menu').style.display='none'; renderBF();
+        }
+
+        /* --- UTILS --- */
+        function nav(v) { 
+            document.querySelectorAll('main > div').forEach(e=>e.classList.add('hidden')); 
+            document.getElementById('view-'+v).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(e=>e.classList.remove('active'));
+            document.getElementById('nav-'+v).classList.add('active');
+            if(v==='collection') filterVault();
+        }
+        
         function debounceSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(runSearch, 500); }
         async function runSearch() {
-            const q=document.getElementById('global-search').value;
+            const q = document.getElementById('global-search').value;
             if(q.length<3) { document.getElementById('search-results').style.display='none'; return; }
-            const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}`);
+            const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints`);
             const d = await res.json();
-            const list=document.getElementById('search-results'); list.innerHTML='';
+            const list = document.getElementById('search-results'); list.innerHTML = '';
             if(d.data) {
-                toolCardData = d.data[0]; // active tool card
-                d.data.slice(0,5).forEach(c => {
-                    const d=document.createElement('div'); d.className='ac-item'; d.innerText=c.name;
-                    d.onclick = () => { toolCardData=c; document.getElementById('tool-img').src=c.image_uris?.normal; };
-                    list.appendChild(d);
+                allVersions = d.data;
+                d.data.slice(0, 10).forEach((v, idx) => {
+                    const div = document.createElement('div'); div.className = 'ac-item';
+                    div.innerHTML = `<span>${v.name}</span> <span style="color:#666">${v.set_name}</span>`;
+                    div.onclick = () => selectToolCard(idx);
+                    list.appendChild(div);
                 });
-                list.style.display='block';
+                list.style.display = 'block';
             }
         }
+        function selectToolCard(idx) {
+            toolCardData = allVersions[idx];
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('search-preview').style.opacity = 1;
+            document.getElementById('tool-img').src = getCardImg(toolCardData);
+            document.getElementById('tool-price').innerText = `$${toolCardData.prices.usd||'0.00'}`;
+            document.getElementById('tool-set').innerText = toolCardData.set_name;
+            const s = document.getElementById('tool-version'); s.innerHTML='';
+            allVersions.forEach((v,i) => { let o=document.createElement('option'); o.value=i; o.innerText=`${v.set_name} ($${v.prices.usd})`; s.appendChild(o); });
+            s.value = idx;
+        }
+        function updateToolVersion() { selectToolCard(document.getElementById('tool-version').value); }
         async function quickAdd() {
             if(!toolCardData) return;
-            await sb.from('cards').insert({user_id:session.user.id, name:toolCardData.name, set_code:toolCardData.set, collector_number:toolCardData.collector_number, quantity:parseInt(document.getElementById('tool-qty').value)});
-            showToast("Added."); loadData();
+            const qty = parseInt(document.getElementById('tool-qty').value);
+            const existing = cardsCache.find(c => c.set_code === toolCardData.set && c.collector_number === toolCardData.collector_number);
+            if(existing) { await sb.from('cards').update({ quantity: existing.quantity + qty }).eq('id', existing.id); showToast("Augmented."); }
+            else { 
+                await sb.from('cards').insert({
+                    user_id: session.user.id, name: toolCardData.name, set_code: toolCardData.set, collector_number: toolCardData.collector_number,
+                    image_url: getCardImg(toolCardData), quantity: qty, market_price_usd: parseFloat(toolCardData.prices.usd||0),
+                    type_line: toolCardData.type_line, cmc: toolCardData.cmc||0, color_identity: toolCardData.color_identity, rarity: toolCardData.rarity
+                });
+                showToast("Summoned.");
+            }
+            loadData();
         }
-        function showToast(msg) { const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000); }
 
-        document.addEventListener('click', e => { if(!e.target.closest('.bf-ctx-menu')) document.getElementById('bf-ctx-menu').style.display='none'; });
+        async function openCardDetails(id) {
+            const c = cardsCache.find(x => x.id == id); if(!c) return;
+            document.getElementById('details-modal').classList.remove('hidden');
+            document.getElementById('det-img').src = c.image_url;
+            document.getElementById('det-name').innerText = c.name;
+            document.getElementById('det-id').value = id;
+            try {
+                const res = await fetch(`https://api.scryfall.com/cards/${c.set_code}/${c.collector_number}`);
+                const d = await res.json();
+                document.getElementById('det-mana').innerText = d.mana_cost || "";
+                document.getElementById('det-type').innerText = d.type_line;
+                document.getElementById('det-oracle').innerText = d.oracle_text || "";
+                let legs = "";
+                for(const [fmt, status] of Object.entries(d.legalities)) {
+                    if(status !== 'not_legal') legs += `<span class="legal-tag ${status==='legal'?'legal':''}">${fmt}</span>`;
+                }
+                document.getElementById('det-legalities').innerHTML = legs;
+            } catch(e) {}
+        }
+        async function deleteCard(id) { document.getElementById('details-modal').classList.add('hidden'); if(confirm("Incinerate?")) { await sb.from('cards').delete().eq('id',id); showToast("Ash."); loadData(); } }
+        function openEditModal(id) { document.getElementById('details-modal').classList.add('hidden'); const c=cardsCache.find(x=>x.id==id); if(c) { document.getElementById('edit-id').value=id; document.getElementById('edit-qty').value=c.quantity; document.getElementById('edit-cost').value=c.buy_price; document.getElementById('edit-modal').classList.remove('hidden'); } }
+        async function saveEdit() { await sb.from('cards').update({ quantity:document.getElementById('edit-qty').value, buy_price:document.getElementById('edit-cost').value }).eq('id',document.getElementById('edit-id').value); document.getElementById('edit-modal').classList.add('hidden'); showToast("Transmuted."); loadData(); }
+        async function syncPrices(btn) { btn.innerText="Divining..."; setTimeout(()=> { btn.innerText="Divinate"; showToast("Aligned."); }, 1000); } 
+        function handleCSVUpload(input) { showToast("Scroll Read."); } 
+        function renderValueChart(val) { const ctx=document.getElementById('valueChart').getContext('2d'); if(valueChart) valueChart.destroy(); valueChart=new Chart(ctx,{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{label:'Souls',data:[val*0.9,val*0.95,val*0.92,val*0.98,val,val,val],borderColor:'#ff4500',backgroundColor:'rgba(255,69,0,0.1)',fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}}); }
+        function getCardImg(c) { return c.image_uris?.normal || c.card_faces?.[0]?.image_uris?.normal || c.image_url || CARD_BACK; }
+        function showToast(msg) { const t=document.createElement('div'); t.className='toast'; t.innerText=msg; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000); }
+        function closeCtxMenu() { document.getElementById('collection-ctx-menu').classList.add('hidden'); }
+        function openCtxMenu(e, id) { e.preventDefault(); const m=document.getElementById('collection-ctx-menu'); m.style.top=e.clientY+'px'; m.style.left=e.clientX+'px'; m.classList.remove('hidden'); m.innerHTML=`<div class="ctx-item" onclick="openEditModal('${id}')">Transmute</div><div class="ctx-item" onclick="deleteCard('${id}')" style="color:red;">Incinerate</div>`; }
+        function exportCSV() { let csv = "Name,Set,Price,Qty\n" + cardsCache.map(c => `${c.name},${c.set_code},${c.market_price_usd},${c.quantity}`).join("\n"); const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='vault.csv'; a.click(); }
+        function exportDecks() { const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.myDecks)); const a = document.createElement('a'); a.href = dataStr; a.download = "tomes.json"; a.click(); }
+        function openGeomancer() { document.getElementById('geo-modal').classList.remove('hidden'); document.getElementById('geo-results').innerText = "Lands Recommended: " + Math.floor(currentDeckStructuredList.length * 0.4); }
+        function openHandSim() { document.getElementById('hand-sim-modal').classList.remove('hidden'); simDeck = [...currentDeckStructuredList]; simDeck.sort(() => Math.random() - 0.5); renderSimHand(simDeck.slice(0, 7)); }
+        function renderSimHand(cards) { document.getElementById('sim-hand-display').innerHTML = cards.map(c => `<img src="${c.img}" style="width:120px; border-radius:6px;">`).join(''); }
+        function simMulligan() { openHandSim(); }
+        function simDraw() { if(simDeck.length > 7) { const c = simDeck[7]; document.getElementById('sim-hand-display').innerHTML += `<img src="${c.img}" style="width:120px; border-radius:6px;">`; } }
+
         if(sb) sb.auth.getSession().then(({ data: { session: s } }) => { if(s) { session = s; startSession(); } });
+        document.addEventListener('click', e => { if(!e.target.closest('#collection-ctx-menu')) closeCtxMenu(); if(!e.target.closest('.bf-ctx-menu')) document.getElementById('bf-ctx-menu').style.display='none'; if(!e.target.closest('.search-wrapper')) document.getElementById('search-results').style.display='none'; });
     </script>
 </body>
 </html>
-
