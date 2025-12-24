@@ -305,24 +305,36 @@
         </main>
 
         <aside class="inspector">
-            <div class="inspector-head">SCRYING ORB</div>
-            <div style="position:relative;">
-                <input id="global-search" class="input-dark" placeholder="Add Card (e.g. 'Sol Ring')" oninput="debounceSearch()">
-                <div id="search-results" class="ac-list" style="display:none;"></div>
-            </div>
-            <div id="search-preview" style="text-align:center; margin-top:20px; opacity:0;">
-                <img id="tool-img" src="" style="width:100%; border-radius:8px; border:1px solid var(--accent-gold);">
-                <div id="tool-price" class="text-gold" style="font-size:20px; margin-top:10px;"></div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <input type="number" id="tool-qty" class="input-dark" value="1" style="width:60px; text-align:center;">
-                    <button class="btn btn-primary" style="flex:1;" onclick="quickAdd()">Add</button>
-                </div>
-            </div>
-            <div style="margin-top:auto;">
-                <button class="btn" style="width:100%; border-style:dashed;" onclick="document.getElementById('csvFile').click()">Import Scroll (CSV)</button>
-                <input type="file" id="csvFile" hidden onchange="handleCSVUpload(this)">
-            </div>
-        </aside>
+    <div class="inspector-head">SCRYING ORB</div>
+    
+    <div style="position:relative;">
+        <input id="global-search" class="input-dark" placeholder="Card Name or 'NEO 302'" oninput="debounceSearch()">
+        <div id="search-results" class="ac-list" style="display:none;"></div>
+    </div>
+    <div style="font-size:10px; color:#666; margin-top:5px; margin-bottom:20px;">
+        Tip: Type "SetCode Number" (e.g. <b>NEO 5</b>) for exact prints.
+    </div>
+    
+    <div id="search-preview" style="text-align:center; opacity:0; transition:0.3s;">
+        <img id="tool-img" src="" style="width:100%; border-radius:10px; border:1px solid var(--accent-gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        
+        <div id="tool-price" class="text-gold" style="font-size:24px; margin-top:15px; font-family:var(--font-num);"></div>
+        <div id="tool-set" style="color:var(--text-muted); font-size:12px; margin-bottom:15px;"></div>
+        
+        <div style="text-align:left; color:var(--text-muted); font-size:11px; margin-bottom:5px;">PRINTING</div>
+        <select id="tool-version" class="input-dark" onchange="updateToolVersion()" style="margin-bottom:15px;"></select>
+        
+        <div style="display:flex; gap:10px;">
+            <input type="number" id="tool-qty" class="input-dark" value="1" style="width:70px; text-align:center;">
+            <button class="btn btn-primary" style="flex:1;" onclick="quickAdd()">Summon</button>
+        </div>
+    </div>
+    
+    <div style="margin-top:auto;">
+        <button class="btn" style="width:100%; border-style:dashed;" onclick="document.getElementById('csvFile').click()">Import Scroll (CSV)</button>
+        <input type="file" id="csvFile" hidden onchange="handleCSVUpload(this)">
+    </div>
+</aside>
     </div>
 
     <div id="view-battlefield" class="bf-overlay hidden">
@@ -645,35 +657,77 @@
         }
         
         function debounceSearch() { clearTimeout(searchTimer); searchTimer=setTimeout(runSearch, 500); }
-        async function runSearch() {
-            const q = document.getElementById('global-search').value;
-            if(q.length<3) { document.getElementById('search-results').style.display='none'; return; }
-            const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints`);
-            const d = await res.json();
-            const list = document.getElementById('search-results'); list.innerHTML = '';
-            if(d.data) {
-                allVersions = d.data;
-                d.data.slice(0, 10).forEach((v, idx) => {
-                    const div = document.createElement('div'); div.className = 'ac-item';
-                    div.innerHTML = `<span>${v.name}</span> <span style="color:#666">${v.set_name}</span>`;
-                    div.onclick = () => selectToolCard(idx);
-                    list.appendChild(div);
-                });
-                list.style.display = 'block';
-            }
-        }
-        function selectToolCard(idx) {
-            toolCardData = allVersions[idx];
-            document.getElementById('search-results').style.display = 'none';
-            document.getElementById('search-preview').style.opacity = 1;
-            document.getElementById('tool-img').src = getCardImg(toolCardData);
-            document.getElementById('tool-price').innerText = `$${toolCardData.prices.usd||'0.00'}`;
-            document.getElementById('tool-set').innerText = toolCardData.set_name;
-            const s = document.getElementById('tool-version'); s.innerHTML='';
-            allVersions.forEach((v,i) => { let o=document.createElement('option'); o.value=i; o.innerText=`${v.set_name} ($${v.prices.usd})`; s.appendChild(o); });
-            s.value = idx;
-        }
-        function updateToolVersion() { selectToolCard(document.getElementById('tool-version').value); }
+        /* --- REPLACES EXISTING runSearch, selectToolCard, updateToolVersion --- */
+
+async function runSearch() {
+    let q = document.getElementById('global-search').value.trim();
+    if(q.length < 2) { 
+        document.getElementById('search-results').style.display = 'none'; 
+        return; 
+    }
+
+    // 1. Smart Syntax Detection (e.g., "NEO 5")
+    const setMatch = q.match(/^([a-zA-Z0-9]{3,4})\s+(\d+)$/);
+    let apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints`;
+    
+    if(setMatch) {
+        // Switch to specific Set+CN search
+        const smartQ = `set:${setMatch[1]} cn:${setMatch[2]}`;
+        apiUrl = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(smartQ)}`;
+    }
+
+    const res = await fetch(apiUrl);
+    const d = await res.json();
+    const list = document.getElementById('search-results'); 
+    list.innerHTML = '';
+
+    if(d.data) {
+        allVersions = d.data; // Store full results for version swapping
+        
+        // Show top 10 results
+        d.data.slice(0, 10).forEach((v, idx) => {
+            const div = document.createElement('div'); 
+            div.className = 'ac-item';
+            // Show Set Code and Collector Number in the list
+            div.innerHTML = `<span>${v.name}</span> <span style="color:#666; font-size:11px;">${v.set.toUpperCase()} #${v.collector_number}</span>`;
+            div.onclick = () => selectToolCard(idx);
+            list.appendChild(div);
+        });
+        list.style.display = 'block';
+    }
+}
+
+function selectToolCard(idx) {
+    // 1. Set Active Card
+    toolCardData = allVersions[idx];
+    
+    // 2. Update UI Elements
+    document.getElementById('search-results').style.display = 'none';
+    document.getElementById('search-preview').style.opacity = 1;
+    document.getElementById('tool-img').src = getCardImg(toolCardData);
+    document.getElementById('tool-price').innerText = `$${toolCardData.prices.usd || '0.00'}`;
+    document.getElementById('tool-set').innerText = `${toolCardData.set_name} (#${toolCardData.collector_number})`;
+    
+    // 3. Populate Version Dropdown
+    // Filter allVersions to find cards with the exact same name
+    const versions = allVersions.filter(c => c.name === toolCardData.name);
+    const select = document.getElementById('tool-version');
+    select.innerHTML = '';
+    
+    versions.forEach((v, i) => {
+        const opt = document.createElement('option');
+        // Map the index back to the main allVersions array
+        opt.value = allVersions.indexOf(v); 
+        opt.innerText = `${v.set.toUpperCase()} ($${v.prices.usd || '-'})`;
+        if(v.id === toolCardData.id) opt.selected = true;
+        select.appendChild(opt);
+    });
+}
+
+function updateToolVersion() {
+    // Just re-run selection with the new index from the dropdown
+    selectToolCard(document.getElementById('tool-version').value);
+}
         async function quickAdd() {
             if(!toolCardData) return;
             const qty = parseInt(document.getElementById('tool-qty').value);
@@ -732,3 +786,4 @@
     </script>
 </body>
 </html>
+
